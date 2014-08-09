@@ -1,0 +1,27 @@
+{
+  "name": "phly/conduit",
+  "description": "Middleware for PHP",
+  "type": "library",
+  "license": "BSD-2-Clause",
+  "keywords": [
+    "http",
+    "middleware"
+  ],
+  "authors": [
+    {
+      "name": "Matthew Weier O'Phinney",
+      "email": "matthew@weierophinney.net",
+      "homepage": "http://mwop.net"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=5.4.8",
+    "psr/http-message": "~1.0-dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "Phly\\Conduit\\": "src/"
+    }
+  }
+}
