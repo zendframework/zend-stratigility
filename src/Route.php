@@ -3,6 +3,12 @@ namespace Phly\Conduit;
 
 use OutOfRangeException;
 
+/**
+ * Value object representing route-based middleware
+ *
+ * Details the subpath on which the middleware is active, and the
+ * handler for the middleware itself.
+ */
 class Route
 {
     /**

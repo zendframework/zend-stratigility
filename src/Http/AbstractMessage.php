@@ -5,12 +5,25 @@ use InvalidArgumentException;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;
 
+/**
+ * Abstract MessageInterface implementation to use as a base for
+ * Request and Response implementations.
+ */
 abstract class AbstractMessage implements MessageInterface
 {
+    /**
+     * @var array
+     */
     protected $headers = array();
 
+    /**
+     * @var string
+     */
     protected $protocol = '1.1';
 
+    /**
+     * @var StreamInterface
+     */
     protected $stream;
 
     /**

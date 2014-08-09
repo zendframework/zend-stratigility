@@ -1,18 +1,56 @@
 <?php
 namespace Phly\Conduit\Http;
 
+/**
+ * URI implementation
+ */
 class Uri
 {
+    /**
+     * @var string
+     */
     private $scheme;
+
+    /**
+     * @var string
+     */
     private $host;
+
+    /**
+     * @var int
+     */
     private $port;
+
+    /**
+     * @var string
+     */
     private $path;
+
+    /**
+     * @var string
+     */
     private $query;
+
+    /**
+     * @var string
+     */
     private $fragment;
 
+    /**
+     * Combination of host + port (if non-standard schema + port pairing)
+     *
+     * @var string
+     */
     private $domain;
+
+    /**
+     * @var string
+     */
     private $uri;
 
+    /**
+     * @param string $uri 
+     */
     public function __construct($uri)
     {
         $this->uri = $uri;
@@ -21,6 +59,12 @@ class Uri
         }
     }
 
+    /**
+     * Retrieve properties
+     * 
+     * @param string $name 
+     * @return null|string|int
+     */
     public function __get($name)
     {
         if (! property_exists($this, $name)) {
@@ -30,11 +74,21 @@ class Uri
         return $this->{$name};
     }
 
+    /**
+     * Return string representation of URI
+     * 
+     * @return string
+     */
     public function __toString()
     {
         return $this->uri;
     }
 
+    /**
+     * Is the URI valid?
+     * 
+     * @return bool
+     */
     public function isValid()
     {
         return filter_var(
@@ -44,6 +98,9 @@ class Uri
         );
     }
 
+    /**
+     * Parse a URI into its parts, and set the properties 
+     */
     private function parseUri()
     {
         $parts = parse_url($this->uri);

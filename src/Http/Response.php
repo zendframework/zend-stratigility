@@ -1,13 +1,24 @@
 <?php
 namespace Phly\Conduit\Http;
 
-use Psr\Http\Message\ResponseInterface;
+use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 
+/**
+ * HTTP response encapsulation
+ */
 class Response extends AbstractMessage implements ResponseInterface
 {
+    /**
+     * @var bool
+     */
     private $complete = false;
 
+    /**
+     * Map of standard HTTP status code/reason phrases
+     * 
+     * @var array
+     */
     private $phrases = array(
         // INFORMATIONAL CODES
         100 => 'Continue',
@@ -73,13 +84,30 @@ class Response extends AbstractMessage implements ResponseInterface
         511 => 'Network Authentication Required',
     );
 
+    /**
+     * @var null|string
+     */
     private $reasonPhrase;
 
+    /**
+     * @var int
+     */
     private $statusCode = 200;
 
+    /**
+     * @param string|resource|StreamInterface $stream Stream identifier and/or actual stream resource
+     */
     public function __construct($stream = 'php://memory')
     {
-        $this->setBody(new Stream($stream, 'wb+'));
+        if (! is_string($stream) && ! is_resource($stream) && ! $stream instanceof StreamInterface) {
+            throw new InvalidArgumentException('Stream must be a string stream resource identifier, an actual stream resource, or a Psr\Http\Message\StreamInterface implementation');
+        }
+
+        if (! $stream instanceof StreamInterface) {
+            $stream = new Stream($stream, 'wb+');
+        }
+
+        $this->setBody($stream);
     }
 
     /**
@@ -128,11 +156,7 @@ class Response extends AbstractMessage implements ResponseInterface
      */
     public function getReasonPhrase()
     {
-        if ($this->complete) {
-            return;
-        }
-
-        if (null === $this->reasonPhrase
+        if (! $this->reasonPhrase
             && isset($this->phrases[$this->statusCode])
         ) {
             $this->setReasonPhrase($this->phrases[$this->statusCode]);
@@ -154,6 +178,13 @@ class Response extends AbstractMessage implements ResponseInterface
         $this->reasonPhrase = $phrase;
     }
 
+    /**
+     * Set the Stream representing the body content.
+     * 
+     * If the response has been marked as complete, performs a no-op.
+     *
+     * @param StreamInterface $body 
+     */
     public function setBody(StreamInterface $body = null)
     {
         if ($this->complete) {
@@ -163,6 +194,14 @@ class Response extends AbstractMessage implements ResponseInterface
         return parent::setBody($body);
     }
 
+    /**
+     * Set/overwrite a single named header
+     * 
+     * If the response has been marked as complete, performs a no-op.
+     *
+     * @param string $header 
+     * @param string|array $value 
+     */
     public function setHeader($header, $value)
     {
         if ($this->complete) {
@@ -172,6 +211,13 @@ class Response extends AbstractMessage implements ResponseInterface
         return parent::setHeader($header, $value);
     }
 
+    /**
+     * Overwrite all existing headers
+     *
+     * If the response has been marked as complete, performs a no-op.
+     * 
+     * @param array $headers 
+     */
     public function setHeaders(array $headers)
     {
         if ($this->complete) {
@@ -181,6 +227,14 @@ class Response extends AbstractMessage implements ResponseInterface
         return parent::setHeaders($headers);
     }
 
+    /**
+     * Add a single named header
+     * 
+     * If the response has been marked as complete, performs a no-op.
+     *
+     * @param string $header 
+     * @param string|array $value 
+     */
     public function addHeader($header, $value)
     {
         if ($this->complete) {
@@ -190,6 +244,13 @@ class Response extends AbstractMessage implements ResponseInterface
         return parent::addHeader($header, $value);
     }
 
+    /**
+     * Add multiple headers at once
+     *
+     * If the response has been marked as complete, performs a no-op.
+     * 
+     * @param array $headers 
+     */
     public function addHeaders(array $headers)
     {
         if ($this->complete) {
@@ -232,6 +293,11 @@ class Response extends AbstractMessage implements ResponseInterface
         $this->complete = true;
     }
 
+    /**
+     * Has the response been marked as complete?
+     * 
+     * @return bool
+     */
     public function isComplete()
     {
         return $this->complete;

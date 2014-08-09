@@ -2,10 +2,13 @@
 namespace Phly\Conduit;
 
 use Exception;
+use Phly\Conduit\Http\ResponseInterface as Response;
 use Psr\Http\Message\RequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
 use Zend\Escaper\Escaper;
 
+/**
+ * Handle incomplete requests
+ */
 class FinalHandler
 {
     /**
@@ -35,6 +38,14 @@ class FinalHandler
     }
 
     /**
+     * Handle incomplete requests
+     *
+     * This handler should only ever be invoked if Next exhausts its stack.
+     * When that happens, we determine if an $err is present, and, if so,
+     * create a 500 status with error details.
+     *
+     * Otherwise, a 404 status is created.
+     *
      * @param null|mixed $err 
      */
     public function __invoke($err = null)
@@ -47,6 +58,13 @@ class FinalHandler
         $this->create404();
     }
 
+    /**
+     * Handle an error condition
+     *
+     * Use the $error to create details for the response.
+     * 
+     * @param mixed $error 
+     */
     private function handleError($error)
     {
         $status = $this->response->getStatusCode();
@@ -81,6 +99,9 @@ class FinalHandler
         $this->response->end($message);
     }
 
+    /**
+     * Create a 404 status in the response
+     */
     private function create404()
     {
         $this->response->setStatusCode(404);

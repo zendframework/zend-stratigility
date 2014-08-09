@@ -3,16 +3,41 @@ namespace Phly\Conduit\Http;
 
 use Psr\Http\Message\StreamInterface;
 
+/**
+ * Implementation of PSR HTTP streams
+ */
 class Stream implements StreamInterface
 {
+    /**
+     * Cached stream contents
+     * 
+     * @var string
+     */
     private $contents;
+
+    /**
+     * @var resource
+     */
     private $resource;
+
+    /**
+     * @var string|resource
+     */
     private $stream;
 
+    /**
+     * @param string|resource $stream 
+     * @param string $mode Mode with which to open stream
+     */
     public function __construct($stream, $mode = 'r')
     {
         $this->stream = $stream;
-        $this->resource = fopen($stream, $mode);
+
+        if (is_resource($stream)) {
+            $this->resource = $stream;
+        } else {
+            $this->resource = fopen($stream, $mode);
+        }
     }
 
     /**

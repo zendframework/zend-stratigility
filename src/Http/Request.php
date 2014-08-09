@@ -6,18 +6,56 @@ use RuntimeException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 
+/**
+ * HTTP Request encapsulation
+ *
+ * Allows arbitrary properties, which allows it to be used to transfer
+ * state between middlewares.
+ */
 class Request extends AbstractMessage implements RequestInterface
 {
+    /**
+     * @var string
+     */
     private $method;
+
+    /**
+     * @var Uri
+     */
     private $url;
+
+    /**
+     * User-set parameters (usually by middleware)
+     *
+     * @var array
+     */
     private $userParams = array();
 
+    /**
+     * @param string $protocol
+     * @param string|resource|StreamInterface $stream 
+     */
     public function __construct($protocol = '1.1', $stream = 'php://input')
     {
         $this->protocol = $protocol;
-        $this->setBody(new Stream($stream));
+
+        if (! is_string($stream) && ! is_resource($stream) && ! $stream instanceof StreamInterface) {
+            throw new InvalidArgumentException('Stream must be a string stream resource identifier, an actual stream resource, or a Psr\Http\Message\StreamInterface implementation');
+        }
+
+        if (! $stream instanceof StreamInterface) {
+            $stream = new Stream($stream, 'r');
+        }
+
+        $this->setBody($stream);
     }
 
+    /**
+     * Retrieve arbitrary user parameters
+     * 
+     * @param string $name 
+     * @return null|mixed null if $name does not exist
+     */
     public function __get($name)
     {
         if (! array_key_exists($name, $this->userParams)) {
@@ -27,16 +65,33 @@ class Request extends AbstractMessage implements RequestInterface
         return $this->userParams[$name];
     }
 
+    /**
+     * Set arbitrary user properties
+     * 
+     * @param string $name 
+     * @param mixed $value 
+     */
     public function __set($name, $value)
     {
         $this->userParams[$name] = $value;
     }
 
+    /**
+     * Test if a user property exists
+     * 
+     * @param mixed $name 
+     * @return bool
+     */
     public function __isset($name)
     {
         return array_key_exists($name, $this->userParams);
     }
 
+    /**
+     * Remove a previously set user property
+     * 
+     * @param string $name 
+     */
     public function __unset($name)
     {
         if (! array_key_exists($name, $this->userParams)) {
