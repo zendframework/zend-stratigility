@@ -20,7 +20,7 @@ class Request extends AbstractMessage implements RequestInterface
 
     public function __get($name)
     {
-        if (! array_key_exists($this->userParams[$name])) {
+        if (! array_key_exists($name, $this->userParams)) {
             return null;
         }
 
@@ -34,12 +34,12 @@ class Request extends AbstractMessage implements RequestInterface
 
     public function __isset($name)
     {
-        return array_key_exists($this->userParams[$name]);
+        return array_key_exists($name, $this->userParams);
     }
 
     public function __unset($name)
     {
-        if (! array_key_exists($this->userParams[$name])) {
+        if (! array_key_exists($name, $this->userParams)) {
             return;
         }
 

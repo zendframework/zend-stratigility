@@ -48,23 +48,23 @@ class Uri
     {
         $parts = parse_url($this->uri);
 
-        $this->scheme   = $data['scheme'];
-        $this->host     = $data['host'];
-        $this->port     = $data['port'];
-        $this->path     = $data['path'];
-        $this->query    = $data['query'];
-        $this->fragment = $data['fragment'];
+        $this->scheme   = $parts['scheme'];
+        $this->host     = $parts['host'];
+        $this->port     = $parts['port'];
+        $this->path     = $parts['path'];
+        $this->query    = isset($parts['query'])    ? $parts['query']    : '';
+        $this->fragment = isset($parts['fragment']) ? $parts['fragment'] : '';
 
-        if ($data['scheme'] === 'http'
-            && $data['port'] !== null
-            && $data['port'] !== 80
+        if ($parts['scheme'] === 'http'
+            && $parts['port'] !== null
+            && $parts['port'] !== 80
         ) {
-            $this->domain = printf('%s:%d', $this->host, $this->port);
-        } elseif ($data['scheme'] === 'https'
-            && $data['port'] !== null
-            && $data['port'] !== 443
+            $this->domain = sprintf('%s:%d', $this->host, $this->port);
+        } elseif ($parts['scheme'] === 'https'
+            && $parts['port'] !== null
+            && $parts['port'] !== 443
         ) {
-            $this->domain = printf('%s:%d', $this->host, $this->port);
+            $this->domain = sprintf('%s:%d', $this->host, $this->port);
         } else {
             $this->domain = $this->host;
         }

@@ -79,7 +79,7 @@ class Response extends AbstractMessage implements ResponseInterface
 
     public function __construct($stream = 'php://memory')
     {
-        $this->setBody(new Stream($stream), 'w+');
+        $this->setBody(new Stream($stream, 'wb+'));
     }
 
     /**

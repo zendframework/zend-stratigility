@@ -31,7 +31,7 @@ class Stream implements StreamInterface
             return '';
         }
 
-        $this->seek(0);
+        rewind($this->resource);
         return $this->getContents();
     }
 
@@ -131,7 +131,7 @@ class Stream implements StreamInterface
             return false;
         }
 
-        return fseek($this->resouce, $offset, $whence);
+        return fseek($this->resource, $offset, $whence);
     }
 
     /**
@@ -180,7 +180,7 @@ class Stream implements StreamInterface
         $meta = stream_get_meta_data($this->resource);
         $mode = $meta['mode'];
 
-        return (strstr($mode, 'r') || $strstr($mode, '+'));
+        return (strstr($mode, 'r') || strstr($mode, '+'));
     }
 
     /**
@@ -214,7 +214,7 @@ class Stream implements StreamInterface
      */
     public function getContents($maxLength = -1)
     {
-        if (null !== $this->contents) {
+        if ($this->contents) {
             return $contents;
         }
 

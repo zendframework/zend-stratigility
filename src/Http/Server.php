@@ -1,7 +1,9 @@
 <?php
 namespace Phly\Conduit\Http;
 
+use OutOfBoundsException;
 use Phly\Conduit\Conduit;
+use Phly\Conduit\Utils;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -28,6 +30,14 @@ class Server
         $this->response = $response;
     }
 
+    public function __get($name)
+    {
+        if (! property_exists($this, $name)) {
+            throw new OutOfBoundsException('Cannot retrieve arbitrary properties from server');
+        }
+        return $this->{$name};
+    }
+
     public static function createServer(
         Conduit $conduit,
         RequestInterface $request = null,
@@ -36,10 +46,10 @@ class Server
         return new self($conduit, $request, $response);
     }
 
-    public function listen()
+    public function listen($finalHandler = null)
     {
         ob_start();
-        $this->conduit->handle($this->request, $this->response);
+        $this->conduit->handle($this->request, $this->response, $finalHandler);
         $this->send($this->response);
     }
 
@@ -101,7 +111,7 @@ class Server
         $request  = new Request($protocol);
         $request->setMethod($server['REQUEST_METHOD']);
         $request->setHeaders($this->marshalHeaders($server));
-        $request->setUri($this->marshalUri($server));
+        $request->setUrl($this->marshalUri($server, $request));
         return $request;
     }
 
@@ -147,20 +157,20 @@ class Server
         $requestUri = null;
 
         // Check this first so IIS will catch.
-        $httpXRewriteUrl = $server['HTTP_X_REWRITE_URL'];
+        $httpXRewriteUrl = isset($server['HTTP_X_REWRITE_URL']) ? $server['HTTP_X_REWRITE_URL'] : null;
         if ($httpXRewriteUrl !== null) {
             $requestUri = $httpXRewriteUrl;
         }
 
         // Check for IIS 7.0 or later with ISAPI_Rewrite
-        $httpXOriginalUrl = $server['HTTP_X_ORIGINAL_URL'];
+        $httpXOriginalUrl = isset($server['HTTP_X_ORIGINAL_URL']) ? $server['HTTP_X_ORIGINAL_URL'] : null;
         if ($httpXOriginalUrl !== null) {
             $requestUri = $httpXOriginalUrl;
         }
 
         // IIS7 with URL Rewrite: make sure we get the unencoded url
         // (double slash problem).
-        $iisUrlRewritten = $server['IIS_WasUrlRewritten'];
+        $iisUrlRewritten = isset($server['IIS_WasUrlRewritten']) ? $server['IIS_WasUrlRewritten'] : null;
         $unencodedUrl    = isset($server['UNENCODED_URL']) ? $server['UNENCODED_URL'] : '';
         if ('1' == $iisUrlRewritten && ! empty($unencodedUrl)) {
             return $unencodedUrl;
@@ -169,7 +179,7 @@ class Server
         // HTTP proxy requests setup request URI with scheme and host [and port]
         // + the URL path, only use URL path.
         if (!$httpXRewriteUrl) {
-            $requestUri = $server['REQUEST_URI'];
+            $requestUri = isset($server['REQUEST_URI']) ? $server['REQUEST_URI'] : null;
         }
 
         if ($requestUri !== null) {
@@ -177,7 +187,7 @@ class Server
         }
 
         // IIS 5.0, PHP as CGI.
-        $origPathInfo = $server['ORIG_PATH_INFO'];
+        $origPathInfo = isset($server['ORIG_PATH_INFO']) ? $server['ORIG_PATH_INFO'] : null;
         if ($origPathInfo !== null) {
             $queryString = isset($server['QUERY_STRING']) ? $server['QUERY_STRING'] : '';
             if ($queryString !== '') {
@@ -232,18 +242,17 @@ class Server
         $port     = 80;
         $path     = null;
         $query    = null;
-        $fragment = null;
 
         // URI scheme
         if ((! empty($server['HTTPS']) && $server['HTTPS'] !== 'off')
-            || (! empty($this->server['HTTP_X_FORWARDED_PROTO']) && $server['HTTP_X_FORWARDED_PROTO'] == 'https')
+            || (! empty($server['HTTP_X_FORWARDED_PROTO']) && $server['HTTP_X_FORWARDED_PROTO'] == 'https')
         ) {
             $scheme = 'https';
         }
 
         // Set the host
         if ($request->hasHeader('host')) {
-            $host = $this->getHeader('host');
+            $host = $request->getHeader('host');
 
             // works for regname, IPv4 & IPv6
             if (preg_match('|\:(\d+)$|', $host, $matches)) {
@@ -281,18 +290,12 @@ class Server
             $query = ltrim($server['QUERY_STRING'], '?');
         }
 
-        $uri = sprintf('%s://%s', $scheme, $host);
-        if ($port) {
-            $uri .= sprintf(':%d', $port);
-        }
-
-        if ($path) {
-            $uri .= $path;
-            if ($query) {
-                $uri .= sprintf('?%s', $query);
-            }
-        }
-
-        return $uri;
+        return Utils::createUriString(compact(
+            'scheme',
+            'host',
+            'port',
+            'path',
+            'query'
+        ));
     }
 }
