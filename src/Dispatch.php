@@ -55,7 +55,7 @@ class Dispatch
 
         try {
             if ($hasError && $arity === 4) {
-                call_user_func($handler, $err, $reqest, $response, $next);
+                call_user_func($handler, $err, $request, $response, $next);
                 return;
             }
 

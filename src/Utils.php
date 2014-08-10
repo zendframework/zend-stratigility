@@ -74,13 +74,18 @@ abstract class Utils
         }
 
         if ($path) {
+            if ('/' !== $path[0]) {
+                $path = '/' . $path;
+            }
             $uri .= $path;
-            if ($query) {
-                $uri .= sprintf('?%s', $query);
-            }
-            if ($fragment) {
-                $uri .= sprintf('#%s', $fragment);
-            }
+        }
+
+        if ($query) {
+            $uri .= sprintf('?%s', $query);
+        }
+
+        if ($fragment) {
+            $uri .= sprintf('#%s', $fragment);
         }
 
         return $uri;

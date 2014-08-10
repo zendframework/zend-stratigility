@@ -150,7 +150,7 @@ class Next
             'scheme'   => $uri->scheme,
             'host'     => $uri->host,
             'port'     => $uri->port,
-            'path'     => $path ?: '/',
+            'path'     => $path,
             'query'    => $uri->query,
             'fragment' => $uri->fragment,
         ))));
