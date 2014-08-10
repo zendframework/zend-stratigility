@@ -144,7 +144,8 @@ class Next
      */
     private function setUriPath(Request $request, $path)
     {
-        $uri = $request->getUrl();
+        $path = $path ?: '/';
+        $uri  = $request->getUrl();
 
         $request->setUrl(new Http\Uri(Utils::createUriString(array(
             'scheme'   => $uri->scheme,
