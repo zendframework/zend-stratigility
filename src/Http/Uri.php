@@ -139,15 +139,32 @@ class Uri
     /**
      * Is the URI valid?
      *
+     * Not using filter_var + FILTER_VALIDATE_URL because perfectly valid
+     * URIs were being flagged as invalid (e.g., https://local.example.com:3001/foo).
+     *
      * @return bool
      */
     public function isValid()
     {
-        return filter_var(
-            $this->uri,
-            FILTER_VALIDATE_URL,
-            FILTER_FLAG_PATH_REQUIRED
-        );
+        $parts = parse_url($this->uri);
+        if (! isset($parts['scheme']) || empty($parts['scheme'])) {
+            return false;
+        }
+
+        $scheme = strtolower($parts['scheme']);
+        if ($scheme !== 'file'
+            && (! isset($parts['host']) || empty($parts['host']))
+        ) {
+            return false;
+        }
+
+        if (in_array($scheme, ['http', 'https'])
+            && (! isset($parts['path']) || empty($parts['path']))
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

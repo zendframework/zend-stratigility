@@ -72,8 +72,54 @@ class UriTest extends TestCase
     /**
      * @dataProvider uriFragmentsAndRelatedStrings
      */
-    public function testUriCreation($parts, $expected)
+    public function testUriCreationFromArray($parts, $expected)
     {
         $this->assertEquals($expected, Uri::fromArray($parts)->uri);
+    }
+
+    public function testConstructorDoesNotSetPropertiesIfUriIsInvalid()
+    {
+        $uri = new Uri('this is bogus');
+        $this->assertFalse($uri->isValid());
+
+        foreach (['scheme', 'host', 'port', 'path', 'query', 'fragment'] as $part) {
+            $this->assertNull($uri->{$part});
+        }
+    }
+
+    public function testConstructorSetsAllPropertiesWhenValid()
+    {
+        $uri = new Uri('https://local.example.com:3001/foo?bar=baz#quz');
+        $this->assertTrue($uri->isValid());
+        $this->assertEquals('https', $uri->scheme);
+        $this->assertEquals('local.example.com', $uri->host);
+        $this->assertEquals(3001, $uri->port);
+        $this->assertEquals('/foo', $uri->path);
+        $this->assertEquals('bar=baz', $uri->query);
+        $this->assertEquals('quz', $uri->fragment);
+    }
+
+    public function testCanSerializeToString()
+    {
+        $url = 'https://local.example.com:3001/foo?bar=baz#quz';
+        $uri = new Uri($url);
+        $this->assertEquals($url, (string) $uri);
+    }
+
+    public function testSetPathReturnsClone()
+    {
+        $url = 'https://local.example.com:3001/foo?bar=baz#quz';
+        $uri = new Uri($url);
+        $new = $uri->setPath('/bar');
+        $this->assertNotSame($uri, $new);
+    }
+
+    public function testCloneReturnedFromSetPathContainsNewPath()
+    {
+        $url = 'https://local.example.com:3001/foo?bar=baz#quz';
+        $uri = new Uri($url);
+        $new = $uri->setPath('/bar');
+        $this->assertEquals('/bar', $new->path);
+        $this->assertEquals('/foo', $uri->path);
     }
 }
