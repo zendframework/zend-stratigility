@@ -62,7 +62,7 @@ class Middleware
      * @param string|callable|object $path Either a URI path prefix, or a handler
      * @param null|callable|object $handler A handler
      */
-    public function attach($path, $handler = null)
+    public function pipe($path, $handler = null)
     {
         if (! is_string($path)) {
             $handler = $path;
