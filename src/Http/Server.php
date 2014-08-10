@@ -4,7 +4,6 @@ namespace Phly\Conduit\Http;
 use OutOfBoundsException;
 use Phly\Conduit\Middleware;
 use Phly\Conduit\Http\ResponseInterface as ResponseInterface;
-use Phly\Conduit\Utils;
 use Psr\Http\Message\RequestInterface as RequestInterface;
 
 /**

@@ -173,8 +173,8 @@ class Uri
      * Returns a cloned version of the URI instance, with the new path.
      *
      * If the path is not valid, raises an exception.
-     * 
-     * @param  string $path 
+     *
+     * @param  string $path
      * @return Uri
      * @throws InvalidArgumentException.php
      */
