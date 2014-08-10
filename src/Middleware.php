@@ -74,6 +74,11 @@ class Middleware
             $path = substr($path, 0, -1);
         }
 
+        // Prepend slash if missing
+        if (empty($path) || $path[0] !== '/') {
+            $path = '/' . $path;
+        }
+
         // Ensure we have a valid handler
         if (! is_callable($handler)
             && (! is_object($handler) || ! method_exists($handler, 'handle'))
