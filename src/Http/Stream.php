@@ -239,15 +239,10 @@ class Stream implements StreamInterface
      */
     public function getContents($maxLength = -1)
     {
-        if ($this->contents) {
-            return $contents;
-        }
-
         if (! $this->isReadable()) {
             return '';
         }
 
-        $this->contents = stream_get_contents($this->resource, $maxLength);
-        return $this->contents;
+        return stream_get_contents($this->resource, $maxLength);
     }
 }
