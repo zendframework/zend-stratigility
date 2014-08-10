@@ -49,6 +49,58 @@ class Uri
     private $uri;
 
     /**
+     * Create a URI based on the parts provided.
+     *
+     * Parts SHOULD contain the following:
+     *
+     * - scheme (defaults to http)
+     * - host
+     * - port (defaults to null)
+     * - path
+     * - query
+     * - fragment
+     *
+     * All but scheme and host are optional.
+     *
+     * @param array $parts
+     * @return self
+     */
+    public static function fromArray(array $parts)
+    {
+        $scheme   = isset($parts['scheme'])   ? $parts['scheme']   : 'http';
+        $host     = isset($parts['host'])     ? $parts['host']     : '';
+        $port     = isset($parts['port'])     ? $parts['port']     : null;
+        $path     = isset($parts['path'])     ? $parts['path']     : '';
+        $query    = isset($parts['query'])    ? $parts['query']    : '';
+        $fragment = isset($parts['fragment']) ? $parts['fragment'] : '';
+
+        $uri = sprintf('%s://%s', $scheme, $host);
+        if (($host && $port)
+            && (($scheme === 'https' && $port && $port !== 443)
+                || ($scheme === 'http' && $port && $port !== 80))
+        ) {
+            $uri .= sprintf(':%d', $port);
+        }
+
+        if ($path) {
+            if ('/' !== $path[0]) {
+                $path = '/' . $path;
+            }
+            $uri .= $path;
+        }
+
+        if ($query) {
+            $uri .= sprintf('?%s', $query);
+        }
+
+        if ($fragment) {
+            $uri .= sprintf('#%s', $fragment);
+        }
+
+        return new static($uri);
+    }
+
+    /**
      * @param string $uri
      */
     public function __construct($uri)
@@ -96,6 +148,45 @@ class Uri
             FILTER_VALIDATE_URL,
             FILTER_FLAG_PATH_REQUIRED
         );
+    }
+
+    /**
+     * Set a new path in the URI
+     *
+     * Returns a cloned version of the URI instance, with the new path.
+     *
+     * If the path is not valid, raises an exception.
+     * 
+     * @param  string $path 
+     * @return Uri
+     * @throws InvalidArgumentException.php
+     */
+    public function setPath($path)
+    {
+        if (! $this->isValid()) {
+            throw new InvalidArgumentException('Cannot set path on invalid URI');
+        }
+
+        $path = $path ?: '/';
+        if ($path[0] !== '/') {
+            $path = '/' . $path;
+        }
+
+        $new = clone $this;
+        $new->path = $path;
+        $new->uri  = static::fromArray([
+            'scheme'   => $new->scheme,
+            'host'     => $new->host,
+            'port'     => $new->port,
+            'path'     => $path,
+            'query'    => $new->query,
+            'fragment' => $new->fragment,
+        ]);
+
+        if (! $new->isValid()) {
+            throw new InvalidArgumentException('Invalid path provided');
+        }
+        return $new;
     }
 
     /**

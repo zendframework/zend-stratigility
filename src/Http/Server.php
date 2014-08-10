@@ -370,7 +370,7 @@ class Server
             $query = ltrim($server['QUERY_STRING'], '?');
         }
 
-        return Utils::createUriString(compact(
+        return Uri::fromArray(compact(
             'scheme',
             'host',
             'port',

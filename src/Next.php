@@ -79,14 +79,14 @@ class Next
         if ($this->slashAdded) {
             $uri  = $this->request->getUrl();
             $path = substr($uri->path, 1);
-            $this->setUriPath($this->request, $path);
+            $request->setUrl($uri->setPath($path));
             $this->slashAdded = false;
         }
 
         if ($this->removed) {
             $uri  = $this->request->getUrl();
             $path = $this->removed . $uri->path;
-            $this->setUriPath($this->request, $path);
+            $request->setUrl($uri->setPath($path));
             $this->removed = '';
         }
 
@@ -119,40 +119,15 @@ class Next
 
             $uri  = $this->request->getUrl();
             $path = substr($uri->path, strlen($route));
-            $this->setUriPath($this->request, $path);
+            $this->request->setUrl($uri->setPath($path));
 
             if ($path[0] !== '/') {
                 $path = '/' . $path;
-                $this->setUriPath($this->request, $path);
+                $this->request->setUrl($uri->setPath($path));
                 $this->slashAdded = true;
             }
         }
 
         $dispatch($layer, $err, $this->request, $this->response, $this);
-    }
-
-    /**
-     * Set the request uri with a new path
-     *
-     * Since Uri objects are immutable, this takes the previous Http\Uri instance,
-     * and the new path, and creates a new Http\Uri instance with the new path,
-     * setting it into the request object.
-     *
-     * @param Request $request
-     * @param string $path
-     */
-    private function setUriPath(Request $request, $path)
-    {
-        $path = $path ?: '/';
-        $uri  = $request->getUrl();
-
-        $request->setUrl(new Http\Uri(Utils::createUriString(array(
-            'scheme'   => $uri->scheme,
-            'host'     => $uri->host,
-            'port'     => $uri->port,
-            'path'     => $path,
-            'query'    => $uri->query,
-            'fragment' => $uri->fragment,
-        ))));
     }
 }
