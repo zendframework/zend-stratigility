@@ -26,7 +26,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Phly\\Conduit\\": "src/"
+      "Phly\\Conduit\\": "src/",
+      "PhlyTest\\Conduit\\": "test/"
     }
   }
 }
