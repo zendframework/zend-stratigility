@@ -14,7 +14,7 @@ abstract class AbstractMessage implements MessageInterface
     /**
      * @var array
      */
-    protected $headers = array();
+    protected $headers = [];
 
     /**
      * @var string
@@ -128,11 +128,11 @@ abstract class AbstractMessage implements MessageInterface
     public function getHeaderAsArray($header)
     {
         if (! $this->hasHeader($header)) {
-            return array();
+            return [];
         }
 
         $header = $this->headers[strtolower($header)];
-        $header = is_array($header) ? $header : array($header);
+        $header = is_array($header) ? $header : [$header];
         return $header;
     }
 
@@ -168,7 +168,7 @@ abstract class AbstractMessage implements MessageInterface
         }
 
         if (is_string($value)) {
-            $value = array($value);
+            $value = [$value];
         }
 
         $this->headers[strtolower($header)] = $value;
@@ -186,7 +186,7 @@ abstract class AbstractMessage implements MessageInterface
      */
     public function setHeaders(array $headers)
     {
-        $this->headers = array();
+        $this->headers = [];
 
         foreach ($headers as $key => $value) {
             if (! is_string($key)) {
