@@ -100,9 +100,7 @@ class Next
         $route = $layer->path;
 
         // Skip if layer path does not match current url
-        if (strlen($route) > strlen($path)
-            || substr(strtolower($path), 0, strlen($route)) !== strtolower($route)
-        ) {
+        if (substr(strtolower($path), 0, strlen($route)) !== strtolower($route)) {
             return $this($err);
         }
 
@@ -110,6 +108,7 @@ class Next
         $border = (strlen($path) > strlen($route))
             ? $path[strlen($route)]
             : '';
+        $border = ($route === '/') ? '/' : $border;
         if ($border && '/' !== $border && '.' !== $border) {
             return $this($err);
         }
