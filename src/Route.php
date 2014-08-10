@@ -1,6 +1,7 @@
 <?php
 namespace Phly\Conduit;
 
+use InvalidArgumentException;
 use OutOfRangeException;
 
 /**
@@ -27,6 +28,10 @@ class Route
      */
     public function __construct($path, callable $handler)
     {
+        if (! is_string($path)) {
+            throw new InvalidArgumentException('Path must be a string');
+        }
+
         $this->path    = $path;
         $this->handler = $handler;
     }
