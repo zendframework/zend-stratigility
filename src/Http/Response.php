@@ -16,7 +16,7 @@ class Response extends AbstractMessage implements ResponseInterface
 
     /**
      * Map of standard HTTP status code/reason phrases
-     * 
+     *
      * @var array
      */
     private $phrases = array(
@@ -180,10 +180,10 @@ class Response extends AbstractMessage implements ResponseInterface
 
     /**
      * Set the Stream representing the body content.
-     * 
+     *
      * If the response has been marked as complete, performs a no-op.
      *
-     * @param StreamInterface $body 
+     * @param StreamInterface $body
      */
     public function setBody(StreamInterface $body = null)
     {
@@ -196,11 +196,11 @@ class Response extends AbstractMessage implements ResponseInterface
 
     /**
      * Set/overwrite a single named header
-     * 
+     *
      * If the response has been marked as complete, performs a no-op.
      *
-     * @param string $header 
-     * @param string|array $value 
+     * @param string $header
+     * @param string|array $value
      */
     public function setHeader($header, $value)
     {
@@ -215,8 +215,8 @@ class Response extends AbstractMessage implements ResponseInterface
      * Overwrite all existing headers
      *
      * If the response has been marked as complete, performs a no-op.
-     * 
-     * @param array $headers 
+     *
+     * @param array $headers
      */
     public function setHeaders(array $headers)
     {
@@ -229,11 +229,11 @@ class Response extends AbstractMessage implements ResponseInterface
 
     /**
      * Add a single named header
-     * 
+     *
      * If the response has been marked as complete, performs a no-op.
      *
-     * @param string $header 
-     * @param string|array $value 
+     * @param string $header
+     * @param string|array $value
      */
     public function addHeader($header, $value)
     {
@@ -248,8 +248,8 @@ class Response extends AbstractMessage implements ResponseInterface
      * Add multiple headers at once
      *
      * If the response has been marked as complete, performs a no-op.
-     * 
-     * @param array $headers 
+     *
+     * @param array $headers
      */
     public function addHeaders(array $headers)
     {
@@ -262,8 +262,8 @@ class Response extends AbstractMessage implements ResponseInterface
 
     /**
      * Write to the content
-     * 
-     * @param mixed $data 
+     *
+     * @param mixed $data
      */
     public function write($data)
     {
@@ -278,8 +278,8 @@ class Response extends AbstractMessage implements ResponseInterface
      *
      * Any data written after this point will be ignored, as the
      * request is considered complete at this point.
-     * 
-     * @param null|mixed $data 
+     *
+     * @param null|mixed $data
      */
     public function end($data = null)
     {
@@ -295,7 +295,7 @@ class Response extends AbstractMessage implements ResponseInterface
 
     /**
      * Has the response been marked as complete?
-     * 
+     *
      * @return bool
      */
     public function isComplete()

@@ -22,8 +22,8 @@ class Route
     protected $path;
 
     /**
-     * @param string $path 
-     * @param callable $handler 
+     * @param string $path
+     * @param callable $handler
      */
     public function __construct($path, callable $handler)
     {
@@ -32,7 +32,7 @@ class Route
     }
 
     /**
-     * @param mixed $name 
+     * @param mixed $name
      * @return mixed
      * @throws OutOfRangeException for invalid properties
      */

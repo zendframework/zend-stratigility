@@ -11,8 +11,8 @@ abstract class Utils
 {
     /**
      * Get the arity of a handler
-     * 
-     * @param string|callable|object $callable 
+     *
+     * @param string|callable|object $callable
      * @return int
      */
     public static function getArity($callable)
@@ -23,14 +23,14 @@ abstract class Utils
             $r = new ReflectionMethod($callable, '__invoke');
             return $r->getNumberOfRequiredParameters();
         }
-       
+
         if (is_object($callable)
             && method_exists($callable, 'handle')
         ) {
             $r = new ReflectionMethod($callable, 'handle');
             return $r->getNumberOfRequiredParameters();
         }
-        
+
         if (! is_callable($callable)) {
             return 0;
         }
@@ -52,8 +52,8 @@ abstract class Utils
      * - fragment
      *
      * All but scheme and host are optional.
-     * 
-     * @param array $parts 
+     *
+     * @param array $parts
      * @return string
      */
     public static function createUriString(array $parts)

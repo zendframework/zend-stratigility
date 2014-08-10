@@ -51,10 +51,10 @@ class Next
     private $stack;
 
     /**
-     * @param ArrayObject $stack 
-     * @param Request $request 
-     * @param Response $response 
-     * @param callable $done 
+     * @param ArrayObject $stack
+     * @param Request $request
+     * @param Response $response
+     * @param callable $done
      */
     public function __construct(ArrayObject $stack, Request $request, Response $response, callable $done)
     {
@@ -68,8 +68,8 @@ class Next
 
     /**
      * Call the next Route in the stack
-     * 
-     * @param null|mixed $err 
+     *
+     * @param null|mixed $err
      */
     public function __invoke($err = null)
     {
@@ -136,11 +136,11 @@ class Next
      * Set the request uri with a new path
      *
      * Since Uri objects are immutable, this takes the previous Http\Uri instance,
-     * and the new path, and creates a new Http\Uri instance with the new path, 
+     * and the new path, and creates a new Http\Uri instance with the new path,
      * setting it into the request object.
-     * 
-     * @param Request $request 
-     * @param string $path 
+     *
+     * @param Request $request
+     * @param string $path
      */
     private function setUriPath(Request $request, $path)
     {

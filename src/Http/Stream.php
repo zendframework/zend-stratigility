@@ -10,7 +10,7 @@ class Stream implements StreamInterface
 {
     /**
      * Cached stream contents
-     * 
+     *
      * @var string
      */
     private $contents;
@@ -26,7 +26,7 @@ class Stream implements StreamInterface
     private $stream;
 
     /**
-     * @param string|resource $stream 
+     * @param string|resource $stream
      * @param string $mode Mode with which to open stream
      */
     public function __construct($stream, $mode = 'r')

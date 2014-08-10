@@ -33,7 +33,7 @@ class Request extends AbstractMessage implements RequestInterface
 
     /**
      * @param string $protocol
-     * @param string|resource|StreamInterface $stream 
+     * @param string|resource|StreamInterface $stream
      */
     public function __construct($protocol = '1.1', $stream = 'php://input')
     {
@@ -52,8 +52,8 @@ class Request extends AbstractMessage implements RequestInterface
 
     /**
      * Retrieve arbitrary user parameters
-     * 
-     * @param string $name 
+     *
+     * @param string $name
      * @return null|mixed null if $name does not exist
      */
     public function __get($name)
@@ -67,9 +67,9 @@ class Request extends AbstractMessage implements RequestInterface
 
     /**
      * Set arbitrary user properties
-     * 
-     * @param string $name 
-     * @param mixed $value 
+     *
+     * @param string $name
+     * @param mixed $value
      */
     public function __set($name, $value)
     {
@@ -78,8 +78,8 @@ class Request extends AbstractMessage implements RequestInterface
 
     /**
      * Test if a user property exists
-     * 
-     * @param mixed $name 
+     *
+     * @param mixed $name
      * @return bool
      */
     public function __isset($name)
@@ -89,8 +89,8 @@ class Request extends AbstractMessage implements RequestInterface
 
     /**
      * Remove a previously set user property
-     * 
-     * @param string $name 
+     *
+     * @param string $name
      */
     public function __unset($name)
     {

@@ -110,10 +110,10 @@ class Middleware
      * If $out is a callable, it is used as the "final handler" when
      * $next has exhausted the stack; otherwise, a FinalHandler instance
      * is created and passed to $next during initialization.
-     * 
-     * @param Request $request 
-     * @param Response $response 
-     * @param callable $out 
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param callable $out
      * @return void
      */
     public function handle(Request $request, Response $response, callable $out = null)
@@ -127,8 +127,8 @@ class Middleware
 
     /**
      * Ensure the request URI is an Http\Uri instance
-     * 
-     * @param Request $request 
+     *
+     * @param Request $request
      * @return Http\Uri
      */
     private function getUrlFromRequest(Request $request)

@@ -40,7 +40,7 @@ interface ResponseInterface extends BaseResponseInterface
      * Indicate whether or not the response is complete.
      *
      * I.e., if end() has previously been called.
-     * 
+     *
      * @return bool
      */
     public function isComplete();

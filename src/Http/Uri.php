@@ -49,7 +49,7 @@ class Uri
     private $uri;
 
     /**
-     * @param string $uri 
+     * @param string $uri
      */
     public function __construct($uri)
     {
@@ -61,8 +61,8 @@ class Uri
 
     /**
      * Retrieve properties
-     * 
-     * @param string $name 
+     *
+     * @param string $name
      * @return null|string|int
      */
     public function __get($name)
@@ -76,7 +76,7 @@ class Uri
 
     /**
      * Return string representation of URI
-     * 
+     *
      * @return string
      */
     public function __toString()
@@ -86,7 +86,7 @@ class Uri
 
     /**
      * Is the URI valid?
-     * 
+     *
      * @return bool
      */
     public function isValid()
@@ -99,7 +99,7 @@ class Uri
     }
 
     /**
-     * Parse a URI into its parts, and set the properties 
+     * Parse a URI into its parts, and set the properties
      */
     private function parseUri()
     {

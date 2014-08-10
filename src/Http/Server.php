@@ -9,7 +9,7 @@ use Psr\Http\Message\RequestInterface as RequestInterface;
 
 /**
  * "Serve" incoming HTTP requests
- * 
+ *
  * Given middleware, takes an incoming request, dispatches it to the
  * middleware, and then sends a response.
  *
@@ -34,9 +34,9 @@ class Server
     private $response;
 
     /**
-     * @param Middleware $middleware 
-     * @param null|RequestInterface $request 
-     * @param null|ResponseInterface $response 
+     * @param Middleware $middleware
+     * @param null|RequestInterface $request
+     * @param null|ResponseInterface $response
      */
     private function __construct(
         Middleware $middleware,
@@ -57,8 +57,8 @@ class Server
 
     /**
      * Allow retrieving the request, response and middleware as properties
-     * 
-     * @param string $name 
+     *
+     * @param string $name
      * @return mixed
      * @throws OutOfBoundsException for invalid properties
      */
@@ -73,9 +73,9 @@ class Server
     /**
      * Create a Server instance
      *
-     * @param Middleware $middleware 
-     * @param null|RequestInterface $request 
-     * @param null|ResponseInterface $response 
+     * @param Middleware $middleware
+     * @param null|RequestInterface $request
+     * @param null|ResponseInterface $response
      */
     public static function createServer(
         Middleware $middleware,
@@ -94,8 +94,8 @@ class Server
      * Output buffering is enabled prior to invoking the attached
      * middleware; any output buffered will be sent prior to any
      * response body content.
-     * 
-     * @param null|callable $finalHandler 
+     *
+     * @param null|callable $finalHandler
      */
     public function listen(callable $finalHandler = null)
     {
@@ -112,8 +112,8 @@ class Server
      * If any output buffering remains active, it will be flushed.
      *
      * Finally, the response body will be emitted.
-     * 
-     * @param ResponseInterface $response 
+     *
+     * @param ResponseInterface $response
      */
     private function send(ResponseInterface $response)
     {
@@ -133,8 +133,8 @@ class Server
      *
      * Sends the response status/reason, followed by all headers;
      * header names are filtered to be word-cased.
-     * 
-     * @param ResponseInterface $response 
+     *
+     * @param ResponseInterface $response
      */
     private function sendHeaders(ResponseInterface $response)
     {
@@ -164,8 +164,8 @@ class Server
 
     /**
      * Filter a header name to wordcase
-     * 
-     * @param string $header 
+     *
+     * @param string $header
      * @return string
      */
     private function filterHeader($header)
@@ -199,7 +199,7 @@ class Server
      * Marshal the $_SERVER array
      *
      * Pre-processes and returns the $_SERVER superglobal.
-     * 
+     *
      * @return array
      */
     private function marshalServer()
@@ -281,8 +281,8 @@ class Server
 
     /**
      * Marshal headers from $_SERVER
-     * 
-     * @param array $server 
+     *
+     * @param array $server
      * @return array
      */
     private function marshalHeaders(array $server)
@@ -310,9 +310,9 @@ class Server
 
     /**
      * Marshal the URI from the $_SERVER array and headers
-     * 
-     * @param array $server 
-     * @param RequestInterface $request 
+     *
+     * @param array $server
+     * @param RequestInterface $request
      * @return string
      */
     private function marshalUri(array $server, RequestInterface $request)

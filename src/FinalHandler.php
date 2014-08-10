@@ -27,8 +27,8 @@ class FinalHandler
     private $reponse;
 
     /**
-     * @param Request $request 
-     * @param Response $response 
+     * @param Request $request
+     * @param Response $response
      */
     public function __construct(Request $request, Response $response, array $options = array())
     {
@@ -46,7 +46,7 @@ class FinalHandler
      *
      * Otherwise, a 404 status is created.
      *
-     * @param null|mixed $err 
+     * @param null|mixed $err
      */
     public function __invoke($err = null)
     {
@@ -62,8 +62,8 @@ class FinalHandler
      * Handle an error condition
      *
      * Use the $error to create details for the response.
-     * 
-     * @param mixed $error 
+     *
+     * @param mixed $error
      */
     private function handleError($error)
     {
