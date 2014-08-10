@@ -107,19 +107,19 @@ class Uri
 
         $this->scheme   = $parts['scheme'];
         $this->host     = $parts['host'];
-        $this->port     = $parts['port'];
+        $this->port     = isset($parts['port'])     ? $parts['port']     : null;
         $this->path     = $parts['path'];
         $this->query    = isset($parts['query'])    ? $parts['query']    : '';
         $this->fragment = isset($parts['fragment']) ? $parts['fragment'] : '';
 
-        if ($parts['scheme'] === 'http'
-            && $parts['port'] !== null
-            && $parts['port'] !== 80
+        if ($this->scheme === 'http'
+            && $this->port
+            && $this->port !== 80
         ) {
             $this->domain = sprintf('%s:%d', $this->host, $this->port);
-        } elseif ($parts['scheme'] === 'https'
-            && $parts['port'] !== null
-            && $parts['port'] !== 443
+        } elseif ($this->scheme === 'https'
+            && $this->port
+            && $this->port !== 443
         ) {
             $this->domain = sprintf('%s:%d', $this->host, $this->port);
         } else {

@@ -30,7 +30,7 @@ class FinalHandler
      * @param Request $request
      * @param Response $response
      */
-    public function __construct(Request $request, Response $response, array $options = array())
+    public function __construct(Request $request, Response $response, array $options = [])
     {
         $this->request  = $request;
         $this->response = $response;
@@ -80,19 +80,23 @@ class FinalHandler
 
         $escaper = new Escaper();
         $message = $this->response->getReasonPhrase() ?: 'Unknown Error';
-        if (isset($this->options['env'])
-            && $this->options['env'] !== 'production'
+        if (! isset($this->options['env'])
+            || $this->options['env'] !== 'production'
         ) {
             if ($error instanceof Exception) {
                 $message = $error->getTraceAsString();
+            } elseif (is_object($error) && ! method_exists($error, '__toString')) {
+                $message = sprintf('Error of type "%s" occurred', get_class($error));
             } else {
                 $message = (string) $error;
             }
             $message = $escaper->escapeHtml($message);
         }
 
-        if (is_callable($this->options['onerror'])) {
-            $onError = $options['onerror'];
+        if (isset($this->options['onerror'])
+            && is_callable($this->options['onerror'])
+        ) {
+            $onError = $this->options['onerror'];
             $onError($error, $this->request, $this->response);
         }
 
