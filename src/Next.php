@@ -96,16 +96,20 @@ class Next
         }
 
         $layer = $this->stack[$this->index++];
-        $path  = $this->request->getUrl()->path || '/';
+        $path  = $this->request->getUrl()->path ?: '/';
         $route = $layer->path;
 
         // Skip if layer path does not match current url
-        if (substr(strtolower($path), 0, strlen($route)) !== strtolower($route)) {
+        if (strlen($route) > strlen($path)
+            || substr(strtolower($path), 0, strlen($route)) !== strtolower($route)
+        ) {
             return $this($err);
         }
 
         // Skip if match is not at a border ('/', '.', or end)
-        $border = $path[strlen($route)];
+        $border = (strlen($path) > strlen($route))
+            ? $path[strlen($route)]
+            : '';
         if ($border && '/' !== $border && '.' !== $border) {
             return $this($err);
         }
@@ -146,7 +150,7 @@ class Next
             'scheme'   => $uri->scheme,
             'host'     => $uri->host,
             'port'     => $uri->port,
-            'path'     => $path,
+            'path'     => $path ?: '/',
             'query'    => $uri->query,
             'fragment' => $uri->fragment,
         ))));

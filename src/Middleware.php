@@ -69,16 +69,19 @@ class Middleware
             $path    = '/';
         }
 
+        // Strip trailing slash
         if ('/' === substr($path, -1)) {
             $path = substr($path, 0, -1);
         }
 
+        // Ensure we have a valid handler
         if (! is_callable($handler)
             && (! is_object($handler) || ! method_exists($handler, 'handle'))
         ) {
             throw new InvalidArgumentException('Handler must be callable or an object implementing the method "handle"');
         }
 
+        // Munge Object::handle() to a callback
         if (! is_callable($handler)
             && (is_object($handler) && method_exists($handler, 'handle'))
         ) {
