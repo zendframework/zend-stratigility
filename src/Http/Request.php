@@ -11,6 +11,8 @@ use Psr\Http\Message\StreamInterface;
  *
  * Allows arbitrary properties, which allows it to be used to transfer
  * state between middlewares.
+ *
+ * @property string $originalUrl Original URI for the request
  */
 class Request extends AbstractMessage implements RequestInterface
 {
@@ -149,8 +151,12 @@ class Request extends AbstractMessage implements RequestInterface
      */
     public function setUrl($url)
     {
-        if (! $url instanceof Uri) {
+        if (is_string($url)) {
             $url = new Uri($url);
+        }
+
+        if (! $url instanceof Uri) {
+            throw new InvalidArgumentException('Invalid URL provided; must be a string or Uri instance');
         }
 
         if (! $url->isValid()) {

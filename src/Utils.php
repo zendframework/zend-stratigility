@@ -17,18 +17,16 @@ abstract class Utils
      */
     public static function getArity($callable)
     {
-        if (is_object($callable)
-            && method_exists($callable, '__invoke')
-        ) {
-            $r = new ReflectionMethod($callable, '__invoke');
-            return $r->getNumberOfRequiredParameters();
-        }
+        if (is_object($callable)) {
+            foreach (['__invoke', 'handle'] as $method) {
+                if (! method_exists($callable, $method)) {
+                    continue;
+                }
 
-        if (is_object($callable)
-            && method_exists($callable, 'handle')
-        ) {
-            $r = new ReflectionMethod($callable, 'handle');
-            return $r->getNumberOfRequiredParameters();
+                $r = new ReflectionMethod($callable, $method);
+                return $r->getNumberOfRequiredParameters();
+            }
+            return 0;
         }
 
         if (! is_callable($callable)) {

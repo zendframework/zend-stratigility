@@ -9,6 +9,9 @@ use OutOfRangeException;
  *
  * Details the subpath on which the middleware is active, and the
  * handler for the middleware itself.
+ *
+ * @property-read callable $handler Handler for this route
+ * @property-read string $path Path for this route
  */
 class Route
 {

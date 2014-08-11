@@ -24,7 +24,7 @@ class FinalHandler
     /**
      * @var Response
      */
-    private $reponse;
+    private $response;
 
     /**
      * @param Request $request
@@ -110,7 +110,12 @@ class FinalHandler
     {
         $this->response->setStatusCode(404);
 
-        $url     = $this->request->originalUrl ?: $this->request->getUrl();
+        if ($this->request instanceof Http\Request && $this->request->originalUrl) {
+            $url = $this->request->originalUrl;
+        } else {
+            $this->request->getUrl();
+        }
+
         $escaper = new Escaper();
         $message = sprintf(
             "Cannot %s %s\n",

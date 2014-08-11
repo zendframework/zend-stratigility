@@ -319,7 +319,6 @@ class Server
         $scheme   = 'http';
         $host     = null;
         $port     = 80;
-        $path     = null;
         $query    = null;
 
         // URI scheme

@@ -123,8 +123,7 @@ class Middleware
      */
     public function handle(Request $request, Response $response, callable $out = null)
     {
-        $stack = $this->stack;
-        $url   = $request->setUrl($this->getUrlFromRequest($request));
+        $request->setUrl($this->getUrlFromRequest($request));
         $done  = is_callable($out) ? $out : new FinalHandler($request, $response);
         $next  = new Next($this->stack, $request, $response, $done);
         $next();
@@ -139,7 +138,7 @@ class Middleware
     protected function getUrlFromRequest(Request $request)
     {
         $url = $request->getUrl();
-        if (! $url instanceof Http\Uri) {
+        if (is_string($url)) {
             $url = new Http\Uri($url);
         }
         return $url;

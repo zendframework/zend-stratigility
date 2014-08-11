@@ -200,7 +200,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * If the response has been marked as complete, performs a no-op.
      *
      * @param string $header
-     * @param string|array $value
+     * @param string|string[] $value  Header value(s)
      */
     public function setHeader($header, $value)
     {
@@ -233,7 +233,7 @@ class Response extends AbstractMessage implements ResponseInterface
      * If the response has been marked as complete, performs a no-op.
      *
      * @param string $header
-     * @param string|array $value
+     * @param string $value
      */
     public function addHeader($header, $value)
     {

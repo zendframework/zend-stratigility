@@ -73,6 +73,7 @@ class Next
      */
     public function __invoke($err = null)
     {
+        $request  = $this->request;
         $dispatch = $this->dispatch;
         $done     = $this->done;
 
