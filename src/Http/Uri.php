@@ -3,6 +3,13 @@ namespace Phly\Conduit\Http;
 
 /**
  * URI implementation
+ *
+ * @property-read string $scheme
+ * @property-read string $host
+ * @property-read int $port
+ * @property-read string $path
+ * @property-read string $query
+ * @property-read string $fragment
  */
 class Uri
 {
@@ -65,7 +72,7 @@ class Uri
      * @param array $parts
      * @return self
      */
-    public static function fromArray(array $parts)
+    public static function fromArray(array $parts, $asString = false)
     {
         $scheme   = isset($parts['scheme'])   ? $parts['scheme']   : 'http';
         $host     = isset($parts['host'])     ? $parts['host']     : '';
@@ -95,6 +102,10 @@ class Uri
 
         if ($fragment) {
             $uri .= sprintf('#%s', $fragment);
+        }
+
+        if ($asString) {
+            return $uri;
         }
 
         return new static($uri);
@@ -198,7 +209,7 @@ class Uri
             'path'     => $path,
             'query'    => $new->query,
             'fragment' => $new->fragment,
-        ]);
+        ], $asString = true);
 
         if (! $new->isValid()) {
             throw new InvalidArgumentException('Invalid path provided');

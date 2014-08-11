@@ -312,14 +312,13 @@ class Server
      *
      * @param array $server
      * @param RequestInterface $request
-     * @return string
+     * @return Uri
      */
     private function marshalUri(array $server, RequestInterface $request)
     {
         $scheme   = 'http';
         $host     = null;
         $port     = 80;
-        $path     = null;
         $query    = null;
 
         // URI scheme

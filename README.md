@@ -2,6 +2,9 @@ Conduit
 =======
 
 [![Build Status](https://travis-ci.org/phly/conduit.svg?branch=master)](https://travis-ci.org/phly/conduit)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/phly/conduit/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/phly/conduit/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/phly/conduit/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/phly/conduit/?branch=master)
+[![Scrutinizer Build Status](https://scrutinizer-ci.com/g/phly/conduit/badges/build.png?b=master)](https://scrutinizer-ci.com/g/phly/conduit/build-status/master)
 
 Conduit is a port of [Sencha Connect](https://github.com/senchalabs/connect) to PHP. It allows you to build applications out of _middleware_.
 

@@ -1,6 +1,7 @@
 <?php
 namespace Phly\Conduit\Http;
 
+use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 
 /**
@@ -28,6 +29,7 @@ class Stream implements StreamInterface
     /**
      * @param string|resource $stream
      * @param string $mode Mode with which to open stream
+     * @throws InvalidArgumentException
      */
     public function __construct($stream, $mode = 'r')
     {
@@ -35,8 +37,12 @@ class Stream implements StreamInterface
 
         if (is_resource($stream)) {
             $this->resource = $stream;
-        } else {
+        } elseif (is_string($stream)) {
             $this->resource = fopen($stream, $mode);
+        } else {
+            throw new InvalidArgumentException(
+                'Invalid stream provided; must be a string stream identifier or resource'
+            );
         }
     }
 
@@ -78,7 +84,7 @@ class Stream implements StreamInterface
      *
      * After the stream has been detached, the stream is in an unusable state.
      *
-     * @return void
+     * @return resource
      */
     public function detach()
     {
