@@ -113,7 +113,7 @@ class FinalHandler
         if ($this->request instanceof Http\Request && $this->request->originalUrl) {
             $url = $this->request->originalUrl;
         } else {
-            $this->request->getUrl();
+            $url = $this->request->getUrl();
         }
 
         $escaper = new Escaper();
