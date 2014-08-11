@@ -14,5 +14,4 @@ script:
   - ./vendor/bin/php-cs-fixer -v fix . --dry-run --config-file ./.php_cs
   
 notifications:
-  irc: "irc.freenode.org#apigility-dev"
-  email: false
+  email: true
