@@ -30,7 +30,7 @@ class Middleware
     /**
      * @var ArrayObject
      */
-    private $stack;
+    protected $stack;
 
     /**
      * Constructor
@@ -136,7 +136,7 @@ class Middleware
      * @param Request $request
      * @return Http\Uri
      */
-    private function getUrlFromRequest(Request $request)
+    protected function getUrlFromRequest(Request $request)
     {
         $url = $request->getUrl();
         if (! $url instanceof Http\Uri) {
