@@ -312,7 +312,7 @@ class Server
      *
      * @param array $server
      * @param RequestInterface $request
-     * @return string
+     * @return Uri
      */
     private function marshalUri(array $server, RequestInterface $request)
     {

@@ -143,7 +143,7 @@ class Request extends AbstractMessage implements RequestInterface
     /**
      * Sets the request URL.
      *
-     * @param string|Url $url Request URL.
+     * @param string|Uri $url Request URL.
      *
      * @throws InvalidArgumentException If the URL is invalid.
      */
