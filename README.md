@@ -1,6 +1,8 @@
 Conduit
 =======
 
+[![Build Status](https://travis-ci.org/phly/conduit.svg?branch=master)](https://travis-ci.org/phly/conduit)
+
 Conduit is a port of [Sencha Connect](https://github.com/senchalabs/connect) to PHP. It allows you to build applications out of _middleware_.
 
 Installation and Requirements
