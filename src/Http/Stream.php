@@ -10,13 +10,6 @@ use Psr\Http\Message\StreamInterface;
 class Stream implements StreamInterface
 {
     /**
-     * Cached stream contents
-     *
-     * @var string
-     */
-    private $contents;
-
-    /**
      * @var resource
      */
     private $resource;
