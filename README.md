@@ -1,7 +1,7 @@
 Conduit
 =======
 
-Conduit is a port of [Sencha Connect](https://github.com/sencha/connect) to PHP. It allows you to build applications out of _middleware_.
+Conduit is a port of [Sencha Connect](https://github.com/senchalabs/connect) to PHP. It allows you to build applications out of _middleware_.
 
 Installation and Requirements
 -----------------------------
