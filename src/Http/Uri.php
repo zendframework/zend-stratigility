@@ -72,7 +72,7 @@ class Uri
      * @param array $parts
      * @return self
      */
-    public static function fromArray(array $parts, $asString = false)
+    public static function fromArray(array $parts)
     {
         $scheme   = isset($parts['scheme'])   ? $parts['scheme']   : 'http';
         $host     = isset($parts['host'])     ? $parts['host']     : '';
@@ -81,34 +81,14 @@ class Uri
         $query    = isset($parts['query'])    ? $parts['query']    : '';
         $fragment = isset($parts['fragment']) ? $parts['fragment'] : '';
 
-        $uri = sprintf('%s://%s', $scheme, $host);
-        if (($host && $port)
-            && (($scheme === 'https' && $port && $port !== 443)
-                || ($scheme === 'http' && $port && $port !== 80))
-        ) {
-            $uri .= sprintf(':%d', $port);
-        }
-
-        if ($path) {
-            if ('/' !== $path[0]) {
-                $path = '/' . $path;
-            }
-            $uri .= $path;
-        }
-
-        if ($query) {
-            $uri .= sprintf('?%s', $query);
-        }
-
-        if ($fragment) {
-            $uri .= sprintf('#%s', $fragment);
-        }
-
-        if ($asString) {
-            return $uri;
-        }
-
-        return new static($uri);
+        return new static(self::createUriString(
+            $scheme,
+            $host,
+            $port,
+            $path,
+            $query,
+            $fragment
+        ));
     }
 
     /**
@@ -192,20 +172,17 @@ class Uri
         }
 
         $path = $path ?: '/';
-        if ($path[0] !== '/') {
-            $path = '/' . $path;
-        }
 
-        $new = clone $this;
-        $new->path = $path;
-        $new->uri  = static::fromArray([
-            'scheme'   => $new->scheme,
-            'host'     => $new->host,
-            'port'     => $new->port,
-            'path'     => $path,
-            'query'    => $new->query,
-            'fragment' => $new->fragment,
-        ], $asString = true);
+        $new       = clone $this;
+        $new->path = self::normalizePath($path);
+        $new->uri  = self::createUriString(
+            $new->scheme,
+            $new->host,
+            $new->port,
+            $path,
+            $new->query,
+            $new->fragment
+        );
 
         if (! $new->isValid()) {
             throw new InvalidArgumentException('Invalid path provided');
@@ -240,5 +217,77 @@ class Uri
         } else {
             $this->domain = $this->host;
         }
+    }
+
+    /**
+     * Create a URI string from its various parts
+     * 
+     * @param string $scheme 
+     * @param string $host 
+     * @param int $port 
+     * @param string $path 
+     * @param string $query 
+     * @param string $fragment 
+     * @return string
+     */
+    private static function createUriString($scheme, $host, $port, $path, $query, $fragment)
+    {
+        $uri = sprintf('%s://%s', $scheme, $host);
+        if (self::isNonStandardPort($scheme, $host, $port)) {
+            $uri .= sprintf(':%d', $port);
+        }
+
+        if ($path) {
+            $uri .= self::normalizePath($path);
+        }
+
+        if ($query) {
+            $uri .= sprintf('?%s', $query);
+        }
+
+        if ($fragment) {
+            $uri .= sprintf('#%s', $fragment);
+        }
+
+        return $uri;
+    }
+
+    /**
+     * Is a given port non-standard for the current scheme?
+     * 
+     * @param string $scheme 
+     * @param string $host 
+     * @param int $port 
+     * @return bool
+     */
+    private static function isNonStandardPort($scheme, $host, $port)
+    {
+        if (! $host || ! $port) {
+            return false;
+        }
+
+        if ($scheme === 'https' && $port !== 443) {
+            return true;
+        }
+
+        if ($scheme === 'http' && $port !== 80) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Normalize a path by prefixing it with a slash if necessary
+     * 
+     * @param string $path 
+     * @return string
+     */
+    private static function normalizePath($path)
+    {
+        if ('/' === $path[0]) {
+            return $path;
+        }
+        return '/' . $path;
     }
 }
