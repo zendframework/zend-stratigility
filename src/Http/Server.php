@@ -233,7 +233,15 @@ class Server
      */
     private function detectRequestUri(array $server)
     {
-        $requestUri = null;
+        // IIS7 with URL Rewrite: make sure we get the unencoded url
+        // (double slash problem).
+        $iisUrlRewritten = isset($server['IIS_WasUrlRewritten']) ? $server['IIS_WasUrlRewritten'] : null;
+        $unencodedUrl    = isset($server['UNENCODED_URL']) ? $server['UNENCODED_URL'] : '';
+        if ('1' == $iisUrlRewritten && ! empty($unencodedUrl)) {
+            return $unencodedUrl;
+        }
+
+        $requestUri = isset($server['REQUEST_URI']) ? $server['REQUEST_URI'] : null;
 
         // Check this first so IIS will catch.
         $httpXRewriteUrl = isset($server['HTTP_X_REWRITE_URL']) ? $server['HTTP_X_REWRITE_URL'] : null;
@@ -247,35 +255,21 @@ class Server
             $requestUri = $httpXOriginalUrl;
         }
 
-        // IIS7 with URL Rewrite: make sure we get the unencoded url
-        // (double slash problem).
-        $iisUrlRewritten = isset($server['IIS_WasUrlRewritten']) ? $server['IIS_WasUrlRewritten'] : null;
-        $unencodedUrl    = isset($server['UNENCODED_URL']) ? $server['UNENCODED_URL'] : '';
-        if ('1' == $iisUrlRewritten && ! empty($unencodedUrl)) {
-            return $unencodedUrl;
-        }
-
-        // HTTP proxy requests setup request URI with scheme and host [and port]
-        // + the URL path, only use URL path.
-        if (!$httpXRewriteUrl) {
-            $requestUri = isset($server['REQUEST_URI']) ? $server['REQUEST_URI'] : null;
-        }
-
         if ($requestUri !== null) {
             return preg_replace('#^[^/:]+://[^/]+#', '', $requestUri);
         }
 
-        // IIS 5.0, PHP as CGI.
         $origPathInfo = isset($server['ORIG_PATH_INFO']) ? $server['ORIG_PATH_INFO'] : null;
-        if ($origPathInfo !== null) {
-            $queryString = isset($server['QUERY_STRING']) ? $server['QUERY_STRING'] : '';
-            if ($queryString !== '') {
-                $origPathInfo .= '?' . $queryString;
-            }
-            return $origPathInfo;
+        if ($origPathInfo === null) {
+            return '/';
         }
 
-        return '/';
+        // IIS 5.0, PHP as CGI.
+        $queryString = isset($server['QUERY_STRING']) ? $server['QUERY_STRING'] : '';
+        if ($queryString !== '') {
+            $origPathInfo .= '?' . $queryString;
+        }
+        return $origPathInfo;
     }
 
     /**
