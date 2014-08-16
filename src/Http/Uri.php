@@ -211,13 +211,13 @@ class Uri
 
     /**
      * Create a URI string from its various parts
-     * 
-     * @param string $scheme 
-     * @param string $host 
-     * @param int $port 
-     * @param string $path 
-     * @param string $query 
-     * @param string $fragment 
+     *
+     * @param string $scheme
+     * @param string $host
+     * @param int $port
+     * @param string $path
+     * @param string $query
+     * @param string $fragment
      * @return string
      */
     private static function createUriString($scheme, $host, $port, $path, $query, $fragment)
@@ -244,10 +244,10 @@ class Uri
 
     /**
      * Is a given port non-standard for the current scheme?
-     * 
-     * @param string $scheme 
-     * @param string $host 
-     * @param int $port 
+     *
+     * @param string $scheme
+     * @param string $host
+     * @param int $port
      * @return bool
      */
     private static function isNonStandardPort($scheme, $host, $port)
@@ -269,8 +269,8 @@ class Uri
 
     /**
      * Normalize a path by prefixing it with a slash if necessary
-     * 
-     * @param string $path 
+     *
+     * @param string $path
      * @return string
      */
     private static function normalizePath($path)
