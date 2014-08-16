@@ -204,19 +204,9 @@ class Uri
         $this->query    = isset($parts['query'])    ? $parts['query']    : '';
         $this->fragment = isset($parts['fragment']) ? $parts['fragment'] : '';
 
-        if ($this->scheme === 'http'
-            && $this->port
-            && $this->port !== 80
-        ) {
-            $this->domain = sprintf('%s:%d', $this->host, $this->port);
-        } elseif ($this->scheme === 'https'
-            && $this->port
-            && $this->port !== 443
-        ) {
-            $this->domain = sprintf('%s:%d', $this->host, $this->port);
-        } else {
-            $this->domain = $this->host;
-        }
+        $this->domain = self::isNonStandardPort($this->scheme, $this->host, $this->port)
+            ? sprintf('%s:%d', $this->host, $this->port)
+            : $this->host;
     }
 
     /**
