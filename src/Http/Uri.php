@@ -158,20 +158,16 @@ class Uri
     public function isValid()
     {
         $parts = parse_url($this->uri);
-        if (! isset($parts['scheme']) || empty($parts['scheme'])) {
+        if (empty($parts['scheme'])) {
             return false;
         }
 
         $scheme = strtolower($parts['scheme']);
-        if ($scheme !== 'file'
-            && (! isset($parts['host']) || empty($parts['host']))
-        ) {
+        if ($scheme !== 'file' && empty($parts['host'])) {
             return false;
         }
 
-        if (in_array($scheme, ['http', 'https'])
-            && (! isset($parts['path']) || empty($parts['path']))
-        ) {
+        if (in_array($scheme, ['http', 'https']) && empty($parts['path'])) {
             return false;
         }
 
