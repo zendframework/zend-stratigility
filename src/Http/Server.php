@@ -41,22 +41,19 @@ class Server
     private $response;
 
     /**
+     * Constructor
+     *
+     * Given middleware, a request, and a response, we can create a server.
+     *
      * @param Middleware $middleware
-     * @param null|RequestInterface $request
-     * @param null|ResponseInterface $response
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
      */
-    private function __construct(
+    public function __construct(
         Middleware $middleware,
-        RequestInterface $request = null,
-        ResponseInterface $response = null
+        RequestInterface $request,
+        ResponseInterface $response
     ) {
-        if (null === $request) {
-            $request = RequestFactory::fromServer($_SERVER);
-        }
-        if (null === $response) {
-            $response = new Response();
-        }
-
         $this->middleware = $middleware;
         $this->request    = $request;
         $this->response   = $response;
@@ -80,15 +77,43 @@ class Server
     /**
      * Create a Server instance
      *
+     * Creates a server instance from the middleware and server array
+     * passed; typically this will be the $_SERVER superglobal.
+     *
      * @param Middleware $middleware
-     * @param null|RequestInterface $request
-     * @param null|ResponseInterface $response
+     * @param array $server
+     * @return self
      */
     public static function createServer(
         Middleware $middleware,
-        RequestInterface $request = null,
+        array $server
+    ) {
+        $request  = RequestFactory::fromServer($server);
+        $response = new Response();
+        return new self($middleware, $request, $response);
+    }
+
+    /**
+     * Create a Server instance from an existing request object
+     *
+     * Provided middleware, an existing request object, and optionally an
+     * existing response object, create and return the Server instance.
+     *
+     * If no Response object is provided, one will be created.
+     *
+     * @param Middleware $middleware
+     * @param RequestInterface $request
+     * @param null|ResponseInterface $response
+     * @return self
+     */
+    public static function createServerFromRequest(
+        Middleware $middleware,
+        RequestInterface $request,
         ResponseInterface $response = null
     ) {
+        if (! $response) {
+            $response = new Response();
+        }
         return new self($middleware, $request, $response);
     }
 
