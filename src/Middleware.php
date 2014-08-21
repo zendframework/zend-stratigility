@@ -132,8 +132,8 @@ class Middleware
      * Normalize a path used when defining a pipe
      *
      * Strips trailing slashes, and prepends a slash.
-     * 
-     * @param string $path 
+     *
+     * @param string $path
      * @return string
      */
     private function normalizePipePath($path)
@@ -155,8 +155,8 @@ class Middleware
      * Create a callback for an object implementing a handle method
      *
      * Uses the method arity to create a closure wrapping the call.
-     * 
-     * @param object $handler 
+     *
+     * @param object $handler
      * @return callable
      */
     private function createPipeHandlerCallback($handler)
