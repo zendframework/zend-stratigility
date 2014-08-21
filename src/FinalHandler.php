@@ -71,27 +71,14 @@ class FinalHandler
             $this->getStatusCode($error, $this->response)
         );
 
-        $escaper = new Escaper();
         $message = $this->response->getReasonPhrase() ?: 'Unknown Error';
         if (! isset($this->options['env'])
             || $this->options['env'] !== 'production'
         ) {
-            if ($error instanceof Exception) {
-                $message = $error->getTraceAsString();
-            } elseif (is_object($error) && ! method_exists($error, '__toString')) {
-                $message = sprintf('Error of type "%s" occurred', get_class($error));
-            } else {
-                $message = (string) $error;
-            }
-            $message = $escaper->escapeHtml($message);
+            $message = $this->createDevelopmentErrorMessage($error);
         }
 
-        if (isset($this->options['onerror'])
-            && is_callable($this->options['onerror'])
-        ) {
-            $onError = $this->options['onerror'];
-            $onError($error, $this->request, $this->response);
-        }
+        $this->triggerError($error, $this->request, $this->response);
 
         $this->response->end($message);
     }
@@ -131,7 +118,7 @@ class FinalHandler
      * @param Http\ResponseInterface $response 
      * @return int
      */
-    private function getStatusCode($error, Http\ResponseInterface $response)
+    private function getStatusCode($error, Response $response)
     {
         if ($error instanceof Exception
             && ($error->getCode() >= 400 && $error->getCode() < 600)
@@ -144,5 +131,38 @@ class FinalHandler
             $status = 500;
         }
         return $status;
+    }
+
+    private function createDevelopmentErrorMessage($error)
+    {
+        if ($error instanceof Exception) {
+            $message = $error->getTraceAsString();
+        } elseif (is_object($error) && ! method_exists($error, '__toString')) {
+            $message = sprintf('Error of type "%s" occurred', get_class($error));
+        } else {
+            $message = (string) $error;
+        }
+
+        $escaper = new Escaper();
+        return $escaper->escapeHtml($message);
+    }
+
+    /**
+     * Trigger the error listener, if present
+     * 
+     * @param mixed $error 
+     * @param Request $request 
+     * @param Response $response 
+     */
+    private function triggerError($error, Request $request, Response $response)
+    {
+        if (! isset($this->options['onerror'])
+            || ! is_callable($this->options['onerror'])
+        ) {
+            return;
+        }
+
+        $onError = $this->options['onerror'];
+        $onError($error, $request, $response);
     }
 }
