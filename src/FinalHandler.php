@@ -113,9 +113,9 @@ class FinalHandler
      *
      * Otherwise, retrieves the code from the response; if not present, or
      * less than 400 or greater than 599, returns 500; otherwise, returns it.
-     * 
-     * @param mixed $error 
-     * @param Http\ResponseInterface $response 
+     *
+     * @param mixed $error
+     * @param Http\ResponseInterface $response
      * @return int
      */
     private function getStatusCode($error, Response $response)
@@ -149,10 +149,10 @@ class FinalHandler
 
     /**
      * Trigger the error listener, if present
-     * 
-     * @param mixed $error 
-     * @param Request $request 
-     * @param Response $response 
+     *
+     * @param mixed $error
+     * @param Request $request
+     * @param Response $response
      */
     private function triggerError($error, Request $request, Response $response)
     {
