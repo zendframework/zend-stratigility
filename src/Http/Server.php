@@ -20,7 +20,7 @@ class Server
     /**
      * Level of output buffering at start of listen cycle; never flush more
      * than this.
-     * 
+     *
      * @var int
      */
     private $bufferLevel;

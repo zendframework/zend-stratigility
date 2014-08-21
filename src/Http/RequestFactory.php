@@ -7,7 +7,7 @@ use Psr\Http\Message\RequestInterface as RequestInterface;
  * Class for marshaling a request object from the current PHP environment.
  *
  * Largely lifted from ZF2's Zend\Http\PhpEnvironment\Request class.
- * 
+ *
  * @copyright Copyright (c) 2005-2014 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   http://framework.zend.com/license/new-bsd New BSD License
  */
@@ -15,9 +15,9 @@ abstract class RequestFactory
 {
     /**
      * Populates a request object from the given $_SERVER array
-     * 
-     * @param array $server 
-     * @param RequestInterface $request 
+     *
+     * @param array $server
+     * @param RequestInterface $request
      * @return RequestInterface The $request provided, only populated with values
      */
     public static function fromServer(array $server, RequestInterface $request = null)
@@ -37,10 +37,10 @@ abstract class RequestFactory
 
     /**
      * Access a value in an array, returning a default value if not found
-     * 
-     * @param string $key 
-     * @param array $values 
-     * @param mixed $default 
+     *
+     * @param string $key
+     * @param array $values
+     * @param mixed $default
      * @return mixed
      */
     public static function get($key, array $values, $default = null)
@@ -71,8 +71,8 @@ abstract class RequestFactory
         if (isset($apacheRequestHeaders['Authorization'])) {
             $server['HTTP_AUTHORIZATION'] = $apacheRequestHeaders['Authorization'];
             return $server;
-        } 
-        
+        }
+
         if (isset($apacheRequestHeaders['authorization'])) {
             $server['HTTP_AUTHORIZATION'] = $apacheRequestHeaders['authorization'];
             return $server;
@@ -103,7 +103,7 @@ abstract class RequestFactory
                 $headers[$name] = $value;
                 continue;
             }
-            
+
             if ($value && strpos($key, 'CONTENT_') === 0) {
                 $name = substr($key, 8); // Content-
                 $name = 'Content-' . (($name == 'MD5') ? $name : ucfirst(strtolower($name)));
@@ -160,9 +160,9 @@ abstract class RequestFactory
 
     /**
      * Marshal the host and port from HTTP headers and/or the PHP environment
-     * 
-     * @param array $server 
-     * @param RequestInterface $request 
+     *
+     * @param array $server
+     * @param RequestInterface $request
      * @return array Array with two members, host and port, at indices 0 and 1, respectively
      */
     public static function marshalHostAndPort(array $server, RequestInterface $request)
@@ -258,8 +258,8 @@ abstract class RequestFactory
 
     /**
      * Strip the query string from a path
-     * 
-     * @param mixed $path 
+     *
+     * @param mixed $path
      * @return void
      */
     public static function stripQueryString($path)
