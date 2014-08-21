@@ -18,6 +18,14 @@ use Psr\Http\Message\RequestInterface as RequestInterface;
 class Server
 {
     /**
+     * Level of output buffering at start of listen cycle; never flush more
+     * than this.
+     * 
+     * @var int
+     */
+    private $bufferLevel;
+
+    /**
      * @var Middleware
      */
     private $middleware;
@@ -99,6 +107,7 @@ class Server
     public function listen(callable $finalHandler = null)
     {
         ob_start();
+        $this->bufferLevel = ob_get_level();
         $this->middleware->handle($this->request, $this->response, $finalHandler);
         $this->send($this->response);
     }
@@ -120,11 +129,14 @@ class Server
             $this->sendHeaders($response);
         }
 
-        while (ob_get_level() > 0) {
+        while (ob_get_level() >= $this->bufferLevel) {
             ob_end_flush();
         }
 
-        echo $response->getBody();
+        $this->bufferLevel = null;
+
+        // Using printf so that we can override the function when testing
+        printf($response->getBody());
     }
 
     /**
