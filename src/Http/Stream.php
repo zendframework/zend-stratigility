@@ -69,7 +69,9 @@ class Stream implements StreamInterface
         if (! $this->resource) {
             return;
         }
-        fclose($this->resource);
+
+        $resource = $this->detach();
+        fclose($resource);
     }
 
     /**
@@ -82,7 +84,7 @@ class Stream implements StreamInterface
     public function detach()
     {
         $resource = $this->resource;
-        unset($this->resource);
+        $this->resource = null;
         return $resource;
     }
 
@@ -131,6 +133,10 @@ class Stream implements StreamInterface
      */
     public function isSeekable()
     {
+        if (! $this->resource) {
+            return false;
+        }
+
         $meta = stream_get_meta_data($this->resource);
         return $meta['seekable'];
     }
@@ -155,7 +161,8 @@ class Stream implements StreamInterface
             return false;
         }
 
-        return fseek($this->resource, $offset, $whence);
+        $result = fseek($this->resource, $offset, $whence);
+        return (0 === $result);
     }
 
     /**
