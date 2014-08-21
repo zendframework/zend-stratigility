@@ -67,38 +67,18 @@ class FinalHandler
      */
     private function handleError($error)
     {
-        $status = $this->response->getStatusCode();
-        if (! $status || $status < 400) {
-            $this->response->setStatusCode(500);
-        }
+        $this->response->setStatusCode(
+            $this->getStatusCode($error, $this->response)
+        );
 
-        if ($error instanceof Exception
-            && ($error->getCode() >= 400 && $error->getCode() < 600)
-        ) {
-            $this->response->setStatusCode($error->getCode());
-        }
-
-        $escaper = new Escaper();
         $message = $this->response->getReasonPhrase() ?: 'Unknown Error';
         if (! isset($this->options['env'])
             || $this->options['env'] !== 'production'
         ) {
-            if ($error instanceof Exception) {
-                $message = $error->getTraceAsString();
-            } elseif (is_object($error) && ! method_exists($error, '__toString')) {
-                $message = sprintf('Error of type "%s" occurred', get_class($error));
-            } else {
-                $message = (string) $error;
-            }
-            $message = $escaper->escapeHtml($message);
+            $message = $this->createDevelopmentErrorMessage($error);
         }
 
-        if (isset($this->options['onerror'])
-            && is_callable($this->options['onerror'])
-        ) {
-            $onError = $this->options['onerror'];
-            $onError($error, $this->request, $this->response);
-        }
+        $this->triggerError($error, $this->request, $this->response);
 
         $this->response->end($message);
     }
@@ -123,5 +103,66 @@ class FinalHandler
             $escaper->escapeHtml((string) $url)
         );
         $this->response->end($message);
+    }
+
+    /**
+     * Determine status code
+     *
+     * If the error is an exception with a code between 400 and 599, returns
+     * the exception code.
+     *
+     * Otherwise, retrieves the code from the response; if not present, or
+     * less than 400 or greater than 599, returns 500; otherwise, returns it.
+     *
+     * @param mixed $error
+     * @param Http\ResponseInterface $response
+     * @return int
+     */
+    private function getStatusCode($error, Response $response)
+    {
+        if ($error instanceof Exception
+            && ($error->getCode() >= 400 && $error->getCode() < 600)
+        ) {
+            return $error->getCode();
+        }
+
+        $status = $response->getStatusCode();
+        if (! $status || $status < 400 || $status >= 600) {
+            $status = 500;
+        }
+        return $status;
+    }
+
+    private function createDevelopmentErrorMessage($error)
+    {
+        if ($error instanceof Exception) {
+            $message = $error->getTraceAsString();
+        } elseif (is_object($error) && ! method_exists($error, '__toString')) {
+            $message = sprintf('Error of type "%s" occurred', get_class($error));
+        } else {
+            $message = (string) $error;
+        }
+
+        $escaper = new Escaper();
+        return $escaper->escapeHtml($message);
+    }
+
+    /**
+     * Trigger the error listener, if present
+     *
+     * @param mixed $error
+     * @param Request $request
+     * @param Response $response
+     */
+    private function triggerError($error, Request $request, Response $response)
+    {
+        if (! isset($this->options['onerror'])
+            || ! is_callable($this->options['onerror'])
+        ) {
+            return;
+        }
+
+        $onError = $this->options['onerror'];
+        $onError($error, $request, $response);
     }
 }
