@@ -104,4 +104,72 @@ class AbstractMessageTest extends TestCase
         $this->message->removeHeader('x-foo');
         $this->assertFalse($this->message->hasHeader('X-Foo'));
     }
+
+    public function invalidGeneralHeaderValues()
+    {
+        return [
+            'null'   => [null],
+            'true'   => [true],
+            'false'  => [false],
+            'int'    => [1],
+            'float'  => [1.1],
+            'array'  => [[ 'foo' => 'bar' ]],
+            'object' => [(object) [ 'foo' => 'bar' ]],
+        ];
+    }
+
+    /**
+     * @dataProvider invalidGeneralHeaderValues
+     */
+    public function testSetHeaderRaisesExceptionForInvalidNestedHeaderValue($value)
+    {
+        $this->setExpectedException('InvalidArgumentException', 'Invalid header value');
+        $this->message->setHeader('X-Foo', [ $value ]);
+    }
+
+    public function invalidHeaderValues()
+    {
+        return [
+            'null'   => [null],
+            'true'   => [true],
+            'false'  => [false],
+            'int'    => [1],
+            'float'  => [1.1],
+            'object' => [(object) [ 'foo' => 'bar' ]],
+        ];
+    }
+
+    /**
+     * @dataProvider invalidHeaderValues
+     */
+    public function testSetHeaderRaisesExceptionForInvalidValueType($value)
+    {
+        $this->setExpectedException('InvalidArgumentException', 'Invalid header value');
+        $this->message->setHeader('X-Foo', $value);
+    }
+
+    public function testSetHeadersRaisesExceptionForNonStringKeys()
+    {
+        $this->setExpectedException('InvalidArgumentException', 'not a string');
+        $this->message->setHeaders([
+            'application/json',
+            'text/plain',
+        ]);
+    }
+
+    /**
+     * @dataProvider invalidGeneralHeaderValues
+     */
+    public function testAddHeaderRaisesExceptionForNonStringValue($value)
+    {
+        $this->setExpectedException('InvalidArgumentException', 'must be a string');
+        $this->message->addHeader('X-Foo', $value);
+    }
+
+    public function testRemoveHeaderDoesNothingIfHeaderDoesNotExist()
+    {
+        $this->assertFalse($this->message->hasHeader('X-Foo'));
+        $this->message->removeHeader('X-Foo');
+        $this->assertFalse($this->message->hasHeader('X-Foo'));
+    }
 }
