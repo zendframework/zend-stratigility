@@ -69,15 +69,7 @@ class Middleware
             $path    = '/';
         }
 
-        // Strip trailing slash
-        if ('/' === substr($path, -1)) {
-            $path = substr($path, 0, -1);
-        }
-
-        // Prepend slash if missing
-        if (empty($path) || $path[0] !== '/') {
-            $path = '/' . $path;
-        }
+        $path = $this->normalizePipePath($path);
 
         // Ensure we have a valid handler
         if (! is_callable($handler)
@@ -90,15 +82,7 @@ class Middleware
         if (! is_callable($handler)
             && (is_object($handler) && method_exists($handler, 'handle'))
         ) {
-            if (Utils::getArity($handler) < 4) {
-                $handler = function ($request, $response, $next) use ($handler) {
-                    $handler->handle($request, $response, $next);
-                };
-            } else {
-                $handler = function ($err, $request, $response, $next) use ($handler) {
-                    $handler->handle($err, $request, $response, $next);
-                };
-            }
+            $handler = $this->createPipeHandlerCallback($handler);
         }
 
         // @todo Trigger event here with route details?
@@ -142,5 +126,51 @@ class Middleware
             $url = new Http\Uri($url);
         }
         return $url;
+    }
+
+    /**
+     * Normalize a path used when defining a pipe
+     *
+     * Strips trailing slashes, and prepends a slash.
+     *
+     * @param string $path
+     * @return string
+     */
+    private function normalizePipePath($path)
+    {
+        // Strip trailing slash
+        if ('/' === substr($path, -1)) {
+            $path = substr($path, 0, -1);
+        }
+
+        // Prepend slash if missing
+        if (empty($path) || $path[0] !== '/') {
+            $path = '/' . $path;
+        }
+
+        return $path;
+    }
+
+    /**
+     * Create a callback for an object implementing a handle method
+     *
+     * Uses the method arity to create a closure wrapping the call.
+     *
+     * @param object $handler
+     * @return callable
+     */
+    private function createPipeHandlerCallback($handler)
+    {
+        if (Utils::getArity($handler) < 4) {
+            // Regular handler
+            return function ($request, $response, $next) use ($handler) {
+                $handler->handle($request, $response, $next);
+            };
+        }
+
+        // Error handler
+        return function ($err, $request, $response, $next) use ($handler) {
+            $handler->handle($err, $request, $response, $next);
+        };
     }
 }
