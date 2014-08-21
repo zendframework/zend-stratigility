@@ -2,6 +2,7 @@
 namespace PhlyTest\Conduit\Http;
 
 use Phly\Conduit\Http\Response;
+use Phly\Conduit\Http\Stream;
 use PHPUnit_Framework_TestCase as TestCase;
 
 class ResponseTest extends TestCase
@@ -92,5 +93,69 @@ class ResponseTest extends TestCase
         $this->assertNotContains('MOAR!', (string) $this->response->getBody());
         $this->assertContains('First', (string) $this->response->getBody());
         $this->assertContains('DONE', (string) $this->response->getBody());
+    }
+
+    public function testConstructorRaisesExceptionForInvalidStream()
+    {
+        $this->setExpectedException('InvalidArgumentException');
+        new Response([ 'TOTALLY INVALID' ]);
+    }
+
+    public function testSetBodyReturnsEarlyIfComplete()
+    {
+        $this->response->end('foo');
+
+        $body = new Stream('php://memory', 'r+');
+        $this->response->setBody($body);
+
+        $this->assertEquals('foo', (string) $this->response->getBody());
+    }
+
+    public function testSetHeadersDelegatesToParent()
+    {
+        $this->response->setHeaders([
+            'Content-Type' => 'application/json',
+        ]);
+        $this->assertTrue($this->response->hasHeader('Content-Type'));
+    }
+
+    public function testSetHeadersDoesNothingIfComplete()
+    {
+        $this->response->end('foo');
+        $this->response->setHeaders([
+            'Content-Type' => 'application/json',
+        ]);
+        $this->assertFalse($this->response->hasHeader('Content-Type'));
+    }
+
+    public function testAddHeaderDoesNothingIfComplete()
+    {
+        $this->response->end('foo');
+        $this->response->addHeader('Content-Type', 'application/json');
+        $this->assertFalse($this->response->hasHeader('Content-Type'));
+    }
+
+    public function testAddHeadersDelegatesToParent()
+    {
+        $this->response->addHeaders([
+            'Content-Type' => 'application/json',
+        ]);
+        $this->assertTrue($this->response->hasHeader('Content-Type'));
+    }
+
+    public function testAddHeadersDoesNothingIfComplete()
+    {
+        $this->response->end('foo');
+        $this->response->addHeaders([
+            'Content-Type' => 'application/json',
+        ]);
+        $this->assertFalse($this->response->hasHeader('Content-Type'));
+    }
+
+    public function testCallingEndMultipleTimesDoesNothingAfterFirstCall()
+    {
+        $this->response->end('foo');
+        $this->response->end('bar');
+        $this->assertEquals('foo', (string) $this->response->getBody());
     }
 }

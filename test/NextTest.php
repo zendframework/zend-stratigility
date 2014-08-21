@@ -114,4 +114,31 @@ class NextTest extends TestCase
         $next();
         $this->assertEquals('/bar', $triggered);
     }
+
+    public function testSlashAndPathGetResetBeforeExecutingNextMiddleware()
+    {
+        $route1 = new Route('/foo/bar', function ($req, $res, $next) {
+            $next();
+        });
+        $route2 = new Route('/foo/baz', function ($req, $res, $next) {
+            $next();
+        });
+        $route3 = new Route('/foo', function ($req, $res, $next) {
+            $res->end('done');
+        });
+
+        $this->stack->append($route1);
+        $this->stack->append($route2);
+        $this->stack->append($route3);
+
+        $phpunit = $this;
+        $done = function ($err) use ($phpunit) {
+            $phpunit->fail('Should not hit final handler');
+        };
+
+        $this->request->setUrl('http://example.com/foo');
+        $next = new Next($this->stack, $this->request, $this->response, $done);
+        $next();
+        $this->assertEquals('done', (string) $this->response->getBody());
+    }
 }

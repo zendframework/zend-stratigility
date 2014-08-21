@@ -26,4 +26,26 @@ class UtilsTest extends TestCase
     {
         $this->assertEquals($expected, Utils::getArity($callable));
     }
+
+    public function nonCallables()
+    {
+        return [
+            'null'                => [null],
+            'false'               => [false],
+            'true'                => [true],
+            'int'                 => [1],
+            'float'               => [1.1],
+            'string'              => ['not a callable'],
+            'array'               => [['not a callable']],
+            'non-callable-object' => [(object) ['foo' => 'bar']],
+        ];
+    }
+
+    /**
+     * @dataProvider nonCallables
+     */
+    public function testReturnsZeroForNonCallableArguments($test)
+    {
+        $this->assertSame(0, Utils::getArity($test));
+    }
 }

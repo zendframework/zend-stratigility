@@ -2,9 +2,11 @@
 namespace PhlyTest\Conduit;
 
 use Phly\Conduit\Middleware;
+use Phly\Conduit\Utils;
 use Phly\Conduit\Http\Request;
 use Phly\Conduit\Http\Response;
 use PHPUnit_Framework_TestCase as TestCase;
+use ReflectionProperty;
 
 class MiddlewareTest extends TestCase
 {
@@ -114,5 +116,34 @@ class MiddlewareTest extends TestCase
         $this->request->setUrl('http://local.example.com/foo');
         $this->middleware->handle($this->request, $this->response, $out);
         $this->assertTrue($triggered);
+    }
+
+    public function testPipeWillCreateClosureForObjectImplementingHandle()
+    {
+        $handler = new TestAsset\NormalHandler();
+        $this->middleware->pipe($handler);
+        $r = new ReflectionProperty($this->middleware, 'stack');
+        $r->setAccessible(true);
+        $stack = $r->getValue($this->middleware);
+        $route = $stack[$stack->count() - 1];
+        $this->assertInstanceOf('Phly\Conduit\Route', $route);
+        $handler = $route->handler;
+        $this->assertInstanceOf('Closure', $handler);
+        $this->assertEquals(3, Utils::getArity($handler));
+    }
+
+    public function testPipeWillCreateErrorClosureForObjectImplementingHandle()
+    {
+        $this->markTestIncomplete();
+        $handler = new TestAsset\ErrorHandler();
+        $this->middleware->pipe($handler);
+        $r = new ReflectionProperty($this->middleware, 'stack');
+        $r->setAccessible(true);
+        $stack = $r->getValue($this->middleware);
+        $route = $stack[$stack->count() - 1];
+        $this->assertInstanceOf('Phly\Conduit\Route', $route);
+        $handler = $route->handler;
+        $this->assertInstanceOf('Closure', $handler);
+        $this->assertEquals(4, Utils::getArity($handler));
     }
 }

@@ -86,7 +86,7 @@ class Middleware
         }
 
         // @todo Trigger event here with route details?
-        $this->stack[] = new Route($path, $handler);
+        $this->stack->append(new Route($path, $handler));
         return $this;
     }
 
