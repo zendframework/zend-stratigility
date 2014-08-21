@@ -144,9 +144,10 @@ class RequestFactoryTest extends TestCase
         $request = new Request('1.1');
         $request->addHeader('Host', 'example.com');
 
-        list($host, $port) = RequestFactory::marshalHostAndPort([], $request);
-        $this->assertEquals('example.com', $host);
-        $this->assertNull($port);
+        $accumulator = (object) ['host' => '', 'port' => null];
+        RequestFactory::marshalHostAndPort($accumulator, [], $request);
+        $this->assertEquals('example.com', $accumulator->host);
+        $this->assertNull($accumulator->port);
     }
 
     public function testMarshalHostAndPortWillDetectPortInHostHeaderWhenPresent()
@@ -154,17 +155,19 @@ class RequestFactoryTest extends TestCase
         $request = new Request('1.1');
         $request->addHeader('Host', 'example.com:8000');
 
-        list($host, $port) = RequestFactory::marshalHostAndPort([], $request);
-        $this->assertEquals('example.com', $host);
-        $this->assertEquals(8000, $port);
+        $accumulator = (object) ['host' => '', 'port' => null];
+        RequestFactory::marshalHostAndPort($accumulator, [], $request);
+        $this->assertEquals('example.com', $accumulator->host);
+        $this->assertEquals(8000, $accumulator->port);
     }
 
     public function testMarshalHostAndPortReturnsEmptyValuesIfNoHostHeaderAndNoServerName()
     {
         $request = new Request('1.1');
-        list($host, $port) = RequestFactory::marshalHostAndPort([], $request);
-        $this->assertEquals('', $host);
-        $this->assertNull($port);
+        $accumulator = (object) ['host' => '', 'port' => null];
+        RequestFactory::marshalHostAndPort($accumulator, [], $request);
+        $this->assertEquals('', $accumulator->host);
+        $this->assertNull($accumulator->port);
     }
 
     public function testMarshalHostAndPortReturnsServerNameForHostWhenPresent()
@@ -173,9 +176,10 @@ class RequestFactoryTest extends TestCase
         $server  = [
             'SERVER_NAME' => 'example.com',
         ];
-        list($host, $port) = RequestFactory::marshalHostAndPort($server, $request);
-        $this->assertEquals('example.com', $host);
-        $this->assertNull($port);
+        $accumulator = (object) ['host' => '', 'port' => null];
+        RequestFactory::marshalHostAndPort($accumulator, $server, $request);
+        $this->assertEquals('example.com', $accumulator->host);
+        $this->assertNull($accumulator->port);
     }
 
     public function testMarshalHostAndPortReturnsServerPortForPortWhenPresentWithServerName()
@@ -185,9 +189,10 @@ class RequestFactoryTest extends TestCase
             'SERVER_NAME' => 'example.com',
             'SERVER_PORT' => 8000,
         ];
-        list($host, $port) = RequestFactory::marshalHostAndPort($server, $request);
-        $this->assertEquals('example.com', $host);
-        $this->assertEquals(8000, $port);
+        $accumulator = (object) ['host' => '', 'port' => null];
+        RequestFactory::marshalHostAndPort($accumulator, $server, $request);
+        $this->assertEquals('example.com', $accumulator->host);
+        $this->assertEquals(8000, $accumulator->port);
     }
 
     public function testMarshalHostAndPortReturnsServerNameForHostIfServerAddrPresentButHostIsNotIpv6Address()
@@ -197,8 +202,9 @@ class RequestFactoryTest extends TestCase
             'SERVER_ADDR' => '127.0.0.1',
             'SERVER_NAME' => 'example.com',
         ];
-        list($host, $port) = RequestFactory::marshalHostAndPort($server, $request);
-        $this->assertEquals('example.com', $host);
+        $accumulator = (object) ['host' => '', 'port' => null];
+        RequestFactory::marshalHostAndPort($accumulator, $server, $request);
+        $this->assertEquals('example.com', $accumulator->host);
     }
 
     public function testMarshalHostAndPortReturnsServerAddrForHostIfPresentAndHostIsIpv6Address()
@@ -209,9 +215,10 @@ class RequestFactoryTest extends TestCase
             'SERVER_NAME' => '[FE80::0202:B3FF:FE1E:8329]',
             'SERVER_PORT' => 8000,
         ];
-        list($host, $port) = RequestFactory::marshalHostAndPort($server, $request);
-        $this->assertEquals('[FE80::0202:B3FF:FE1E:8329]', $host);
-        $this->assertEquals(8000, $port);
+        $accumulator = (object) ['host' => '', 'port' => null];
+        RequestFactory::marshalHostAndPort($accumulator, $server, $request);
+        $this->assertEquals('[FE80::0202:B3FF:FE1E:8329]', $accumulator->host);
+        $this->assertEquals(8000, $accumulator->port);
     }
 
     public function testMarshalHostAndPortWillDetectPortInIpv6StyleHost()
@@ -221,9 +228,10 @@ class RequestFactoryTest extends TestCase
             'SERVER_ADDR' => 'FE80::0202:B3FF:FE1E:8329',
             'SERVER_NAME' => '[FE80::0202:B3FF:FE1E:8329:80]',
         ];
-        list($host, $port) = RequestFactory::marshalHostAndPort($server, $request);
-        $this->assertEquals('[FE80::0202:B3FF:FE1E:8329]', $host);
-        $this->assertEquals(80, $port);
+        $accumulator = (object) ['host' => '', 'port' => null];
+        RequestFactory::marshalHostAndPort($accumulator, $server, $request);
+        $this->assertEquals('[FE80::0202:B3FF:FE1E:8329]', $accumulator->host);
+        $this->assertEquals(80, $accumulator->port);
     }
 
     public function testMarshalUriDetectsHttpsSchemeFromServerValue()

@@ -2,6 +2,7 @@
 namespace Phly\Conduit\Http;
 
 use Psr\Http\Message\RequestInterface as RequestInterface;
+use stdClass;
 
 /**
  * Class for marshaling a request object from the current PHP environment.
@@ -124,12 +125,8 @@ abstract class RequestFactory
      */
     public static function marshalUri(array $server, RequestInterface $request)
     {
-        $scheme = 'http';
-        $host   = null;
-        $port   = null;
-        $query  = null;
-
         // URI scheme
+        $scheme = 'http';
         $https = self::get('HTTPS', $server);
         if (($https && 'off' !== $https)
             || $request->getHeader('x-forwarded-proto') == 'https'
@@ -138,13 +135,17 @@ abstract class RequestFactory
         }
 
         // Set the host
-        list($host, $port) = self::marshalHostAndPort($server, $request);
+        $accumulator = (object) ['host' => '', 'port' => null];
+        self::marshalHostAndPort($accumulator, $server, $request);
+        $host = $accumulator->host;
+        $port = $accumulator->port;
 
         // URI path
         $path = self::marshalRequestUri($server);
         $path = self::stripQueryString($path);
 
         // URI query
+        $query = null;
         if (isset($server['QUERY_STRING'])) {
             $query = ltrim($server['QUERY_STRING'], '?');
         }
@@ -165,46 +166,28 @@ abstract class RequestFactory
      * @param RequestInterface $request
      * @return array Array with two members, host and port, at indices 0 and 1, respectively
      */
-    public static function marshalHostAndPort(array $server, RequestInterface $request)
+    public static function marshalHostAndPort(stdClass $accumulator, array $server, RequestInterface $request)
     {
-        $host = '';
-        $port = null;
         if ($request->hasHeader('host')) {
-            $host = $request->getHeader('host');
-
-            // works for regname, IPv4 & IPv6
-            if (preg_match('|\:(\d+)$|', $host, $matches)) {
-                $host = substr($host, 0, -1 * (strlen($matches[1]) + 1));
-                $port = (int) $matches[1];
-            }
-
-            return array($host, $port);
+            return self::marshalHostAndPortFromHeader($accumulator, $request);
         }
 
         if (! isset($server['SERVER_NAME'])) {
-            return array($host, $port);
+            return;
         }
 
-        $host = $server['SERVER_NAME'];
+        $accumulator->host = $server['SERVER_NAME'];
         if (isset($server['SERVER_PORT'])) {
-            $port = (int) $server['SERVER_PORT'];
+            $accumulator->port = (int) $server['SERVER_PORT'];
         }
 
-        // Check for missinterpreted IPv6-Address
-        // Reported at least for Safari on Windows
-        if (! isset($server['SERVER_ADDR']) || ! preg_match('/^\[[0-9a-fA-F\:]+\]$/', $host)) {
-            return array($host, $port);
+        if (! isset($server['SERVER_ADDR']) || ! preg_match('/^\[[0-9a-fA-F\:]+\]$/', $accumulator->host)) {
+            return;
         }
 
-        $host = '[' . $server['SERVER_ADDR'] . ']';
-        $port = $port ?: 80;
-        if ($port . ']' == substr($host, strrpos($host, ':')+1)) {
-            // The last digit of the IPv6-Address has been taken as port
-            // Unset the port so the default port can be used
-            $port = null;
-        }
-
-        return array($host, $port);
+        // Misinterpreted IPv6-Address
+        // Reported for Safari on Windows
+        self::marshalIpv6HostAndPort($accumulator, $server);
     }
 
     /**
@@ -268,5 +251,41 @@ abstract class RequestFactory
             return substr($path, 0, $qpos);
         }
         return $path;
+    }
+
+    /**
+     * Marshal the host and port from the request header
+     * 
+     * @param stdClass $accumulator 
+     * @param RequestInterface $request 
+     * @return void
+     */
+    private static function marshalHostAndPortFromHeader(stdClass $accumulator, RequestInterface $request)
+    {
+        $accumulator->host = $request->getHeader('host');
+        $accumulator->port = null;
+
+        // works for regname, IPv4 & IPv6
+        if (preg_match('|\:(\d+)$|', $accumulator->host, $matches)) {
+            $accumulator->host = substr($accumulator->host, 0, -1 * (strlen($matches[1]) + 1));
+            $accumulator->port = (int) $matches[1];
+        }
+    }
+
+    /**
+     * Marshal host/port from misinterpreted IPv6 address
+     * 
+     * @param stdClass $accumulator 
+     * @param array $server 
+     */
+    private static function marshalIpv6HostAndPort(stdClass $accumulator, array $server)
+    {
+        $accumulator->host = '[' . $server['SERVER_ADDR'] . ']';
+        $accumulator->port = $accumulator->port ?: 80;
+        if ($accumulator->port . ']' == substr($accumulator->host, strrpos($accumulator->host, ':')+1)) {
+            // The last digit of the IPv6-Address has been taken as port
+            // Unset the port so the default port can be used
+            $accumulator->port = null;
+        }
     }
 }
