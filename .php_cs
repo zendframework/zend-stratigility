@@ -9,6 +9,8 @@ $finder = Symfony\CS\Finder\DefaultFinder::create()
         switch (true) {
             case (strrpos($path, '/test/Bootstrap.php')):
                 return false;
+            case (strrpos($path, '/test/Http/TestAsset/Functions.php')):
+                return false;
             case (strrpos($path, '/vendor/')):
                 return false;
             default:
