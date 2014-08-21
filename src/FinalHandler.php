@@ -67,16 +67,9 @@ class FinalHandler
      */
     private function handleError($error)
     {
-        $status = $this->response->getStatusCode();
-        if (! $status || $status < 400) {
-            $this->response->setStatusCode(500);
-        }
-
-        if ($error instanceof Exception
-            && ($error->getCode() >= 400 && $error->getCode() < 600)
-        ) {
-            $this->response->setStatusCode($error->getCode());
-        }
+        $this->response->setStatusCode(
+            $this->getStatusCode($error, $this->response)
+        );
 
         $escaper = new Escaper();
         $message = $this->response->getReasonPhrase() ?: 'Unknown Error';
@@ -123,5 +116,33 @@ class FinalHandler
             $escaper->escapeHtml((string) $url)
         );
         $this->response->end($message);
+    }
+
+    /**
+     * Determine status code
+     *
+     * If the error is an exception with a code between 400 and 599, returns
+     * the exception code.
+     *
+     * Otherwise, retrieves the code from the response; if not present, or
+     * less than 400 or greater than 599, returns 500; otherwise, returns it.
+     * 
+     * @param mixed $error 
+     * @param Http\ResponseInterface $response 
+     * @return int
+     */
+    private function getStatusCode($error, Http\ResponseInterface $response)
+    {
+        if ($error instanceof Exception
+            && ($error->getCode() >= 400 && $error->getCode() < 600)
+        ) {
+            return $error->getCode();
+        }
+
+        $status = $response->getStatusCode();
+        if (! $status || $status < 400 || $status >= 600) {
+            $status = 500;
+        }
+        return $status;
     }
 }
