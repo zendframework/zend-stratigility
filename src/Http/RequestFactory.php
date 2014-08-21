@@ -255,9 +255,9 @@ abstract class RequestFactory
 
     /**
      * Marshal the host and port from the request header
-     * 
-     * @param stdClass $accumulator 
-     * @param RequestInterface $request 
+     *
+     * @param stdClass $accumulator
+     * @param RequestInterface $request
      * @return void
      */
     private static function marshalHostAndPortFromHeader(stdClass $accumulator, RequestInterface $request)
@@ -274,9 +274,9 @@ abstract class RequestFactory
 
     /**
      * Marshal host/port from misinterpreted IPv6 address
-     * 
-     * @param stdClass $accumulator 
-     * @param array $server 
+     *
+     * @param stdClass $accumulator
+     * @param array $server
      */
     private static function marshalIpv6HostAndPort(stdClass $accumulator, array $server)
     {
