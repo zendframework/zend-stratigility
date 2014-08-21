@@ -77,19 +77,8 @@ class Next
         $dispatch = $this->dispatch;
         $done     = $this->done;
 
-        if ($this->slashAdded) {
-            $uri  = $this->request->getUrl();
-            $path = substr($uri->path, 1);
-            $request->setUrl($uri->setPath($path));
-            $this->slashAdded = false;
-        }
-
-        if ($this->removed) {
-            $uri  = $this->request->getUrl();
-            $path = $this->removed . $uri->path;
-            $request->setUrl($uri->setPath($path));
-            $this->removed = '';
-        }
+        $this->resetSlash($request);
+        $this->resetPath($request);
 
         // No middleware remains; done
         if (! isset($this->stack[$this->index])) {
@@ -106,29 +95,86 @@ class Next
         }
 
         // Skip if match is not at a border ('/', '.', or end)
-        $border = (strlen($path) > strlen($route))
-            ? $path[strlen($route)]
-            : '';
-        $border = ($route === '/') ? '/' : $border;
+        $border = $this->getBorder($path, $route);
         if ($border && '/' !== $border && '.' !== $border) {
             return $this($err);
         }
 
         // Trim off the part of the url that matches the layer route
         if (strlen($route) !== 0 && $route !== '/') {
-            $this->removed = $route;
-
-            $uri  = $this->request->getUrl();
-            $path = substr($uri->path, strlen($route));
-            $this->request->setUrl($uri->setPath($path));
-
-            if ($path[0] !== '/') {
-                $path = '/' . $path;
-                $this->request->setUrl($uri->setPath($path));
-                $this->slashAdded = true;
-            }
+            $this->stripRouteFromPath($route);
         }
 
         $dispatch($layer, $err, $this->request, $this->response, $this);
+    }
+
+    /**
+     * Reinstate any stripped slashes
+     *
+     * @param Request $request
+     */
+    private function resetSlash(Request $request)
+    {
+        if (! $this->slashAdded) {
+            return;
+        }
+
+        $uri  = $this->request->getUrl();
+        $path = substr($uri->path, 1);
+        $request->setUrl($uri->setPath($path));
+        $this->slashAdded = false;
+    }
+
+    /**
+     * Reset the path, if a segment was previously stripped
+     *
+     * @param Request $request
+     */
+    private function resetPath(Request $request)
+    {
+        if (! $this->removed) {
+            return;
+        }
+
+        $uri  = $this->request->getUrl();
+        $path = $this->removed . $uri->path;
+        $request->setUrl($uri->setPath($path));
+        $this->removed = '';
+    }
+
+    /**
+     * Determine the border between the request path and current route
+     *
+     * @param string $path
+     * @param string $route
+     * @return string
+     */
+    private function getBorder($path, $route)
+    {
+        $border = (strlen($path) > strlen($route))
+            ? $path[strlen($route)]
+            : '';
+        $border = ($route === '/') ? '/' : $border;
+        return $border;
+    }
+
+    /**
+     * Strip the route from the request path
+     *
+     * @param string $route
+     */
+    private function stripRouteFromPath($route)
+    {
+        $this->removed = $route;
+
+        $uri  = $this->request->getUrl();
+        $path = substr($uri->path, strlen($route));
+        $this->request->setUrl($uri->setPath($path));
+
+        if ($path[0] !== '/') {
+            $path = '/' . $path;
+            $this->request->setUrl($uri->setPath($path));
+            $this->slashAdded = true;
+        }
     }
 }
