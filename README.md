@@ -43,7 +43,7 @@ use Phly\Conduit\Http\Server;
 require __DIR__ . '/../vendor/autoload.php';
 
 $app    = new Middleware();
-$server = Server::createServer($app);
+$server = Server::createServer($app, $_SERVER);
 $server->listen();
 ```
 
@@ -63,7 +63,7 @@ use Phly\Conduit\Http\Server;
 require __DIR__ . '/../vendor/autoload.php';
 
 $app    = new Middleware();
-$server = Server::createServer($app);
+$server = Server::createServer($app, $_SERVER);
 
 // Landing page
 $app->pipe('/', function ($req, $res, $next) {
@@ -263,6 +263,18 @@ $originalUrl = $request->originalUrl;
 
 I recommend you store values in properties named after your middleware; use arrays or objects in cases where multiple values may be possible.
 
+#### RequestFactory
+
+This static class can be used to marshal a `Request` instance from the PHP environment. The primary entry point is `Phly\Conduit\Http\RequestFactory::fromServer(array $server, RequestInterface $request = null)`. This method allows you to either marshal a new request instance, or to populate an existing instance (for example, if you are using another `Psr\Http\Message\RequestInterface`-compatible implementation). Examples of usage are:
+
+```php
+$request = RequestFactory::fromServer($_SERVER); // returns new Request instance
+
+// or
+
+$request = RequestFactory::fromServer($_SERVER, $request); // returns same request, but populated
+```
+
 #### Response Message
 
 `Phly\Conduit\Http\Response` implements `Phly\Conduit\Http\ResponseInterface`, which extends `Psr\Http\Message\ResponseInterface`, and includes the following methods:
@@ -340,21 +352,30 @@ In most cases, you will not interact with the Stream object directly.
 
 #### Server
 
-`Phly\Conduit\Http\Server` represents a server capable of executing middleware. It has two methods:
+`Phly\Conduit\Http\Server` represents a server capable of executing middleware. It has four methods:
 
 ```php
 class Server
 {
+    public function __construct(
+        Phly\Conduit\Middleware $middleware,
+        Psr\Http\Message\RequestInterface $request,
+        Phly\Conduit\Http\ResponseInterface $response
+    );
     public static function createServer(
         Phly\Conduit\Middleware $middleware,
-        Psr\Http\Message\RequestInterface $request = null,
+        array $server // usually $_SERVER
+    );
+    public static function createServerFromRequest(
+        Phly\Conduit\Middleware $middleware,
+        Psr\Http\Message\RequestInterface $request,
         Phly\Conduit\Http\ResponseInterface $response = null
     );
     public function listen(callable $finalHandler = null);
 }
 ```
 
-`createServer()` is used to create an instance of the `Server`. If no request or response objects are provided, defaults are used; in particular, the `Server` contains logic for marshaling request information from the current PHP request environment, including headers, the request URI, the request method, and the request body. If you wish to use your own implementations, pass them to the method when creating your server.
+You can create an instance of the `Server` using any of the constructor, `createServer()`, or `createServerFromRequest()` methods. If you wish to use the default request and response implementations, `createServer($middleware, $_SERVER)` is the recommended option, as this method will also marshal the `Request` object based on the PHP request environment.  If you wish to use your own implementations, pass them to the constructor or `createServerFromRequest()` method (the latter will create a default `Response` instance if you omit it).
 
 `listen()` executes the middleware. If no `$finalHandler` is provided, an instance of `Phly\Conduit\FinalHandler` is created and used; this callable will be executed if the middleware exhausts its internal stack.
 

@@ -26,9 +26,9 @@ class ServerTest extends TestCase
         Output::$body    = null;
     }
 
-    public function testCreateServerReturnsServerInstanceWithProvidedObjects()
+    public function testCreateServerFromRequestReturnsServerInstanceWithProvidedObjects()
     {
-        $server = Server::createServer(
+        $server = Server::createServerFromRequest(
             $this->middleware,
             $this->request,
             $this->response
@@ -39,9 +39,21 @@ class ServerTest extends TestCase
         $this->assertSame($this->response, $server->response);
     }
 
+    public function testCreateServerFromRequestWillCreateResponseIfNotProvided()
+    {
+        $server = Server::createServerFromRequest(
+            $this->middleware,
+            $this->request
+        );
+        $this->assertInstanceOf('Phly\Conduit\Http\Server', $server);
+        $this->assertSame($this->middleware, $server->middleware);
+        $this->assertSame($this->request, $server->request);
+        $this->assertInstanceOf('Phly\Conduit\Http\Response', $server->response);
+    }
+
     public function testCannotAccessArbitraryProperties()
     {
-        $server = Server::createServer(
+        $server = new Server(
             $this->middleware,
             $this->request,
             $this->response
@@ -53,14 +65,14 @@ class ServerTest extends TestCase
 
     public function testCreateServerWillCreateDefaultInstancesForRequestAndResponse()
     {
-        $_SERVER = array_merge($_SERVER, [
+        $server = [
             'HTTP_HOST' => 'example.com',
             'HTTP_ACCEPT' => 'application/json',
             'REQUEST_METHOD' => 'POST',
             'REQUEST_URI' => '/foo/bar',
             'QUERY_STRING' => 'bar=baz',
-        ]);
-        $server = Server::createServer($this->middleware);
+        ];
+        $server = Server::createServer($this->middleware, $server);
         $this->assertInstanceOf('Phly\Conduit\Http\Server', $server);
         $this->assertSame($this->middleware, $server->middleware);
 
@@ -75,23 +87,47 @@ class ServerTest extends TestCase
 
     public function testListenInvokesMiddlewareAndSendsResponse()
     {
-        $_SERVER = array_merge($_SERVER, [
+        $server = [
             'HTTP_HOST' => 'example.com',
             'HTTP_ACCEPT' => 'application/json',
             'REQUEST_METHOD' => 'POST',
             'REQUEST_URI' => '/foo/bar',
             'QUERY_STRING' => 'bar=baz',
-        ]);
+        ];
 
         $middleware = new Middleware();
         $middleware->pipe(function ($req, $res) {
             $res->addHeader('Content-Type', 'text/plain');
             $res->end('FOOBAR');
         });
-        $server = Server::createServer($middleware);
+        $server = Server::createServer($middleware, $server);
         $server->listen();
 
         $this->assertContains('HTTP/1.1 200 OK', Output::$headers);
+        $this->assertContains('Content-Type: text/plain', Output::$headers);
+        $this->assertEquals('FOOBAR', Output::$body);
+    }
+
+    public function testListenEmitsStatusHeaderWithoutReasonPhraseIfNoReasonPhrase()
+    {
+        $server = [
+            'HTTP_HOST' => 'example.com',
+            'HTTP_ACCEPT' => 'application/json',
+            'REQUEST_METHOD' => 'POST',
+            'REQUEST_URI' => '/foo/bar',
+            'QUERY_STRING' => 'bar=baz',
+        ];
+
+        $middleware = new Middleware();
+        $middleware->pipe(function ($req, $res) {
+            $res->setStatusCode(299);
+            $res->addHeader('Content-Type', 'text/plain');
+            $res->end('FOOBAR');
+        });
+        $server = Server::createServer($middleware, $server);
+        $server->listen();
+
+        $this->assertContains('HTTP/1.1 299', Output::$headers);
         $this->assertContains('Content-Type: text/plain', Output::$headers);
         $this->assertEquals('FOOBAR', Output::$body);
     }
