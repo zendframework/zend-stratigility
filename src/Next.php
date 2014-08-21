@@ -41,11 +41,6 @@ class Next
     private $response;
 
     /**
-     * @var bool
-     */
-    private $slashAdded = false;
-
-    /**
      * @var ArrayObject
      */
     private $stack;
@@ -77,7 +72,6 @@ class Next
         $dispatch = $this->dispatch;
         $done     = $this->done;
 
-        $this->resetSlash($request);
         $this->resetPath($request);
 
         // No middleware remains; done
@@ -106,23 +100,6 @@ class Next
         }
 
         $dispatch($layer, $err, $this->request, $this->response, $this);
-    }
-
-    /**
-     * Reinstate any stripped slashes
-     *
-     * @param Request $request
-     */
-    private function resetSlash(Request $request)
-    {
-        if (! $this->slashAdded) {
-            return;
-        }
-
-        $uri  = $this->request->getUrl();
-        $path = substr($uri->path, 1);
-        $request->setUrl($uri->setPath($path));
-        $this->slashAdded = false;
     }
 
     /**
@@ -170,11 +147,5 @@ class Next
         $uri  = $this->request->getUrl();
         $path = substr($uri->path, strlen($route));
         $this->request->setUrl($uri->setPath($path));
-
-        if ($path[0] !== '/') {
-            $path = '/' . $path;
-            $this->request->setUrl($uri->setPath($path));
-            $this->slashAdded = true;
-        }
     }
 }
