@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.3.0 - TBD
+
+This release separates the HTTP functionality into its own package, [phly/http](https://github.com/phly/http). As such, the subnamespaces `Phly\Conduit\Http` and `PhlyTest\Conduit\Http` were removed, as they became part of that package. Additionally, the following changes were made:
+
+- `Middleware::handle()` was renamed to `Middleware::__invoke()`, to be compatible with the `phly/http` server implementation.
+- All signatures that referred to the former Http subnamespace now refer to the `phly/http` namespace (`Phly\Http`).
+- Examples were rewritten to show instantiating a `Phly\Http\Server` instead of a `Phly\Conduit\Http\Server`.
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- `Phly\Conduit\Http\*` were removed; this includes:
+
+  - `AbstractMessage`
+  - `Request`
+  - `RequestFactory`
+  - `Response`
+  - `ResponseInterface`
+  - `Stream`
+  - `Uri`
+  - `Server`
+  
+  Each of these are now part of the [phly/http](https://github.com/phly/http) package; install that package to use them.
+
+### Fixed
+
+- Nothing.
+
 ## 0.2.0 - 2014-08-21
 
 Most importantly, this release changes the signature of `Phly\Conduit\Http\Server::createServer()`. Previously, the signature was:
