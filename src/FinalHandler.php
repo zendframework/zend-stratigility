@@ -2,7 +2,8 @@
 namespace Phly\Conduit;
 
 use Exception;
-use Phly\Conduit\Http\ResponseInterface as Response;
+use Phly\Http\Request as PhlyRequest;
+use Phly\Http\ResponseInterface as Response;
 use Psr\Http\Message\RequestInterface as Request;
 use Zend\Escaper\Escaper;
 
@@ -90,7 +91,7 @@ class FinalHandler
     {
         $this->response->setStatusCode(404);
 
-        if ($this->request instanceof Http\Request && $this->request->originalUrl) {
+        if ($this->request instanceof PhlyRequest && $this->request->originalUrl) {
             $url = $this->request->originalUrl;
         } else {
             $url = $this->request->getUrl();
@@ -115,7 +116,7 @@ class FinalHandler
      * less than 400 or greater than 599, returns 500; otherwise, returns it.
      *
      * @param mixed $error
-     * @param Http\ResponseInterface $response
+     * @param Response $response
      * @return int
      */
     private function getStatusCode($error, Response $response)

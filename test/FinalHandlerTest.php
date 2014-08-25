@@ -3,8 +3,8 @@ namespace PhlyTest\Conduit;
 
 use Exception;
 use Phly\Conduit\FinalHandler;
-use Phly\Conduit\Http\Request;
-use Phly\Conduit\Http\Response;
+use Phly\Http\Request;
+use Phly\Http\Response;
 use PHPUnit_Framework_TestCase as TestCase;
 use Zend\Escaper\Escaper;
 

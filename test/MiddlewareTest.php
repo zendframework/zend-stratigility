@@ -3,8 +3,8 @@ namespace PhlyTest\Conduit;
 
 use Phly\Conduit\Middleware;
 use Phly\Conduit\Utils;
-use Phly\Conduit\Http\Request;
-use Phly\Conduit\Http\Response;
+use Phly\Http\Request;
+use Phly\Http\Response;
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
 
@@ -59,7 +59,7 @@ class MiddlewareTest extends TestCase
 
         $this->request->setMethod('GET');
         $this->request->setUrl('http://local.example.com/foo');
-        $this->middleware->handle($this->request, $this->response);
+        $this->middleware->__invoke($this->request, $this->response);
         $body = (string) $this->response->getBody();
         $this->assertContains('First', $body);
         $this->assertContains('Second', $body);
@@ -88,7 +88,7 @@ class MiddlewareTest extends TestCase
 
         $this->request->setMethod('GET');
         $this->request->setUrl('http://local.example.com/foo');
-        $this->middleware->handle($this->request, $this->response);
+        $this->middleware->__invoke($this->request, $this->response);
         $body = (string) $this->response->getBody();
         $this->assertContains('First', $body);
         $this->assertContains('ERROR HANDLER', $body);
@@ -114,7 +114,7 @@ class MiddlewareTest extends TestCase
 
         $this->request->setMethod('GET');
         $this->request->setUrl('http://local.example.com/foo');
-        $this->middleware->handle($this->request, $this->response, $out);
+        $this->middleware->__invoke($this->request, $this->response, $out);
         $this->assertTrue($triggered);
     }
 

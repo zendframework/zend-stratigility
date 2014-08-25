@@ -2,8 +2,8 @@
 namespace PhlyTest\Conduit;
 
 use ArrayObject;
-use Phly\Conduit\Http\Request;
-use Phly\Conduit\Http\Response;
+use Phly\Http\Request;
+use Phly\Http\Response;
 use Phly\Conduit\Next;
 use Phly\Conduit\Route;
 use PHPUnit_Framework_TestCase as TestCase;

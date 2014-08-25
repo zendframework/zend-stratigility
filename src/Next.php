@@ -2,7 +2,7 @@
 namespace Phly\Conduit;
 
 use ArrayObject;
-use Phly\Conduit\Http\ResponseInterface as Response;
+use Phly\Http\ResponseInterface as Response;
 use Psr\Http\Message\RequestInterface as Request;
 
 /**
