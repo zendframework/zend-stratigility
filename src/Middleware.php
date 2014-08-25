@@ -3,7 +3,8 @@ namespace Phly\Conduit;
 
 use ArrayObject;
 use InvalidArgumentException;
-use Phly\Conduit\Http\ResponseInterface as Response;
+use Phly\Http\ResponseInterface as Response;
+use Phly\Http\Uri;
 use Psr\Http\Message\RequestInterface as Request;
 
 /**
@@ -40,6 +41,29 @@ class Middleware
     public function __construct()
     {
         $this->stack = new ArrayObject(array());
+    }
+
+    /**
+     * Handle a request
+     *
+     * Takes the stack, creates a Next handler, and delegates to the
+     * Next handler.
+     *
+     * If $out is a callable, it is used as the "final handler" when
+     * $next has exhausted the stack; otherwise, a FinalHandler instance
+     * is created and passed to $next during initialization.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param callable $out
+     * @return void
+     */
+    public function __invoke(Request $request, Response $response, callable $out = null)
+    {
+        $request->setUrl($this->getUrlFromRequest($request));
+        $done  = is_callable($out) ? $out : new FinalHandler($request, $response);
+        $next  = new Next($this->stack, $request, $response, $done);
+        $next();
     }
 
     /**
@@ -91,39 +115,16 @@ class Middleware
     }
 
     /**
-     * Handle a request
-     *
-     * Takes the stack, creates a Next handler, and delegates to the
-     * Next handler.
-     *
-     * If $out is a callable, it is used as the "final handler" when
-     * $next has exhausted the stack; otherwise, a FinalHandler instance
-     * is created and passed to $next during initialization.
+     * Ensure the request URI is an Uri instance
      *
      * @param Request $request
-     * @param Response $response
-     * @param callable $out
-     * @return void
-     */
-    public function handle(Request $request, Response $response, callable $out = null)
-    {
-        $request->setUrl($this->getUrlFromRequest($request));
-        $done  = is_callable($out) ? $out : new FinalHandler($request, $response);
-        $next  = new Next($this->stack, $request, $response, $done);
-        $next();
-    }
-
-    /**
-     * Ensure the request URI is an Http\Uri instance
-     *
-     * @param Request $request
-     * @return Http\Uri
+     * @return Uri
      */
     protected function getUrlFromRequest(Request $request)
     {
         $url = $request->getUrl();
         if (is_string($url)) {
-            $url = new Http\Uri($url);
+            $url = new Uri($url);
         }
         return $url;
     }

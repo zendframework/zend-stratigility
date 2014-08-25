@@ -1,7 +1,6 @@
 Conduit
 =======
 
-[![Build Status](https://travis-ci.org/phly/conduit.svg?branch=master)](https://travis-ci.org/phly/conduit)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/phly/conduit/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/phly/conduit/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/phly/conduit/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/phly/conduit/?branch=master)
 [![Scrutinizer Build Status](https://scrutinizer-ci.com/g/phly/conduit/badges/build.png?b=master)](https://scrutinizer-ci.com/g/phly/conduit/build-status/master)
@@ -14,15 +13,12 @@ Installation and Requirements
 Install this library using composer:
 
 ```console
-$ composer require phly/conduit
+$ composer require "psr/http-message:~1.0-dev@dev" "phly/http:~1.0-dev@dev" "phly/conduit:~1.0-dev@dev"
 ```
 
 Conduit has the following dependencies (which are managed by Composer):
 
-- `psr/http-message`, which defines interfaces for HTTP messages, including requests and responses. Conduit provides implementations of these, and extends the `ResponseInterface` to provide three additional methods:
-  - `write($data)`, to write data to the response body
-  - `end($data = null)`, to mark the response as complete, optionally writing data to the body first
-  - `isComplete()`, for determining if the response is already complete
+- `phly/http`, which provides implementations of the [proposed PSR HTTP message interfaces](https://github.com/php-fig/fig-standards/blob/master/proposed/http-message.md), as well as a "server" implementation similar to [node's http.Server](http://nodejs.org/api/http.html); this is the foundation on which Conduit is built.
 - `zendframework/zend-escaper`, used by the `FinalHandler` for escaping error messages prior to passing them to the response.
 
 You can provide your own request and response implementations if desired, but stream-based implementations are provided in this package.
@@ -38,7 +34,7 @@ Creating an application consists of 3 steps:
 
 ```php
 use Phly\Conduit\Middleware;
-use Phly\Conduit\Http\Server;
+use Phly\Http\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -58,7 +54,7 @@ Middleware is code that exists between the request and response, and which can t
 
 ```php
 use Phly\Conduit\Middleware;
-use Phly\Conduit\Http\Server;
+use Phly\Http\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -161,7 +157,7 @@ In all cases, if you wish to implement typehinting, the signature is:
 ```php
 function (
     Psr\Http\Message\RequestInterface $request,
-    Phly\Conduit\Http\ResponseInterface $response,
+    Phly\Http\ResponseInterface $response,
     callable $next = null
 ) {
 }
@@ -173,7 +169,7 @@ Error handler middleware has the following signature:
 function (
     $error, // Can be any type
     Psr\Http\Message\RequestInterface $request,
-    Phly\Conduit\Http\ResponseInterface $response,
+    Phly\Http\ResponseInterface $response,
     callable $next
 ) {
 }
@@ -182,8 +178,8 @@ function (
 Another approach is to extend the `Phly\Conduit\Middleware` class itself -- particularly if you want to allow attaching other middleware to your own middleware. In such a case, you will generally override the `handle()` method to perform any additional logic you have, and then call on the parent in order to iterate through your stack of middleware:
 
 ```php
-use Phly\Conduit\Http\ResponseInterface as Response;
 use Phly\Conduit\Middleware;
+use Phly\Http\ResponseInterface as Response;
 use Psr\Http\Message\RequestInterface as Request;
 
 class CustomMiddleware extends Middleware
@@ -225,165 +221,9 @@ These approaches are particularly suited for cases where you may want to impleme
 API
 ---
 
-### HTTP
-
-Conduit contains a number of classes and interfaces around the HTTP protocol.
-
-#### Request Message
-
-`Phly\Conduit\Http\Request` implements `Psr\Http\Message\RequestInterface`, and includes the following methods:
-
-```php
-class Request
-{
-    public function __construct($protocol = '1.1', $stream = 'php://input');
-    public function addHeader($name, $value);
-    public function addHeaders(array $headers);
-    public function getBody(); // returns a Stream
-    public function getHeader();
-    public function getHeaderAsArray();
-    public function getHeaders();
-    public function getMethod();
-    public function getProtocolVersion();
-    public function getUrl(); // returns a Uri object
-    public function removeHeader($name);
-    public function setBody(Psr\Http\Message\StreamInterface $stream);
-    public function setHeader($name, $value);
-    public function setHeaders(array $headers);
-    public function setMethod($method);
-    public function setUrl($url); // string or Uri object
-}
-```
-
-Additionally, `Request` implements property overloading, allowing the developer to set and retrieve arbitrary properties other than those exposed via getters. This allows the ability to pass values between middlewares. As an example, `Middleware` uses this to store the originalUrl passed to the application:
-
-```
-$originalUrl = $request->originalUrl;
-```
-
-I recommend you store values in properties named after your middleware; use arrays or objects in cases where multiple values may be possible.
-
-#### RequestFactory
-
-This static class can be used to marshal a `Request` instance from the PHP environment. The primary entry point is `Phly\Conduit\Http\RequestFactory::fromServer(array $server, RequestInterface $request = null)`. This method allows you to either marshal a new request instance, or to populate an existing instance (for example, if you are using another `Psr\Http\Message\RequestInterface`-compatible implementation). Examples of usage are:
-
-```php
-$request = RequestFactory::fromServer($_SERVER); // returns new Request instance
-
-// or
-
-$request = RequestFactory::fromServer($_SERVER, $request); // returns same request, but populated
-```
-
-#### Response Message
-
-`Phly\Conduit\Http\Response` implements `Phly\Conduit\Http\ResponseInterface`, which extends `Psr\Http\Message\ResponseInterface`, and includes the following methods:
-
-```php
-class Response
-{
-    public function __construct($stream = 'php://input');
-    public function addHeader($name, $value);
-    public function addHeaders(array $headers);
-    public function end($data = null); // Mark the response as complete
-    public function getBody(); // returns a Stream
-    public function getHeader();
-    public function getHeaderAsArray();
-    public function getHeaders();
-    public function getStatusCode();
-    public function getReasonPhrase();
-    public function isComplete(); // Is the response complete?
-    public function removeHeader($name);
-    public function setBody(Psr\Http\Message\StreamInterface $stream);
-    public function setHeader($name, $value);
-    public function setHeaders(array $headers);
-    public function setStatusCode($code);
-    public function setReasonPhrase($phrase);
-    public function write($data); // Write data to the body
-}
-```
-
-#### URI
-
-`Phly\Conduit\Http\Uri` models and validates URIs. The request object casts URLs to `Uri` objects, and returns them from `getUrl()`, giving an OOP interface to the parts of a URI. It implements `__toString()`, allowing it to be represented as a string and `echo()`'d directly. The following methods are pertinent:
-
-```php
-class Uri
-{
-    public static function fromArray(array $parts);
-    public function __construct($uri);
-    public function isValid();
-    public function setPath($path);
-}
-```
-
-`fromArray()` expects an array of URI parts, and should contain 1 or more of the following keys:
-
-- scheme
-- host
-- port
-- path
-- query
-- fragment
-
-`setPath()` accepts a path, but does not actually change the `Uri` instance; it instead returns a clone of the current instance with the new path.
-
-The following properties are exposed for read-only access:
-
-- scheme
-- host
-- port
-- path
-- query
-- fragment
-
-#### Stream
-
-`Phly\Conduit\Http\Stream` is an implementation of `Psr\Http\Message\StreamInterface`, and provides a number of facilities around manipulating the composed PHP stream resource. The constructor accepts a stream, which may be either:
-
-- a stream identifier; e.g., `php://input`, a filename, etc.
-- a PHP stream resource
-
-If a stream identifier is provided, an optional second parameter may be provided, the file mode by which to `fopen` the stream.
-
-Request objects by default use a `php://input` stream set to read-only; Response objects by default use a `php://memory` with a mode of `wb+`, allowing binary read/write access.
-
-In most cases, you will not interact with the Stream object directly.
-
-#### Server
-
-`Phly\Conduit\Http\Server` represents a server capable of executing middleware. It has four methods:
-
-```php
-class Server
-{
-    public function __construct(
-        Phly\Conduit\Middleware $middleware,
-        Psr\Http\Message\RequestInterface $request,
-        Phly\Conduit\Http\ResponseInterface $response
-    );
-    public static function createServer(
-        Phly\Conduit\Middleware $middleware,
-        array $server // usually $_SERVER
-    );
-    public static function createServerFromRequest(
-        Phly\Conduit\Middleware $middleware,
-        Psr\Http\Message\RequestInterface $request,
-        Phly\Conduit\Http\ResponseInterface $response = null
-    );
-    public function listen(callable $finalHandler = null);
-}
-```
-
-You can create an instance of the `Server` using any of the constructor, `createServer()`, or `createServerFromRequest()` methods. If you wish to use the default request and response implementations, `createServer($middleware, $_SERVER)` is the recommended option, as this method will also marshal the `Request` object based on the PHP request environment.  If you wish to use your own implementations, pass them to the constructor or `createServerFromRequest()` method (the latter will create a default `Response` instance if you omit it).
-
-`listen()` executes the middleware. If no `$finalHandler` is provided, an instance of `Phly\Conduit\FinalHandler` is created and used; this callable will be executed if the middleware exhausts its internal stack.
-
-### Middleware
-
 The following make up the primary API of Conduit.
 
-#### Middleware
+### Middleware
 
 `Phly\Conduit\Middleware` is the primary application interface, and has been discussed previously. It's API is:
 
@@ -393,7 +233,7 @@ class Middleware
     public function pipe($path, $handler = null);
     public function handle(
         Psr\Http\Message\RequestInterface $request = null,
-        Phly\Conduit\Http\ResponseInterface $response = null,
+        Phly\Http\ResponseInterface $response = null,
         callable $out = null
     );
 }
@@ -405,7 +245,7 @@ Handlers are executed in the order in which they are piped to the `Middleware` i
 
 `handle()` is itself a middleware handler. If `$out` is not provided, an instance of `Phly\Conduit\FinalHandler` will be created, and used in the event that the pipe stack is exhausted.
 
-#### FinalHandler
+### FinalHandler
 
 `Phly\Conduit\FinalHandler` is a default implementation of middleware to execute when the stack exhausts itself. It is provided the request and response object to the constructor, and expects zero or one arguments when invoked; one argument indicates an error condition.
 
