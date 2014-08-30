@@ -287,7 +287,7 @@ class Response implements
      */
     public function setReasonPhrase($phrase)
     {
-        if ($this->complete) {
+        if ($this->complete && $this->psrResponse->getReasonPhrase()) {
             return;
         }
 
