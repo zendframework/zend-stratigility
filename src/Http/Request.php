@@ -9,6 +9,8 @@ use Psr\Http\Message\StreamInterface;
  *
  * Decorates the PSR request interface to add the ability to manipulate
  * arbitrary instance members.
+ *
+ * @property \Phly\Http\Uri $originalUrl Original URL of this instance
  */
 class Request implements RequestInterface
 {
@@ -257,12 +259,18 @@ class Request implements RequestInterface
     /**
      * Proxy to RequestInterface::setUrl()
      *
+     * Also sets originalUrl property if not previously set.
+     *
      * @param string|object $url Request URL.
      * @throws \InvalidArgumentException If the URL is invalid.
      * @link http://tools.ietf.org/html/rfc3986#section-4.3
      */
     public function setUrl($url)
     {
-        return $this->psrRequest->setUrl($url);
+        $this->psrRequest->setUrl($url);
+
+        if (! $this->originalUrl) {
+            $this->originalUrl = $this->psrRequest->getUrl();
+        }
     }
 }
