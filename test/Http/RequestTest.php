@@ -3,6 +3,7 @@ namespace PhlyTest\Conduit\Http;
 
 use Phly\Conduit\Http\Request;
 use Phly\Http\Request as PsrRequest;
+use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 
 class RequestTest extends TestCase
@@ -24,5 +25,13 @@ class RequestTest extends TestCase
     public function testFetchingUnknownPropertyYieldsNull()
     {
         $this->assertNull($this->request->somePropertyWeMadeUp);
+    }
+
+    public function testCallingSetUrlSetsOriginalUrlProperty()
+    {
+        $url = 'http://example.com/foo';
+        $uri = new Uri($url);
+        $this->request->setUrl($uri);
+        $this->assertSame($uri, $this->request->originalUrl);
     }
 }
