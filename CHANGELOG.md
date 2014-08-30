@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.4.2 - 2014-08-30
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Ensures `$originalUrl` is set from the composed request's URL at instantiation of the request decorator; this ensures the property is set from the outset.
+
 ## 0.4.1 - 2014-08-30
 
 ### Added
