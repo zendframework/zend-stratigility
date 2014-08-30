@@ -2,9 +2,6 @@
 namespace Phly\Conduit;
 
 use Exception;
-use Phly\Http\Request as PhlyRequest;
-use Phly\Http\ResponseInterface as Response;
-use Psr\Http\Message\RequestInterface as Request;
 use Zend\Escaper\Escaper;
 
 /**
@@ -18,20 +15,20 @@ class FinalHandler
     private $options;
 
     /**
-     * @var Request
+     * @var Http\Request
      */
     private $request;
 
     /**
-     * @var Response
+     * @var Http\Response
      */
     private $response;
 
     /**
-     * @param Request $request
-     * @param Response $response
+     * @param Http\Request $request
+     * @param Http\Response $response
      */
-    public function __construct(Request $request, Response $response, array $options = [])
+    public function __construct(Http\Request $request, Http\Response $response, array $options = [])
     {
         $this->request  = $request;
         $this->response = $response;
@@ -91,12 +88,7 @@ class FinalHandler
     {
         $this->response->setStatusCode(404);
 
-        if ($this->request instanceof PhlyRequest && $this->request->originalUrl) {
-            $url = $this->request->originalUrl;
-        } else {
-            $url = $this->request->getUrl();
-        }
-
+        $url     = $this->request->originalUrl ?: $this->request->getUrl();
         $escaper = new Escaper();
         $message = sprintf(
             "Cannot %s %s\n",
@@ -116,10 +108,10 @@ class FinalHandler
      * less than 400 or greater than 599, returns 500; otherwise, returns it.
      *
      * @param mixed $error
-     * @param Response $response
+     * @param Http\Response $response
      * @return int
      */
-    private function getStatusCode($error, Response $response)
+    private function getStatusCode($error, Http\Response $response)
     {
         if ($error instanceof Exception
             && ($error->getCode() >= 400 && $error->getCode() < 600)
@@ -152,10 +144,10 @@ class FinalHandler
      * Trigger the error listener, if present
      *
      * @param mixed $error
-     * @param Request $request
-     * @param Response $response
+     * @param Http\Request $request
+     * @param Http\Response $response
      */
-    private function triggerError($error, Request $request, Response $response)
+    private function triggerError($error, Http\Request $request, Http\Response $response)
     {
         if (! isset($this->options['onerror'])
             || ! is_callable($this->options['onerror'])

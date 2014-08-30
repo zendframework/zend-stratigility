@@ -3,9 +3,9 @@ namespace Phly\Conduit;
 
 use ArrayObject;
 use InvalidArgumentException;
-use Phly\Http\ResponseInterface as Response;
 use Phly\Http\Uri;
 use Psr\Http\Message\RequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 
 /**
  * Middleware
@@ -13,6 +13,11 @@ use Psr\Http\Message\RequestInterface as Request;
  * Middleware accepts a request and a response, and optionally a
  * callback "$next" (called if the middleware wants to allow further
  * middleware to process the incoming request).
+ *
+ * The request and response objects are decorated using the Phly\Conduit\Http
+ * variants in this package, ensuring that the request may store arbitrary
+ * properties, and the response exposes the convenience write(), end(), and
+ * isComplete() methods.
  *
  * Middleware can also accept an initial argument, an error; if middleware
  * accepts errors, it will only be called when an either an exception
@@ -60,6 +65,9 @@ class Middleware
      */
     public function __invoke(Request $request, Response $response, callable $out = null)
     {
+        $request  = $this->decorateRequest($request);
+        $response = $this->decorateResponse($response);
+
         $request->setUrl($this->getUrlFromRequest($request));
         $done  = is_callable($out) ? $out : new FinalHandler($request, $response);
         $next  = new Next($this->stack, $request, $response, $done);
@@ -173,5 +181,35 @@ class Middleware
         return function ($err, $request, $response, $next) use ($handler) {
             $handler->handle($err, $request, $response, $next);
         };
+    }
+
+    /**
+     * Decorate the Request instance
+     *
+     * @param Request $request
+     * @return Http\Request
+     */
+    private function decorateRequest(Request $request)
+    {
+        if ($request instanceof Http\Request) {
+            return $request;
+        }
+
+        return new Http\Request($request);
+    }
+
+    /**
+     * Decorate the Response instance
+     *
+     * @param Response $response
+     * @return Http\Response
+     */
+    private function decorateResponse(Response $response)
+    {
+        if ($response instanceof Http\Response) {
+            return $response;
+        }
+
+        return new Http\Response($response);
     }
 }

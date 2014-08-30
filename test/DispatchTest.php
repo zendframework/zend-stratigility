@@ -10,8 +10,12 @@ class DispatchTest extends TestCase
 {
     public function setUp()
     {
-        $this->request  = $this->getMock('Psr\Http\Message\RequestInterface');
-        $this->response = $this->getMock('Phly\Http\ResponseInterface');
+        $this->request  = $this->getMockBuilder('Phly\Conduit\Http\Request')
+            ->disableOriginalConstructor()
+            ->getMock();
+        $this->response = $this->getMockBuilder('Phly\Conduit\Http\Response')
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 
     public function testHasErrorAndHandleArityIsFourTriggersHandler()

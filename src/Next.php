@@ -2,8 +2,6 @@
 namespace Phly\Conduit;
 
 use ArrayObject;
-use Phly\Http\ResponseInterface as Response;
-use Psr\Http\Message\RequestInterface as Request;
 
 /**
  * Iterate a stack of middlewares and execute them
@@ -31,12 +29,12 @@ class Next
     private $removed = '';
 
     /**
-     * @var Request
+     * @var Http\Request
      */
     private $request;
 
     /**
-     * @var Response
+     * @var Http\Response
      */
     private $response;
 
@@ -47,11 +45,11 @@ class Next
 
     /**
      * @param ArrayObject $stack
-     * @param Request $request
-     * @param Response $response
+     * @param Http\Request $request
+     * @param Http\Response $response
      * @param callable $done
      */
-    public function __construct(ArrayObject $stack, Request $request, Response $response, callable $done)
+    public function __construct(ArrayObject $stack, Http\Request $request, Http\Response $response, callable $done)
     {
         $this->dispatch = new Dispatch();
 
@@ -105,9 +103,9 @@ class Next
     /**
      * Reset the path, if a segment was previously stripped
      *
-     * @param Request $request
+     * @param Http\Request $request
      */
-    private function resetPath(Request $request)
+    private function resetPath(Http\Request $request)
     {
         if (! $this->removed) {
             return;

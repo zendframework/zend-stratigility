@@ -2,10 +2,12 @@
 namespace PhlyTest\Conduit;
 
 use ArrayObject;
-use Phly\Http\Request;
-use Phly\Http\Response;
+use Phly\Conduit\Http\Request;
+use Phly\Conduit\Http\Response;
 use Phly\Conduit\Next;
 use Phly\Conduit\Route;
+use Phly\Http\Request as PsrRequest;
+use Phly\Http\Response as PsrResponse;
 use PHPUnit_Framework_TestCase as TestCase;
 
 class NextTest extends TestCase
@@ -13,8 +15,8 @@ class NextTest extends TestCase
     public function setUp()
     {
         $this->stack    = new ArrayObject();
-        $this->request  = new Request('1.1', 'php://memory');
-        $this->response = new Response();
+        $this->request  = new Request(new PsrRequest('1.1', 'php://memory'));
+        $this->response = new Response(new PsrResponse());
     }
 
     public function testDoneHandlerIsInvokedWhenStackIsExhausted()

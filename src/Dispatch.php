@@ -2,8 +2,6 @@
 namespace Phly\Conduit;
 
 use Exception;
-use Phly\Http\ResponseInterface as Response;
-use Psr\Http\Message\RequestInterface as Request;
 
 /**
  * Dispatch middleware
@@ -36,15 +34,15 @@ class Dispatch
      *
      * @param Route $route
      * @param mixed $err
-     * @param Request $request
-     * @param Response $response
+     * @param Http\Request $request
+     * @param Http\Response $response
      * @param callable $next
      */
     public function __invoke(
         Route $route,
         $err,
-        Request $request,
-        Response $response,
+        Http\Request $request,
+        Http\Response $response,
         callable $next
     ) {
         $arity    = Utils::getArity($route->handler);
