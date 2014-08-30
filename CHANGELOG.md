@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.4.1 - 2014-08-30
+
+### Added
+
+- Adds `$originalUrl` to the request implementation; set first time `setUrl()` is called.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Adds `$originalUrl` to the request implementation; set first time `setUrl()` is called. (This was present in the original phly/http implementation, but is removed as of 0.2.0 of that project.)
+
 ## 0.4.0 - 2014-08-30
 
 This release adds HTTP decorators for the request and response objects in order to ensure expected functionality is present regardless of the PSR implementation. This ensures greater compatibility with other implementations, while keeping the current implementation robust. It also fortunately poses no backwards compatibility issues.
