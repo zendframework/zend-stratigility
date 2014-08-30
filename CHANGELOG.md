@@ -2,7 +2,32 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
-## 0.3.0 - TBD
+## 0.4.0 - 2014-08-30
+
+This release adds HTTP decorators for the request and response objects in order to ensure expected functionality is present regardless of the PSR implementation. This ensures greater compatibility with other implementations, while keeping the current implementation robust. It also fortunately poses no backwards compatibility issues.
+
+### Added
+
+- `Phly\Conduit\Http\Request`, a decorator for `Psr\Http\Message\RequestInterface`, which adds the ability to set and retrieve arbitrary object properties.
+- `Phly\Conduit\Http\ResponseInterface`, which defines:
+  - `write($data)` to proxy to the underlying stream's `write()` method.
+  - `end($data = null)` to optionally write to the underlying stream, and then mark the response as complete.
+  - `isComplete()` to indicate whether or not the response is complete.
+- `Phly\Conduit\Http\Response`, a decorator for `Psr\Http\Message\ResponseInterface` which also implements `Phly\Conduit\Http\ResponseInterface`, and ensure that if the response is complete, it is immutable.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
+## 0.3.0 - 2014-08-25
 
 This release separates the HTTP functionality into its own package, [phly/http](https://github.com/phly/http). As such, the subnamespaces `Phly\Conduit\Http` and `PhlyTest\Conduit\Http` were removed, as they became part of that package. Additionally, the following changes were made:
 
