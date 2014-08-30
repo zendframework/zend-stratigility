@@ -113,7 +113,7 @@ class Request implements RequestInterface
      */
     public function getBody()
     {
-        return $this->psrRequest->getProtocolVersion();
+        return $this->psrRequest->getBody();
     }
 
     /**
