@@ -1,6 +1,8 @@
 <?php
 namespace PhlyTest\Conduit;
 
+use Phly\Conduit\Http\Request as RequestDecorator;
+use Phly\Conduit\Http\Response as ResponseDecorator;
 use Phly\Conduit\Middleware;
 use Phly\Conduit\Utils;
 use Phly\Http\Request;
@@ -145,5 +147,29 @@ class MiddlewareTest extends TestCase
         $handler = $route->handler;
         $this->assertInstanceOf('Closure', $handler);
         $this->assertEquals(4, Utils::getArity($handler));
+    }
+
+    public function testCanUseDecoratedRequestAndResponseDirectly()
+    {
+        $this->request->setMethod('GET');
+        $this->request->setUrl('http://local.example.com/foo');
+
+        $request  = new RequestDecorator($this->request);
+        $response = new ResponseDecorator($this->response);
+        $phpunit  = $this;
+        $executed = false;
+
+        $middleware = $this->middleware;
+        $middleware->pipe(function ($req, $res, $next) use ($phpunit, $request, $response, &$executed) {
+            $phpunit->assertSame($request, $req);
+            $phpunit->assertSame($response, $res);
+            $executed = true;
+        });
+
+        $middleware($request, $response, function ($err = null) use ($phpunit) {
+            $phpunit->fail('Next should not be called');
+        });
+
+        $this->assertTrue($executed);
     }
 }
