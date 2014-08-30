@@ -3,8 +3,10 @@ namespace PhlyTest\Conduit;
 
 use Exception;
 use Phly\Conduit\FinalHandler;
-use Phly\Http\Request;
-use Phly\Http\Response;
+use Phly\Conduit\Http\Request;
+use Phly\Conduit\Http\Response;
+use Phly\Http\Request as PsrRequest;
+use Phly\Http\Response as PsrResponse;
 use PHPUnit_Framework_TestCase as TestCase;
 use Zend\Escaper\Escaper;
 
@@ -13,8 +15,8 @@ class FinalHandlerTest extends TestCase
     public function setUp()
     {
         $this->escaper  = new Escaper();
-        $this->request  = new Request('1.1', 'php://memory');
-        $this->response = new Response();
+        $this->request  = new Request(new PsrRequest('1.1', 'php://memory'));
+        $this->response = new Response(new PsrResponse());
         $this->final    = new FinalHandler($this->request, $this->response);
     }
 
