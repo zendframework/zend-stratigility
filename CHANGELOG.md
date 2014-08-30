@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file, in reverse 
 ### Fixed
 
 - Improved test coverage.
+- Fixed `Phly\Conduit\Http\Request::getBody()` implementation; ensures it proxies to correct method.
 
 ## 0.4.2 - 2014-08-30
 

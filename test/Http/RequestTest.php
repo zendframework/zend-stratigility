@@ -49,4 +49,40 @@ class RequestTest extends TestCase
     {
         $this->assertSame($this->original, $this->request->getOriginalRequest());
     }
+
+    public function testDecoratorProxiesToAllMethods()
+    {
+        $this->assertEquals('1.1', $this->request->getProtocolVersion());
+
+        $stream = $this->getMock('Psr\Http\Message\StreamInterface');
+        $this->request->setBody($stream);
+        $this->assertSame($stream, $this->request->getBody());
+
+        $this->assertSame($this->original->getHeaders(), $this->request->getHeaders());
+
+        $this->request->setHeaders([
+            'Accept'       => 'application/json',
+            'Content-Type' => 'application/json',
+        ]);
+        $this->assertSame($this->original->getHeaders(), $this->request->getHeaders());
+
+        $this->request->setHeader('Accept', 'application/xml');
+        $this->assertTrue($this->request->hasHeader('Accept'));
+        $this->assertEquals('application/xml', $this->request->getHeader('Accept'));
+
+        $this->request->addHeader('X-URL', 'http://example.com/foo');
+        $this->assertTrue($this->request->hasHeader('X-URL'));
+
+        $this->request->addHeaders([
+            'X-Url'  => 'http://example.com/bar',
+            'X-Flag' => 'true',
+        ]);
+        $this->assertEquals('http://example.com/foo,http://example.com/bar', $this->request->getHeader('X-URL'));
+        $this->assertTrue($this->request->hasHeader('X-Flag'));
+        $this->assertTrue($this->request->hasHeader('Accept'));
+        $this->assertTrue($this->request->hasHeader('Content-Type'));
+
+        $this->request->removeHeader('X-Flag');
+        $this->assertFalse($this->request->hasHeader('X-Flag'));
+    }
 }
