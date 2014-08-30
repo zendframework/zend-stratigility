@@ -32,6 +32,7 @@ class Request implements RequestInterface
     public function __construct(RequestInterface $request)
     {
         $this->psrRequest = $request;
+        $this->originalUrl = $request->getUrl();
     }
 
     /**
