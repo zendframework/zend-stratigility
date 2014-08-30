@@ -34,4 +34,13 @@ class RequestTest extends TestCase
         $this->request->setUrl($uri);
         $this->assertSame($uri, $this->request->originalUrl);
     }
+
+    public function testConstructorSetsOriginalUrlIfDecoratedRequestHasUrl()
+    {
+        $url = 'http://example.com/foo';
+        $baseRequest = new PsrRequest();
+        $baseRequest->setUrl($url);
+        $request = new Request($baseRequest);
+        $this->assertSame($baseRequest->getUrl(), $request->originalUrl);
+    }
 }
