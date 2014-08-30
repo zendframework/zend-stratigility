@@ -10,7 +10,8 @@ class ResponseTest extends TestCase
 {
     public function setUp()
     {
-        $this->response = new Response(new PsrResponse());
+        $this->original = new PsrResponse();
+        $this->response = new Response($this->original);
     }
 
     public function testIsNotCompleteByDefault()
@@ -90,5 +91,66 @@ class ResponseTest extends TestCase
         $this->response->end('foo');
         $this->response->end('bar');
         $this->assertEquals('foo', (string) $this->response->getBody());
+    }
+
+    public function testCanAccessOriginalResponse()
+    {
+        $this->assertSame($this->original, $this->response->getOriginalResponse());
+    }
+
+    public function testDecoratorProxiesToAllMethods()
+    {
+        $this->assertEquals('1.1', $this->response->getProtocolVersion());
+
+        $stream = $this->getMock('Psr\Http\Message\StreamInterface');
+        $this->response->setBody($stream);
+        $this->assertSame($stream, $this->response->getBody());
+
+        $this->assertSame($this->original->getHeaders(), $this->response->getHeaders());
+
+        $this->response->setHeaders([
+            'Accept'       => 'application/json',
+            'Content-Type' => 'application/json',
+        ]);
+        $this->assertSame($this->original->getHeaders(), $this->response->getHeaders());
+
+        $this->response->setHeader('Accept', 'application/xml');
+        $this->assertTrue($this->response->hasHeader('Accept'));
+        $this->assertEquals('application/xml', $this->response->getHeader('Accept'));
+
+        $this->response->addHeader('X-URL', 'http://example.com/foo');
+        $this->assertTrue($this->response->hasHeader('X-URL'));
+
+        $this->response->addHeaders([
+            'X-Url'  => 'http://example.com/bar',
+            'X-Flag' => 'true',
+        ]);
+        $this->assertEquals('http://example.com/foo,http://example.com/bar', $this->response->getHeader('X-URL'));
+        $this->assertTrue($this->response->hasHeader('X-Flag'));
+        $this->assertTrue($this->response->hasHeader('Accept'));
+        $this->assertTrue($this->response->hasHeader('Content-Type'));
+
+        $this->response->removeHeader('X-Flag');
+        $this->assertFalse($this->response->hasHeader('X-Flag'));
+
+        $this->response->setReasonPhrase('FOOBAR');
+        $this->assertEquals('FOOBAR', $this->response->getReasonPhrase());
+    }
+
+    public function testReasonPhraseMayBeUpdatedWhenResponseIsCompleteAndPhraseIsNull()
+    {
+        $this->response->setStatusCode(499);
+        $this->response->end('foo');
+        $this->response->setReasonPhrase('FOOBAR');
+        $this->assertEquals('FOOBAR', $this->response->getReasonPhrase());
+    }
+
+    public function testReasonPhraseIsImmutableWhenAlreadySetAndResponseIsComplete()
+    {
+        $this->response->setStatusCode(499);
+        $this->response->setReasonPhrase('FOOBAR');
+        $this->response->end('foo');
+        $this->response->setReasonPhrase('BARBAZ');
+        $this->assertEquals('FOOBAR', $this->response->getReasonPhrase());
     }
 }

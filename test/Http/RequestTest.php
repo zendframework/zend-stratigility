@@ -10,7 +10,8 @@ class RequestTest extends TestCase
 {
     public function setUp()
     {
-        $this->request = new Request(new PsrRequest());
+        $this->original = new PsrRequest();
+        $this->request  = new Request($this->original);
     }
 
     public function testAllowsManipulatingArbitraryNonPrivateProperties()
@@ -42,5 +43,10 @@ class RequestTest extends TestCase
         $baseRequest->setUrl($url);
         $request = new Request($baseRequest);
         $this->assertSame($baseRequest->getUrl(), $request->originalUrl);
+    }
+
+    public function testCanAccessOriginalRequest()
+    {
+        $this->assertSame($this->original, $this->request->getOriginalRequest());
     }
 }
