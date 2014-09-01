@@ -28,6 +28,14 @@ class RequestTest extends TestCase
         $this->assertNull($this->request->somePropertyWeMadeUp);
     }
 
+    public function testArrayPropertyValueIsCastToArrayObject()
+    {
+        $original = ['test' => 'value'];
+        $this->request->anArray = $original;
+        $this->assertInstanceOf('ArrayObject', $this->request->anArray);
+        $this->assertEquals($original, $this->request->anArray->getArrayCopy());
+    }
+
     public function testCallingSetUrlSetsOriginalUrlProperty()
     {
         $url = 'http://example.com/foo';
