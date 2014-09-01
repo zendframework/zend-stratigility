@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.4.4 - 2014-09-01
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- [#6](https://github.com/phly/conduit/pull/6) casts arrays assigned to request property values to `ArrayObject` to fix dereferencing issues.
+
 ## 0.4.3 - 2014-08-30
 
 ### Added
