@@ -1,6 +1,7 @@
 <?php
 namespace Phly\Conduit\Http;
 
+use ArrayObject;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 
@@ -69,6 +70,9 @@ class Request implements RequestInterface
      */
     public function __set($name, $value)
     {
+        if (is_array($value)) {
+            $value = new ArrayObject($value, ArrayObject::ARRAY_AS_PROPS);
+        }
         $this->params[$name] = $value;
     }
 
