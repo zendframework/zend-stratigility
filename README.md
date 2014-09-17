@@ -23,6 +23,13 @@ Conduit has the following dependencies (which are managed by Composer):
 
 You can provide your own request and response implementations if desired, but stream-based implementations are provided in this package.
 
+Contributing
+------------
+
+- Please write unit tests for any features or bug reports you have.
+- Please run unit tests before opening a pull request. You can do so using `./vendor/bin/phpunit`.
+- Please run CodeSniffer before opening a pull request, and correct any issues. Use the following to run it: `./vendor/bin/phpcs --standard=PSR2 --ignore=test/Bootstrap.php src test`.
+
 Usage
 -----
 
