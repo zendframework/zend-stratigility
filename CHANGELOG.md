@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.4.5 - 2014-09-17
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Updated `FinalHandler` to report the exception message as part of the response payload.
+
 ## 0.4.4 - 2014-09-01
 
 ### Added
