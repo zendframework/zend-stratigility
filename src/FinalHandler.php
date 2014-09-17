@@ -129,7 +129,8 @@ class FinalHandler
     private function createDevelopmentErrorMessage($error)
     {
         if ($error instanceof Exception) {
-            $message = $error->getTraceAsString();
+            $message  = $error->getMessage() . "\n";
+            $message .= $error->getTraceAsString();
         } elseif (is_object($error) && ! method_exists($error, '__toString')) {
             $message = sprintf('Error of type "%s" occurred', get_class($error));
         } else {

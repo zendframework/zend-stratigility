@@ -48,12 +48,20 @@ class FinalHandlerTest extends TestCase
         $this->assertEquals($error, (string) $this->response->getBody());
     }
 
-    public function testInvokingWithExceptionInNonProductionModeSetsResponseBodyToTrace()
+    public function testInvokingWithExceptionInNonProductionModeIncludesExceptionMessageInResponseBody()
+    {
+        $error = new Exception('foo', 400);
+        call_user_func($this->final, $error);
+        $expected = $this->escaper->escapeHtml($error->getMessage());
+        $this->assertContains($expected, (string) $this->response->getBody());
+    }
+
+    public function testInvokingWithExceptionInNonProductionModeIncludesTraceInResponseBody()
     {
         $error = new Exception('foo', 400);
         call_user_func($this->final, $error);
         $expected = $this->escaper->escapeHtml($error->getTraceAsString());
-        $this->assertEquals($expected, (string) $this->response->getBody());
+        $this->assertContains($expected, (string) $this->response->getBody());
     }
 
     public function testInvokingWithErrorInProductionSetsResponseToReasonPhrase()
