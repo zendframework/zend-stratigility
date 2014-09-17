@@ -107,7 +107,9 @@ class Middleware
         if (! is_callable($handler)
             && (! is_object($handler) || ! method_exists($handler, 'handle'))
         ) {
-            throw new InvalidArgumentException('Handler must be callable or an object implementing the method "handle"');
+            throw new InvalidArgumentException(
+                'Handler must be callable or an object implementing the method "handle"'
+            );
         }
 
         // Munge Object::handle() to a callback

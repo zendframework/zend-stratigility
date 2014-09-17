@@ -23,7 +23,9 @@ class Bootstrap
         $vendorPath = __DIR__ . '/../vendor';
 
         if (! is_readable($vendorPath . '/autoload.php')) {
-            throw new RuntimeException('Unable to locate autoloader. Run `composer install` from the project root directory.');
+            throw new RuntimeException(
+                'Unable to locate autoloader. Run `composer install` from the project root directory.'
+            );
         }
 
         include $vendorPath . '/autoload.php';
