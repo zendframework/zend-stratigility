@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.5.0 - 2014-10-01
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Updated to psr/http-message 0.2.0 and phly/http 0.4.0:
+  - StreamInterface becomes StreamableInterface
+  - Stream interface changes:
+    - adds attach() and getMetadata() methods
+    - removes the $maxLength argument from the getContents() method
+
 ## 0.4.5 - 2014-09-17
 
 ### Added

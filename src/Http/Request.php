@@ -3,7 +3,7 @@ namespace Phly\Conduit\Http;
 
 use ArrayObject;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\StreamableInterface;
 
 /**
  * Decorator for PSR RequestInterface
@@ -113,7 +113,7 @@ class Request implements RequestInterface
     /**
      * Proxy to RequestInterface::getBody()
      *
-     * @return StreamInterface|null Returns the body, or null if not set.
+     * @return StreamableInterface|null Returns the body, or null if not set.
      */
     public function getBody()
     {
@@ -123,10 +123,10 @@ class Request implements RequestInterface
     /**
      * Proxy to RequestInterface::setBody()
      *
-     * @param StreamInterface|null $body Body.
+     * @param StreamableInterface|null $body Body.
      * @throws \InvalidArgumentException When the body is not valid.
      */
-    public function setBody(StreamInterface $body = null)
+    public function setBody(StreamableInterface $body = null)
     {
         return $this->psrRequest->setBody($body);
     }

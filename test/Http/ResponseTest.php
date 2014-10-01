@@ -102,7 +102,7 @@ class ResponseTest extends TestCase
     {
         $this->assertEquals('1.1', $this->response->getProtocolVersion());
 
-        $stream = $this->getMock('Psr\Http\Message\StreamInterface');
+        $stream = $this->getMock('Psr\Http\Message\StreamableInterface');
         $this->response->setBody($stream);
         $this->assertSame($stream, $this->response->getBody());
 

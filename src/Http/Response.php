@@ -2,7 +2,7 @@
 namespace Phly\Conduit\Http;
 
 use Psr\Http\Message\ResponseInterface as BaseResponseInterface;
-use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\StreamableInterface;
 
 /**
  * Response decorator
@@ -107,7 +107,7 @@ class Response implements
     /**
      * Proxy to ResponseInterface::getBody()
      *
-     * @return StreamInterface|null Returns the body, or null if not set.
+     * @return StreamableInterface|null Returns the body, or null if not set.
      */
     public function getBody()
     {
@@ -117,10 +117,10 @@ class Response implements
     /**
      * Proxy to ResponseInterface::setBody()
      *
-     * @param StreamInterface|null $body Body.
+     * @param StreamableInterface|null $body Body.
      * @throws \InvalidArgumentException When the body is not valid.
      */
-    public function setBody(StreamInterface $body = null)
+    public function setBody(StreamableInterface $body = null)
     {
         if ($this->complete) {
             return;
