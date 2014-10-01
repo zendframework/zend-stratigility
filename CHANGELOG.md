@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.5.1 - 2014-10-01
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Updated README:
+  - Removes references to `Phly\Http\ResponseInterface` (no longer exists)
+  - Updates the version for `psr/http-message` to `~0.2.0@dev`
+  - Adds descriptions for `Phly\Conduit\Http\Request` and `Phly\Conduit\Http\Response`.
+
 ## 0.5.0 - 2014-10-01
 
 ### Added
