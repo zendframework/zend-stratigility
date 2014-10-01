@@ -62,7 +62,7 @@ class RequestTest extends TestCase
     {
         $this->assertEquals('1.1', $this->request->getProtocolVersion());
 
-        $stream = $this->getMock('Psr\Http\Message\StreamInterface');
+        $stream = $this->getMock('Psr\Http\Message\StreamableInterface');
         $this->request->setBody($stream);
         $this->assertSame($stream, $this->request->getBody());
 
