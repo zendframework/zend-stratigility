@@ -5,7 +5,7 @@ use Phly\Conduit\Http\Request as RequestDecorator;
 use Phly\Conduit\Http\Response as ResponseDecorator;
 use Phly\Conduit\Middleware;
 use Phly\Conduit\Utils;
-use Phly\Http\Request;
+use Phly\Http\IncomingRequest as Request;
 use Phly\Http\Response;
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
@@ -14,7 +14,7 @@ class MiddlewareTest extends TestCase
 {
     public function setUp()
     {
-        $this->request    = new Request('1.1', 'php://memory');
+        $this->request    = new Request('php://memory');
         $this->response   = new Response();
         $this->middleware = new Middleware();
     }

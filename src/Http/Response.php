@@ -95,7 +95,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::
+     * Proxy to BaseResponseInterface::getProtocolVersion()
      *
      * @return string HTTP protocol version.
      */
@@ -105,7 +105,18 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::getBody()
+     * Proxy to BaseResponseInterface::setProtocolVersion()
+     * 
+     * @param string $version 
+     * @return void
+     */
+    public function setProtocolVersion($version)
+    {
+        return $this->psrResponse->setProtocolVersion($version);
+    }
+
+    /**
+     * Proxy to BaseResponseInterface::getBody()
      *
      * @return StreamableInterface|null Returns the body, or null if not set.
      */
@@ -115,7 +126,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::setBody()
+     * Proxy to BaseResponseInterface::setBody()
      *
      * @param StreamableInterface|null $body Body.
      * @throws \InvalidArgumentException When the body is not valid.
@@ -130,7 +141,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::getHeaders()
+     * Proxy to BaseResponseInterface::getHeaders()
      *
      * @return array Returns an associative array of the message's headers.
      */
@@ -140,7 +151,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::hasHeader()
+     * Proxy to BaseResponseInterface::hasHeader()
      *
      * @param string $header Case-insensitive header name.
      * @return bool Returns true if any header names match the given header
@@ -153,7 +164,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::getHeader()
+     * Proxy to BaseResponseInterface::getHeader()
      *
      * @param string $header Case-insensitive header name.
      * @return string
@@ -164,7 +175,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::getHeaderAsArray()
+     * Proxy to BaseResponseInterface::getHeaderAsArray()
      *
      * @param string $header Case-insensitive header name.
      * @return string[]
@@ -175,7 +186,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::setHeader()
+     * Proxy to BaseResponseInterface::setHeader()
      *
      * @param string $header Header name
      * @param string|string[] $value  Header value(s)
@@ -190,7 +201,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::setHeaders()
+     * Proxy to BaseResponseInterface::setHeaders()
      *
      * @param array $headers Headers to set.
      */
@@ -204,7 +215,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::addHeader()
+     * Proxy to BaseResponseInterface::addHeader()
      *
      * @param string $header Header name to add
      * @param string $value  Value of the header
@@ -219,7 +230,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::addHeaders()
+     * Proxy to BaseResponseInterface::addHeaders()
      *
      * @param array $headers Associative array of headers to add to the message
      */
@@ -233,7 +244,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::removeHeader()
+     * Proxy to BaseResponseInterface::removeHeader()
      *
      * @param string $header HTTP header to remove
      */
@@ -247,7 +258,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::getStatusCode()
+     * Proxy to BaseResponseInterface::getStatusCode()
      *
      * @return integer Status code.
      */
@@ -257,7 +268,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::setStatusCode()
+     * Proxy to BaseResponseInterface::setStatusCode()
      *
      * @param integer $code The 3-digit integer result code to set.
      */
@@ -271,7 +282,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::getReasonPhrase()
+     * Proxy to BaseResponseInterface::getReasonPhrase()
      *
      * @return string|null Reason phrase, or null if unknown.
      */
@@ -281,7 +292,7 @@ class Response implements
     }
 
     /**
-     * Proxy to ResponseInterface::setReasonPhrase()
+     * Proxy to BaseResponseInterface::setReasonPhrase()
      *
      * @param string $phrase The Reason-Phrase to set.
      */

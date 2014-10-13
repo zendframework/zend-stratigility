@@ -4,7 +4,7 @@ namespace Phly\Conduit;
 use ArrayObject;
 use InvalidArgumentException;
 use Phly\Http\Uri;
-use Psr\Http\Message\RequestInterface as Request;
+use Psr\Http\Message\IncomingRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
 /**
