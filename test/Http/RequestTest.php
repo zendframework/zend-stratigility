@@ -2,7 +2,7 @@
 namespace PhlyTest\Conduit\Http;
 
 use Phly\Conduit\Http\Request;
-use Phly\Http\Request as PsrRequest;
+use Phly\Http\IncomingRequest as PsrRequest;
 use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 

@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.6.0 - TBD
+
+Updated to psr/http-message 0.3.0 and phly/http 0.5.0. The changes required to do so are not backwards incompatible. In particular, all typehints against `Psr\Http\Message\RequestInterface` have been changed to `Psr\Http\Message\IncomingRequestInterface`, as the middleware in Conduit is expected to be server-side, and accept incoming requests.
+
+### Added
+
+- `Phly\Conduit\Http\Request` now implements `Psr\Http\Message\IncomingRequestInterface`, and defines the following new methods:
+  - `getCookieParams()`
+  - `setCookieParams($cookies)`
+  - `getQueryParams()`
+  - `getFileParams()`
+  - `getBodyParams()`
+  - `setBodyParams($values)`
+  - `getPathParams()`
+  - `setPathParams(array $values)`
+- `Phly\Conduit\Http\Request` adds a `setProtocolVersion()` method, as it is now defined in `Psr\Http\Message\MessageInterface`.
+- `Phly\Conduit\Http\Response` adds a `setProtocolVersion()` method, as it is now defined in `Psr\Http\Message\MessageInterface`.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- `Phly\Http\Middleware::__invoke` now typehints the `$request` argument against `Psr\Http\Message\IncomingRequestInterface`.
+
 ## 0.5.1 - 2014-10-01
 
 ### Added

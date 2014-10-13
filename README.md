@@ -13,7 +13,7 @@ Installation and Requirements
 Install this library using composer:
 
 ```console
-$ composer require "psr/http-message:~0.2.0@dev" "phly/http:~1.0-dev@dev" "phly/conduit:~1.0-dev@dev"
+$ composer require "psr/http-message:~0.3.0@dev" "phly/http:~1.0-dev@dev" "phly/conduit:~1.0-dev@dev"
 ```
 
 Conduit has the following dependencies (which are managed by Composer):
@@ -46,7 +46,13 @@ use Phly\Http\Server;
 require __DIR__ . '/../vendor/autoload.php';
 
 $app    = new Middleware();
-$server = Server::createServer($app, $_SERVER);
+$server = Server::createServer($app,
+  $_SERVER,
+  $_GET,
+  $_POST,
+  $_COOKIE,
+  $_FILES
+);
 $server->listen();
 ```
 
@@ -66,7 +72,7 @@ use Phly\Http\Server;
 require __DIR__ . '/../vendor/autoload.php';
 
 $app    = new Middleware();
-$server = Server::createServer($app, $_SERVER);
+$server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
 
 // Landing page
 $app->pipe('/', function ($req, $res, $next) {
@@ -163,7 +169,7 @@ In all cases, if you wish to implement typehinting, the signature is:
 
 ```php
 function (
-    Psr\Http\Message\RequestInterface $request,
+    Psr\Http\Message\IncomingRequestInterface $request,
     Psr\Http\Message\ResponseInterface $response,
     callable $next = null
 ) {
@@ -175,7 +181,7 @@ Error handler middleware has the following signature:
 ```php
 function (
     $error, // Can be any type
-    Psr\Http\Message\RequestInterface $request,
+    Psr\Http\Message\IncomingRequestInterface $request,
     Psr\Http\Message\ResponseInterface $response,
     callable $next
 ) {
@@ -186,7 +192,7 @@ Another approach is to extend the `Phly\Conduit\Middleware` class itself -- part
 
 ```php
 use Phly\Conduit\Middleware;
-use Psr\Http\Message\RequestInterface as Request;
+use Psr\Http\Message\IncomingRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
 class CustomMiddleware extends Middleware
@@ -232,14 +238,14 @@ The following make up the primary API of Conduit.
 
 ### Middleware
 
-`Phly\Conduit\Middleware` is the primary application interface, and has been discussed previously. It's API is:
+`Phly\Conduit\Middleware` is the primary application interface, and has been discussed previously. Its API is:
 
 ```php
 class Middleware
 {
     public function pipe($path, $handler = null);
     public function handle(
-        Psr\Http\Message\RequestInterface $request = null,
+        Psr\Http\Message\IncomingRequestInterface $request = null,
         Psr\Http\Message\ResponseInterface $response = null,
         callable $out = null
     );
@@ -265,7 +271,7 @@ Handlers are executed in the order in which they are piped to the `Middleware` i
 
 #### Phly\Conduit\Http\Request
 
-`Phly\Conduit\Http\Request` acts as a decorator for a `Psr\Http\Message\RequestInterface` instance, and implements property overloading, allowing the developer to set and retrieve arbitrary properties other than those exposed via getters. This allows the ability to pass values between handlers.
+`Phly\Conduit\Http\Request` acts as a decorator for a `Psr\Http\Message\IncomingRequestInterface` instance, and implements property overloading, allowing the developer to set and retrieve arbitrary properties other than those exposed via getters. This allows the ability to pass values between handlers.
 
 #### Phly\Conduit\Http\Response
 
