@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## TBD - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Updated `composer.json` to push `PhlyTest\\Conduit\\` namespace autoloading to the `autoload-dev` section (meaning no entry will be added when generating production autoloader rules).
+
 ## 0.6.1 - 2014-10-13
 
 ### Added
