@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.6.1 - 2014-10-13
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- `composer.json` now specifies `~0.5.0@dev` for the `phly/http` dependency.
+
 ## 0.6.0 - 2014-10-13
 
 Updated to psr/http-message 0.3.0 and phly/http 0.5.0. The changes required to do so are not backwards incompatible. In particular, all typehints against `Psr\Http\Message\RequestInterface` have been changed to `Psr\Http\Message\IncomingRequestInterface`, as the middleware in Conduit is expected to be server-side, and accept incoming requests.
