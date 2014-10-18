@@ -68,12 +68,6 @@ class RequestTest extends TestCase
 
         $this->assertSame($this->original->getHeaders(), $this->request->getHeaders());
 
-        $this->request->setHeaders([
-            'Accept'       => 'application/json',
-            'Content-Type' => 'application/json',
-        ]);
-        $this->assertSame($this->original->getHeaders(), $this->request->getHeaders());
-
         $this->request->setHeader('Accept', 'application/xml');
         $this->assertTrue($this->request->hasHeader('Accept'));
         $this->assertEquals('application/xml', $this->request->getHeader('Accept'));
@@ -81,16 +75,7 @@ class RequestTest extends TestCase
         $this->request->addHeader('X-URL', 'http://example.com/foo');
         $this->assertTrue($this->request->hasHeader('X-URL'));
 
-        $this->request->addHeaders([
-            'X-Url'  => 'http://example.com/bar',
-            'X-Flag' => 'true',
-        ]);
-        $this->assertEquals('http://example.com/foo,http://example.com/bar', $this->request->getHeader('X-URL'));
-        $this->assertTrue($this->request->hasHeader('X-Flag'));
-        $this->assertTrue($this->request->hasHeader('Accept'));
-        $this->assertTrue($this->request->hasHeader('Content-Type'));
-
-        $this->request->removeHeader('X-Flag');
-        $this->assertFalse($this->request->hasHeader('X-Flag'));
+        $this->request->removeHeader('X-URL');
+        $this->assertFalse($this->request->hasHeader('X-URL'));
     }
 }

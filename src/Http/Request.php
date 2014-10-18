@@ -199,34 +199,14 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::setHeaders()
-     *
-     * @param array $headers Headers to set.
-     */
-    public function setHeaders(array $headers)
-    {
-        return $this->psrRequest->setHeaders($headers);
-    }
-
-    /**
      * Proxy to IncomingRequestInterface::addHeader()
      *
-     * @param string $header Header name to add
-     * @param string $value  Value of the header
+     * @param string $header Header name to add or append
+     * @param string|string[] $value Value(s) to add or merge into the header
      */
     public function addHeader($header, $value)
     {
         return $this->psrRequest->addHeader($header, $value);
-    }
-
-    /**
-     * Proxy to IncomingRequestInterface::addHeaders()
-     *
-     * @param array $headers Associative array of headers to add to the message
-     */
-    public function addHeaders(array $headers)
-    {
-        return $this->psrRequest->addHeaders($headers);
     }
 
     /**
@@ -277,9 +257,9 @@ class Request implements IncomingRequestInterface
      *
      * Also sets originalUrl property if not previously set.
      *
+     * @link http://tools.ietf.org/html/rfc3986#section-4.3
      * @param string|object $url Request URL.
      * @throws \InvalidArgumentException If the URL is invalid.
-     * @link http://tools.ietf.org/html/rfc3986#section-4.3
      */
     public function setUrl($url)
     {
@@ -293,7 +273,7 @@ class Request implements IncomingRequestInterface
     /**
      * Proxy to IncomingRequestInterface::getCookies()
      *
-     * @return array|ArrayAccess
+     * @return array
      */
     public function getCookieParams()
     {
@@ -303,10 +283,9 @@ class Request implements IncomingRequestInterface
     /**
      * Proxy to IncomingRequestInterface::setCookies()
      * 
-     * @param array|ArrayAccess $cookies Cookie values/structs
-     * @return void
+     * @param array $cookies Cookie values/structs
      */
-    public function setCookieParams($cookies)
+    public function setCookieParams(array $cookies)
     {
         return $this->psrRequest->setCookieParams($cookies);
     }
@@ -314,7 +293,7 @@ class Request implements IncomingRequestInterface
     /**
      * Proxy to IncomingRequestInterface::getQueryParams()
      * 
-     * @return array|ArrayAccess
+     * @return array
      */
     public function getQueryParams()
     {
@@ -324,7 +303,7 @@ class Request implements IncomingRequestInterface
     /**
      * Proxy to IncomingRequestInterface::getFileParams
      * 
-     * @return array|ArrayAccess Upload file(s) metadata, if any.
+     * @return array Upload file(s) metadata, if any.
      */
     public function getFileParams()
     {
@@ -335,9 +314,7 @@ class Request implements IncomingRequestInterface
      * Proxy to IncomingRequestInterface::getBodyParams()
      *
      * 
-     * @return array|object The deserialized body parameters, if any. These may
-     *                      be either an array or an object, though an array or
-     *                      array-like object is recommended.
+     * @return array The deserialized body parameters, if any.
      */
     public function getBodyParams()
     {
@@ -347,37 +324,30 @@ class Request implements IncomingRequestInterface
     /**
      * Proxy to IncomingRequestInterface::setBodyParams()
      *
-     * @param array|object $values The deserialized body parameters, if any.
-     *                             These may be either an array or an object,
-     *                             though an array or array-like object is
-     *                             recommended.
-     *
-     * @return void
+     * @param array $values The deserialized body parameters, if any.
      */
-    public function setBodyParams($values)
+    public function setBodyParams(array $values)
     {
         return $this->psrRequest->setBodyParams($values);
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getPathParams()
+     * Proxy to IncomingRequestInterface::getAttributes()
      *
-     * @return array|ArrayAccess Path parameters matched by routing
+     * @return array Attributes derived from the request
      */
-    public function getPathParams()
+    public function getAttributes()
     {
-        return $this->psrRequest->getPathParams();
+        return $this->psrRequest->getAttributes();
     }
 
     /**
-     * Proxy to IncomingRequestInterface::setPathParams()
+     * Proxy to IncomingRequestInterface::setAttributes()
      *
-     * @param array|ArrayAccess $values Path parameters matched by routing
-     *
-     * @return void
+     * @param array Attributes derived from the request
      */
-    public function setPathParams(array $values)
+    public function setAttributes(array $values)
     {
-        return $this->psrRequest->setPathParams($values);
+        return $this->psrRequest->setAttributes($values);
     }
 }

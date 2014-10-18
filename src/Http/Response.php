@@ -201,24 +201,10 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::setHeaders()
-     *
-     * @param array $headers Headers to set.
-     */
-    public function setHeaders(array $headers)
-    {
-        if ($this->complete) {
-            return;
-        }
-
-        return $this->psrResponse->setHeaders($headers);
-    }
-
-    /**
      * Proxy to BaseResponseInterface::addHeader()
      *
-     * @param string $header Header name to add
-     * @param string $value  Value of the header
+     * @param string $header Header name to add or append
+     * @param string|string[] $value Value(s) to add or merge into the header
      */
     public function addHeader($header, $value)
     {
@@ -227,20 +213,6 @@ class Response implements
         }
 
         return $this->psrResponse->addHeader($header, $value);
-    }
-
-    /**
-     * Proxy to BaseResponseInterface::addHeaders()
-     *
-     * @param array $headers Associative array of headers to add to the message
-     */
-    public function addHeaders(array $headers)
-    {
-        if ($this->complete) {
-            return;
-        }
-
-        return $this->psrResponse->addHeaders($headers);
     }
 
     /**
