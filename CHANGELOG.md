@@ -2,11 +2,14 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
-## TBD - TBD
+## 0.7.0 - 2014-10-18
+
+Updates to psr/http-message 0.4.0 and phly/http 0.6.0. These libraries had several BC incompatible changes, requiring BC-breaking changes in Conduit.
 
 ### Added
 
-- Nothing.
+- Specifying `array` as the only accepted input type and return type for all `IncomingRequestInterface`-specific methods.
+- Added `(set|get)Attributes()` to the request decorator (replaces `(set|get)PathParams()`.
 
 ### Deprecated
 
@@ -14,7 +17,8 @@ All notable changes to this project will be documented in this file, in reverse 
 
 ### Removed
 
-- Nothing.
+- Removed of `setHeaders()` and `addHeaders()` in both the request and response decorators.
+- Removed `(set|get)PathParams()` in the request decorator (replaced by `(set|get)Attributes()`.
 
 ### Fixed
 

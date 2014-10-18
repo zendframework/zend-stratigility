@@ -61,28 +61,10 @@ class ResponseTest extends TestCase
         $this->assertEquals('foo', (string) $this->response->getBody());
     }
 
-    public function testSetHeadersDoesNothingIfComplete()
-    {
-        $this->response->end('foo');
-        $this->response->setHeaders([
-            'Content-Type' => 'application/json',
-        ]);
-        $this->assertFalse($this->response->hasHeader('Content-Type'));
-    }
-
     public function testAddHeaderDoesNothingIfComplete()
     {
         $this->response->end('foo');
         $this->response->addHeader('Content-Type', 'application/json');
-        $this->assertFalse($this->response->hasHeader('Content-Type'));
-    }
-
-    public function testAddHeadersDoesNothingIfComplete()
-    {
-        $this->response->end('foo');
-        $this->response->addHeaders([
-            'Content-Type' => 'application/json',
-        ]);
         $this->assertFalse($this->response->hasHeader('Content-Type'));
     }
 
@@ -108,12 +90,6 @@ class ResponseTest extends TestCase
 
         $this->assertSame($this->original->getHeaders(), $this->response->getHeaders());
 
-        $this->response->setHeaders([
-            'Accept'       => 'application/json',
-            'Content-Type' => 'application/json',
-        ]);
-        $this->assertSame($this->original->getHeaders(), $this->response->getHeaders());
-
         $this->response->setHeader('Accept', 'application/xml');
         $this->assertTrue($this->response->hasHeader('Accept'));
         $this->assertEquals('application/xml', $this->response->getHeader('Accept'));
@@ -121,17 +97,8 @@ class ResponseTest extends TestCase
         $this->response->addHeader('X-URL', 'http://example.com/foo');
         $this->assertTrue($this->response->hasHeader('X-URL'));
 
-        $this->response->addHeaders([
-            'X-Url'  => 'http://example.com/bar',
-            'X-Flag' => 'true',
-        ]);
-        $this->assertEquals('http://example.com/foo,http://example.com/bar', $this->response->getHeader('X-URL'));
-        $this->assertTrue($this->response->hasHeader('X-Flag'));
-        $this->assertTrue($this->response->hasHeader('Accept'));
-        $this->assertTrue($this->response->hasHeader('Content-Type'));
-
-        $this->response->removeHeader('X-Flag');
-        $this->assertFalse($this->response->hasHeader('X-Flag'));
+        $this->response->removeHeader('X-URL');
+        $this->assertFalse($this->response->hasHeader('X-URL'));
 
         $this->response->setReasonPhrase('FOOBAR');
         $this->assertEquals('FOOBAR', $this->response->getReasonPhrase());
