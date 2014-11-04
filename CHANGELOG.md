@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.8.1 - 2014-11-04
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- `Phly\Conduit\Http\Request` now proxies the property overloading methods to the underlying request's "attributes" methods.
+
 ## 0.8.0 - 2014-11-04
 
 Updates to psr/http-message 0.5.1 and phly/http 0.7.0. These libraries had several BC incompatible changes, requiring BC-breaking changes in Conduit.

@@ -63,10 +63,7 @@ class Request implements IncomingRequestInterface
      */
     public function __get($name)
     {
-        if (! array_key_exists($name, $this->params)) {
-            return null;
-        }
-        return $this->params[$name];
+        return $this->psrRequest->getAttribute($name);
     }
 
     /**
@@ -80,7 +77,8 @@ class Request implements IncomingRequestInterface
         if (is_array($value)) {
             $value = new ArrayObject($value, ArrayObject::ARRAY_AS_PROPS);
         }
-        $this->params[$name] = $value;
+
+        return $this->psrRequest->setAttribute($name, $value);
     }
 
     /**
@@ -91,7 +89,7 @@ class Request implements IncomingRequestInterface
      */
     public function __isset($name)
     {
-        return array_key_exists($name, $this->params);
+        return (bool) $this->psrRequest->getAttribute($name, false);
     }
 
     /**
@@ -101,10 +99,7 @@ class Request implements IncomingRequestInterface
      */
     public function __unset($name)
     {
-        if (! array_key_exists($name, $this->params)) {
-            return;
-        }
-        unset($this->params[$name]);
+        $this->psrRequest->setAttribute($name, null);
     }
 
     /**
