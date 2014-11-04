@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.8.0 - 2014-11-04
+
+Updates to psr/http-message 0.5.1 and phly/http 0.7.0. These libraries had several BC incompatible changes, requiring BC-breaking changes in Conduit.
+
+### Added
+
+- `Phly\Conduit\Http\Request::getAttribute($attribute, $default = null)`
+- `Phly\Conduit\Http\Request::setAttribute($attribute, $value)`
+- `Phly\Conduit\Http\Response::setStatus($code, $reasonPhrase = null)` (replaces `setStatusCode()` and `setReasonPhrase()`)
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Removed all setters except for `setUrl()` in `Phly\Conduit\Http\Request`.
+- Removed `setStatusCode()` and `setReasonPhrase()` from `Phly\Conduit\Http\Response` (replaced with `setStatus()`).
+
+### Fixed
+
+- `Phly\Conduit\Middleware` now typehints on `Psr\Http\Message\OutgoingResponseInterface` instead of `Psr\Http\Message\ResponseInterface` (which was removed).
+
 ## 0.7.0 - 2014-10-18
 
 Updates to psr/http-message 0.4.0 and phly/http 0.6.0. These libraries had several BC incompatible changes, requiring BC-breaking changes in Conduit.
