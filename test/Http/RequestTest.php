@@ -85,4 +85,20 @@ class RequestTest extends TestCase
         $this->assertSame($stream, $request->getBody());
         $this->assertSame($psrRequest->getHeaders(), $request->getHeaders());
     }
+
+    public function testPropertyAccessProxiesToRequestAttributes()
+    {
+        $this->original->setAttributes([
+            'foo' => 'bar',
+            'bar' => 'baz',
+        ]);
+
+        $this->assertTrue(isset($this->request->foo));
+        $this->assertTrue(isset($this->request->bar));
+        $this->assertFalse(isset($this->request->baz));
+
+        $this->request->baz = 'quz';
+        $this->assertTrue(isset($this->request->baz));
+        $this->assertEquals('quz', $this->original->getAttribute('baz', false));
+    }
 }
