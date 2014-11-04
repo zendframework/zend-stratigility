@@ -2,6 +2,7 @@
 namespace Phly\Conduit;
 
 use ArrayObject;
+use Phly\Http\Uri;
 
 /**
  * Iterate a stack of middlewares and execute them
@@ -78,7 +79,7 @@ class Next
         }
 
         $layer = $this->stack[$this->index++];
-        $path  = $this->request->getUrl()->path ?: '/';
+        $path  = parse_url($this->request->getUrl(), PHP_URL_PATH) ?: '/';
         $route = $layer->path;
 
         // Skip if layer path does not match current url
@@ -111,9 +112,10 @@ class Next
             return;
         }
 
-        $uri  = $this->request->getUrl();
+        $uri  = new Uri($this->request->getUrl());
         $path = $this->removed . $uri->path;
-        $request->setUrl($uri->setPath($path));
+        $new  = $uri->setPath($path);
+        $request->setUrl((string) $new);
         $this->removed = '';
     }
 
@@ -142,8 +144,9 @@ class Next
     {
         $this->removed = $route;
 
-        $uri  = $this->request->getUrl();
+        $uri  = new Uri($this->request->getUrl());
         $path = substr($uri->path, strlen($route));
-        $this->request->setUrl($uri->setPath($path));
+        $new  = $uri->setPath($path);
+        $this->request->setUrl((string) $new);
     }
 }

@@ -1,7 +1,7 @@
 <?php
 namespace Phly\Conduit\Http;
 
-use Psr\Http\Message\ResponseInterface as BaseResponseInterface;
+use Psr\Http\Message\OutgoingResponseInterface;
 use Psr\Http\Message\StreamableInterface;
 
 /**
@@ -11,7 +11,7 @@ use Psr\Http\Message\StreamableInterface;
  * to provide a common interface for all PSR HTTP implementations.
  */
 class Response implements
-    BaseResponseInterface,
+    OutgoingResponseInterface,
     ResponseInterface
 {
     /**
@@ -25,9 +25,9 @@ class Response implements
     private $psrResponse;
 
     /**
-     * @param BaseResponseInterface $response
+     * @param OutgoingResponseInterface $response
      */
-    public function __construct(BaseResponseInterface $response)
+    public function __construct(OutgoingResponseInterface $response)
     {
         $this->psrResponse = $response;
     }
@@ -128,10 +128,10 @@ class Response implements
     /**
      * Proxy to BaseResponseInterface::setBody()
      *
-     * @param StreamableInterface|null $body Body.
+     * @param StreamableInterface $body Body.
      * @throws \InvalidArgumentException When the body is not valid.
      */
-    public function setBody(StreamableInterface $body = null)
+    public function setBody(StreamableInterface $body)
     {
         if ($this->complete) {
             return;
@@ -240,17 +240,18 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::setStatusCode()
+     * Proxy to BaseResponseInterface::setStatus()
      *
      * @param integer $code The 3-digit integer result code to set.
+     * @param null|string $reasonPhrase The reason phrase to use with the status, if any.
      */
-    public function setStatusCode($code)
+    public function setStatus($code, $reasonPhrase = null)
     {
         if ($this->complete) {
             return;
         }
 
-        return $this->psrResponse->setStatusCode($code);
+        return $this->psrResponse->setStatus($code, $reasonPhrase);
     }
 
     /**
@@ -261,19 +262,5 @@ class Response implements
     public function getReasonPhrase()
     {
         return $this->psrResponse->getReasonPhrase();
-    }
-
-    /**
-     * Proxy to BaseResponseInterface::setReasonPhrase()
-     *
-     * @param string $phrase The Reason-Phrase to set.
-     */
-    public function setReasonPhrase($phrase)
-    {
-        if ($this->complete && $this->psrResponse->getReasonPhrase()) {
-            return;
-        }
-
-        return $this->psrResponse->setReasonPhrase($phrase);
     }
 }

@@ -2,7 +2,7 @@
 namespace PhlyTest\Conduit\Http;
 
 use Phly\Conduit\Http\Response;
-use Phly\Http\Response as PsrResponse;
+use Phly\Http\OutgoingResponse as PsrResponse;
 use Phly\Http\Stream;
 use PHPUnit_Framework_TestCase as TestCase;
 
@@ -36,11 +36,11 @@ class ResponseTest extends TestCase
 
     public function testCannotMutateResponseAfterCallingEnd()
     {
-        $this->response->setStatusCode(201);
+        $this->response->setStatus(201);
         $this->response->write("First\n");
         $this->response->end('DONE');
 
-        $this->response->setStatusCode(200);
+        $this->response->setStatus(200);
         $this->response->setHeader('X-Foo', 'Foo');
         $this->response->write('MOAR!');
 
@@ -100,24 +100,7 @@ class ResponseTest extends TestCase
         $this->response->removeHeader('X-URL');
         $this->assertFalse($this->response->hasHeader('X-URL'));
 
-        $this->response->setReasonPhrase('FOOBAR');
-        $this->assertEquals('FOOBAR', $this->response->getReasonPhrase());
-    }
-
-    public function testReasonPhraseMayBeUpdatedWhenResponseIsCompleteAndPhraseIsNull()
-    {
-        $this->response->setStatusCode(499);
-        $this->response->end('foo');
-        $this->response->setReasonPhrase('FOOBAR');
-        $this->assertEquals('FOOBAR', $this->response->getReasonPhrase());
-    }
-
-    public function testReasonPhraseIsImmutableWhenAlreadySetAndResponseIsComplete()
-    {
-        $this->response->setStatusCode(499);
-        $this->response->setReasonPhrase('FOOBAR');
-        $this->response->end('foo');
-        $this->response->setReasonPhrase('BARBAZ');
+        $this->response->setStatus(200, 'FOOBAR');
         $this->assertEquals('FOOBAR', $this->response->getReasonPhrase());
     }
 }

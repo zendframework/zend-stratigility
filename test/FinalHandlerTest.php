@@ -6,7 +6,7 @@ use Phly\Conduit\FinalHandler;
 use Phly\Conduit\Http\Request;
 use Phly\Conduit\Http\Response;
 use Phly\Http\IncomingRequest as PsrRequest;
-use Phly\Http\Response as PsrResponse;
+use Phly\Http\OutgoingResponse as PsrResponse;
 use PHPUnit_Framework_TestCase as TestCase;
 use Zend\Escaper\Escaper;
 
@@ -15,7 +15,7 @@ class FinalHandlerTest extends TestCase
     public function setUp()
     {
         $this->escaper  = new Escaper();
-        $this->request  = new Request(new PsrRequest('php://memory'));
+        $this->request  = new Request(new PsrRequest('http://example.com/', 'GET', [], 'php://memory'));
         $this->response = new Response(new PsrResponse());
         $this->final    = new FinalHandler($this->request, $this->response);
     }
@@ -103,10 +103,16 @@ class FinalHandlerTest extends TestCase
     public function test404ResponseIncludesOriginalRequestUrl()
     {
         $originalUrl = 'http://local.example.com/bar/foo';
-        $this->request->setMethod('GET');
-        $this->request->setUrl('http://local.example.com/foo');
-        $this->request->originalUrl = $originalUrl;
-        call_user_func($this->final);
+        $request = new Request(new PsrRequest(
+            $originalUrl,
+            'GET',
+            [],
+            'php://memory'
+        ));
+        $request->setUrl('http://local.example.com/foo');
+
+        $final = new FinalHandler($request, $this->response);
+        call_user_func($final);
         $this->assertContains($originalUrl, (string) $this->response->getBody());
     }
 }

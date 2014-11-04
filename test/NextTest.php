@@ -7,7 +7,7 @@ use Phly\Conduit\Http\Response;
 use Phly\Conduit\Next;
 use Phly\Conduit\Route;
 use Phly\Http\IncomingRequest as PsrRequest;
-use Phly\Http\Response as PsrResponse;
+use Phly\Http\OutgoingResponse as PsrResponse;
 use PHPUnit_Framework_TestCase as TestCase;
 
 class NextTest extends TestCase
@@ -15,7 +15,12 @@ class NextTest extends TestCase
     public function setUp()
     {
         $this->stack    = new ArrayObject();
-        $this->request  = new Request(new PsrRequest('php://memory'));
+        $this->request  = new Request(new PsrRequest(
+            'http://example.com/',
+            'GET',
+            [],
+            'php://memory'
+        ));
         $this->response = new Response(new PsrResponse());
     }
 
@@ -101,7 +106,7 @@ class NextTest extends TestCase
         // then the URI path in the handler is "/bar"
         $triggered = null;
         $route = new Route('/foo', function ($req, $res, $next) use (&$triggered) {
-            $triggered = $req->getUrl()->path;
+            $triggered = parse_url($req->getUrl(), PHP_URL_PATH);
         });
         $this->stack[] = $route;
 

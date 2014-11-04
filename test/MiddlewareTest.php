@@ -6,7 +6,7 @@ use Phly\Conduit\Http\Response as ResponseDecorator;
 use Phly\Conduit\Middleware;
 use Phly\Conduit\Utils;
 use Phly\Http\IncomingRequest as Request;
-use Phly\Http\Response;
+use Phly\Http\OutgoingResponse as Response;
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
 
@@ -14,7 +14,12 @@ class MiddlewareTest extends TestCase
 {
     public function setUp()
     {
-        $this->request    = new Request('php://memory');
+        $this->request    = new Request(
+            'http://example.com/',
+            'GET',
+            [],
+            'php://memory'
+        );
         $this->response   = new Response();
         $this->middleware = new Middleware();
     }
@@ -59,9 +64,8 @@ class MiddlewareTest extends TestCase
             $phpunit->fail('Should not hit fourth handler!');
         });
 
-        $this->request->setMethod('GET');
-        $this->request->setUrl('http://local.example.com/foo');
-        $this->middleware->__invoke($this->request, $this->response);
+        $request = new Request('http://local.example.com/foo', 'GET', [], 'php://memory');
+        $this->middleware->__invoke($request, $this->response);
         $body = (string) $this->response->getBody();
         $this->assertContains('First', $body);
         $this->assertContains('Second', $body);
@@ -88,9 +92,8 @@ class MiddlewareTest extends TestCase
             $phpunit->fail('Should not hit fourth handler!');
         });
 
-        $this->request->setMethod('GET');
-        $this->request->setUrl('http://local.example.com/foo');
-        $this->middleware->__invoke($this->request, $this->response);
+        $request = new Request('http://local.example.com/foo', 'GET', [], 'php://memory');
+        $this->middleware->__invoke($request, $this->response);
         $body = (string) $this->response->getBody();
         $this->assertContains('First', $body);
         $this->assertContains('ERROR HANDLER', $body);
@@ -114,9 +117,8 @@ class MiddlewareTest extends TestCase
             $next();
         });
 
-        $this->request->setMethod('GET');
-        $this->request->setUrl('http://local.example.com/foo');
-        $this->middleware->__invoke($this->request, $this->response, $out);
+        $request = new Request('http://local.example.com/foo', 'GET', [], 'php://memory');
+        $this->middleware->__invoke($request, $this->response, $out);
         $this->assertTrue($triggered);
     }
 
@@ -151,10 +153,9 @@ class MiddlewareTest extends TestCase
 
     public function testCanUseDecoratedRequestAndResponseDirectly()
     {
-        $this->request->setMethod('GET');
-        $this->request->setUrl('http://local.example.com/foo');
+        $baseRequest = new Request('http://local.example.com/foo', 'GET', [], 'php://memory');
 
-        $request  = new RequestDecorator($this->request);
+        $request  = new RequestDecorator($baseRequest);
         $response = new ResponseDecorator($this->response);
         $phpunit  = $this;
         $executed = false;

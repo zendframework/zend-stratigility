@@ -5,7 +5,7 @@ use ArrayObject;
 use InvalidArgumentException;
 use Phly\Http\Uri;
 use Psr\Http\Message\IncomingRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\OutgoingResponseInterface as Response;
 
 /**
  * Middleware
