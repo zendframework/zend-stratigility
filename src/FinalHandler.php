@@ -65,7 +65,7 @@ class FinalHandler
      */
     private function handleError($error)
     {
-        $this->response->setStatusCode(
+        $this->response->setStatus(
             $this->getStatusCode($error, $this->response)
         );
 
@@ -86,7 +86,7 @@ class FinalHandler
      */
     private function create404()
     {
-        $this->response->setStatusCode(404);
+        $this->response->setStatus(404);
 
         $url     = $this->request->originalUrl ?: $this->request->getUrl();
         $escaper = new Escaper();

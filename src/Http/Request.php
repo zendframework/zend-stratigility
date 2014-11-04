@@ -16,6 +16,13 @@ use Psr\Http\Message\StreamableInterface;
 class Request implements IncomingRequestInterface
 {
     /**
+     * Current URL (URL set in the proxy)
+     * 
+     * @var string
+     */
+    private $currentUrl;
+
+    /**
      * User request parameters
      *
      * @var array
@@ -111,35 +118,13 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::setProtocolVersion()
-     * 
-     * @param string $version 
-     * @return void
-     */
-    public function setProtocolVersion($version)
-    {
-        return $this->psrRequest->setProtocolVersion($version);
-    }
-
-    /**
      * Proxy to IncomingRequestInterface::getBody()
      *
-     * @return StreamableInterface|null Returns the body, or null if not set.
+     * @return StreamableInterface Returns the body stream.
      */
     public function getBody()
     {
         return $this->psrRequest->getBody();
-    }
-
-    /**
-     * Proxy to IncomingRequestInterface::setBody()
-     *
-     * @param StreamableInterface|null $body Body.
-     * @throws \InvalidArgumentException When the body is not valid.
-     */
-    public function setBody(StreamableInterface $body = null)
-    {
-        return $this->psrRequest->setBody($body);
     }
 
     /**
@@ -188,38 +173,6 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::setHeader()
-     *
-     * @param string $header Header name
-     * @param string|string[] $value  Header value(s)
-     */
-    public function setHeader($header, $value)
-    {
-        return $this->psrRequest->setHeader($header, $value);
-    }
-
-    /**
-     * Proxy to IncomingRequestInterface::addHeader()
-     *
-     * @param string $header Header name to add or append
-     * @param string|string[] $value Value(s) to add or merge into the header
-     */
-    public function addHeader($header, $value)
-    {
-        return $this->psrRequest->addHeader($header, $value);
-    }
-
-    /**
-     * Proxy to IncomingRequestInterface::removeHeader()
-     *
-     * @param string $header HTTP header to remove
-     */
-    public function removeHeader($header)
-    {
-        return $this->psrRequest->removeHeader($header);
-    }
-
-    /**
      * Proxy to IncomingRequestInterface::getMethod()
      *
      * @return string Returns the request method.
@@ -227,16 +180,6 @@ class Request implements IncomingRequestInterface
     public function getMethod()
     {
         return $this->psrRequest->getMethod();
-    }
-
-    /**
-     * Proxy to IncomingRequestInterface::setMethod()
-     *
-     * @param string $method Case-insensitive method.
-     */
-    public function setMethod($method)
-    {
-        return $this->psrRequest->setMethod($method);
     }
 
     /**
@@ -249,11 +192,15 @@ class Request implements IncomingRequestInterface
      */
     public function getUrl()
     {
+        if ($this->currentUrl) {
+            return $this->currentUrl;
+        }
+
         return $this->psrRequest->getUrl();
     }
 
     /**
-     * Proxy to IncomingRequestInterface::setUrl()
+     * Allow mutating the URL
      *
      * Also sets originalUrl property if not previously set.
      *
@@ -263,7 +210,7 @@ class Request implements IncomingRequestInterface
      */
     public function setUrl($url)
     {
-        $this->psrRequest->setUrl($url);
+        $this->currentUrl = $url;
 
         if (! $this->originalUrl) {
             $this->originalUrl = $this->psrRequest->getUrl();
@@ -271,23 +218,23 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getCookies()
+     * Proxy to IncomingRequestInterface::getServerParams()
+     * 
+     * @return array
+     */
+    public function getServerParams()
+    {
+        return $this->psrRequest->getServerParams();
+    }
+
+    /**
+     * Proxy to IncomingRequestInterface::getCookieParams()
      *
      * @return array
      */
     public function getCookieParams()
     {
         return $this->psrRequest->getCookieParams();
-    }
-
-    /**
-     * Proxy to IncomingRequestInterface::setCookies()
-     * 
-     * @param array $cookies Cookie values/structs
-     */
-    public function setCookieParams(array $cookies)
-    {
-        return $this->psrRequest->setCookieParams($cookies);
     }
 
     /**
@@ -301,7 +248,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getFileParams
+     * Proxy to IncomingRequestInterface::getFileParams()
      * 
      * @return array Upload file(s) metadata, if any.
      */
@@ -322,16 +269,6 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::setBodyParams()
-     *
-     * @param array $values The deserialized body parameters, if any.
-     */
-    public function setBodyParams(array $values)
-    {
-        return $this->psrRequest->setBodyParams($values);
-    }
-
-    /**
      * Proxy to IncomingRequestInterface::getAttributes()
      *
      * @return array Attributes derived from the request
@@ -342,6 +279,18 @@ class Request implements IncomingRequestInterface
     }
 
     /**
+     * Proxy to IncomingRequestInterface::getAttribute()
+     * 
+     * @param string $attribute 
+     * @param mixed $default 
+     * @return mixed
+     */
+    public function getAttribute($attribute, $default = null)
+    {
+        return $this->psrRequest->getAttribute($attribute, $default);
+    }
+
+    /**
      * Proxy to IncomingRequestInterface::setAttributes()
      *
      * @param array Attributes derived from the request
@@ -349,5 +298,17 @@ class Request implements IncomingRequestInterface
     public function setAttributes(array $values)
     {
         return $this->psrRequest->setAttributes($values);
+    }
+
+    /**
+     * Proxy to IncomingRequestInterface::setAttribute()
+     * 
+     * @param string $attribute 
+     * @param mixed $value 
+     * @return void
+     */
+    public function setAttribute($attribute, $value)
+    {
+        return $this->psrRequest->setAttribute($attribute, $value);
     }
 }

@@ -10,7 +10,12 @@ class RequestTest extends TestCase
 {
     public function setUp()
     {
-        $this->original = new PsrRequest();
+        $this->original = new PsrRequest(
+            'http://example.com/',
+            'GET',
+            [],
+            'php://memory'
+        );
         $this->request  = new Request($this->original);
     }
 
@@ -39,16 +44,20 @@ class RequestTest extends TestCase
     public function testCallingSetUrlSetsOriginalUrlProperty()
     {
         $url = 'http://example.com/foo';
-        $uri = new Uri($url);
-        $this->request->setUrl($uri);
-        $this->assertSame($uri, $this->request->originalUrl);
+        $this->request->setUrl($url);
+        $this->assertSame('http://example.com/', $this->request->originalUrl);
+        $this->assertSame($url, $this->request->getUrl());
     }
 
     public function testConstructorSetsOriginalUrlIfDecoratedRequestHasUrl()
     {
         $url = 'http://example.com/foo';
-        $baseRequest = new PsrRequest();
-        $baseRequest->setUrl($url);
+        $baseRequest = new PsrRequest(
+            $url,
+            'GET',
+            [],
+            'php://memory'
+        );
         $request = new Request($baseRequest);
         $this->assertSame($baseRequest->getUrl(), $request->originalUrl);
     }
@@ -60,22 +69,20 @@ class RequestTest extends TestCase
 
     public function testDecoratorProxiesToAllMethods()
     {
-        $this->assertEquals('1.1', $this->request->getProtocolVersion());
-
         $stream = $this->getMock('Psr\Http\Message\StreamableInterface');
-        $this->request->setBody($stream);
-        $this->assertSame($stream, $this->request->getBody());
+        $psrRequest = new PsrRequest(
+            'http://example.com/',
+            'POST',
+            [
+                'Accept' => 'application/xml',
+                'X-URL'  => 'http://example.com/foo',
+            ],
+            $stream
+        );
+        $request = new Request($psrRequest);
 
-        $this->assertSame($this->original->getHeaders(), $this->request->getHeaders());
-
-        $this->request->setHeader('Accept', 'application/xml');
-        $this->assertTrue($this->request->hasHeader('Accept'));
-        $this->assertEquals('application/xml', $this->request->getHeader('Accept'));
-
-        $this->request->addHeader('X-URL', 'http://example.com/foo');
-        $this->assertTrue($this->request->hasHeader('X-URL'));
-
-        $this->request->removeHeader('X-URL');
-        $this->assertFalse($this->request->hasHeader('X-URL'));
+        $this->assertEquals('1.1', $request->getProtocolVersion());
+        $this->assertSame($stream, $request->getBody());
+        $this->assertSame($psrRequest->getHeaders(), $request->getHeaders());
     }
 }
