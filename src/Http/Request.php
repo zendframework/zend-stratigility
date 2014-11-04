@@ -23,13 +23,6 @@ class Request implements IncomingRequestInterface
     private $currentUrl;
 
     /**
-     * User request parameters
-     *
-     * @var array
-     */
-    private $params = array();
-
-    /**
      * @var IncomingRequestInterface
      */
     private $psrRequest;
