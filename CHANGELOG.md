@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.8.2 - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- `Phly\Conduit\Http\Request::$params`, as it is no longer used.
+
+### Fixed
+
+- Nothing.
+
 ## 0.8.1 - 2014-11-04
 
 ### Added
