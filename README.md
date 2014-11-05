@@ -13,7 +13,7 @@ Installation and Requirements
 Install this library using composer:
 
 ```console
-$ composer require "psr/http-message:~0.3.0@dev" "phly/http:~1.0-dev@dev" "phly/conduit:~1.0-dev@dev"
+$ composer require "psr/http-message:~0.5.1@dev" "phly/http:~1.0-dev@dev" "phly/conduit:~1.0-dev@dev"
 ```
 
 Conduit has the following dependencies (which are managed by Composer):
@@ -170,7 +170,7 @@ In all cases, if you wish to implement typehinting, the signature is:
 ```php
 function (
     Psr\Http\Message\IncomingRequestInterface $request,
-    Psr\Http\Message\ResponseInterface $response,
+    Psr\Http\Message\OutgoingResponseInterface $response,
     callable $next = null
 ) {
 }
@@ -182,7 +182,7 @@ Error handler middleware has the following signature:
 function (
     $error, // Can be any type
     Psr\Http\Message\IncomingRequestInterface $request,
-    Psr\Http\Message\ResponseInterface $response,
+    Psr\Http\Message\OutgoingResponseInterface $response,
     callable $next
 ) {
 }
@@ -193,7 +193,7 @@ Another approach is to extend the `Phly\Conduit\Middleware` class itself -- part
 ```php
 use Phly\Conduit\Middleware;
 use Psr\Http\Message\IncomingRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\OutgoingResponseInterface as Response;
 
 class CustomMiddleware extends Middleware
 {
@@ -246,7 +246,7 @@ class Middleware
     public function pipe($path, $handler = null);
     public function handle(
         Psr\Http\Message\IncomingRequestInterface $request = null,
-        Psr\Http\Message\ResponseInterface $response = null,
+        Psr\Http\Message\OutgoingResponseInterface $response = null,
         callable $out = null
     );
 }
@@ -273,9 +273,11 @@ Handlers are executed in the order in which they are piped to the `Middleware` i
 
 `Phly\Conduit\Http\Request` acts as a decorator for a `Psr\Http\Message\IncomingRequestInterface` instance, and implements property overloading, allowing the developer to set and retrieve arbitrary properties other than those exposed via getters. This allows the ability to pass values between handlers.
 
+Property overloading writes to the _attributes_ property of the incoming request, ensuring that the two are synchronized; in essence, it offers a convenience API to the various `(get|set)Attributes?()` methods.
+
 #### Phly\Conduit\Http\Response
 
-`Phly\Conduit\Http\Response` acts as a decorator for a `Psr\Http\Message\ResponseInterface` instance, and also implements `Phly\Conduit\Http\ResponseInterface`, which provides the following convenience methods:
+`Phly\Conduit\Http\Response` acts as a decorator for a `Psr\Http\Message\OutgoingResponseInterface` instance, and also implements `Phly\Conduit\Http\ResponseInterface`, which provides the following convenience methods:
 
 - `write()`, which proxies to the `write()` method of the composed response stream.
 - `end()`, which marks the response as complete; it can take an optional argument, which, when provided, will be passed to the `write()` method. Once `end()` has been called, the response is immutable.
