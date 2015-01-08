@@ -5,8 +5,8 @@ use Exception;
 use Phly\Conduit\FinalHandler;
 use Phly\Conduit\Http\Request;
 use Phly\Conduit\Http\Response;
-use Phly\Http\IncomingRequest as PsrRequest;
-use Phly\Http\OutgoingResponse as PsrResponse;
+use Phly\Http\ServerRequest as PsrRequest;
+use Phly\Http\Response as PsrResponse;
 use PHPUnit_Framework_TestCase as TestCase;
 use Zend\Escaper\Escaper;
 
@@ -14,8 +14,12 @@ class FinalHandlerTest extends TestCase
 {
     public function setUp()
     {
+        $psrRequest  = new PsrRequest('php://memory');
+        $psrRequest->setMethod('GET');
+        $psrRequest->setAbsoluteUri('http://example.com/');
+
         $this->escaper  = new Escaper();
-        $this->request  = new Request(new PsrRequest('http://example.com/', 'GET', [], 'php://memory'));
+        $this->request  = new Request($psrRequest);
         $this->response = new Response(new PsrResponse());
         $this->final    = new FinalHandler($this->request, $this->response);
     }
@@ -103,12 +107,10 @@ class FinalHandlerTest extends TestCase
     public function test404ResponseIncludesOriginalRequestUrl()
     {
         $originalUrl = 'http://local.example.com/bar/foo';
-        $request = new Request(new PsrRequest(
-            $originalUrl,
-            'GET',
-            [],
-            'php://memory'
-        ));
+        $psrRequest = new PsrRequest('php://memory');
+        $psrRequest->setMethod('GET');
+        $psrRequest->setAbsoluteUri($originalUrl);
+        $request = new Request($psrRequest);
         $request->setUrl('http://local.example.com/foo');
 
         $final = new FinalHandler($request, $this->response);

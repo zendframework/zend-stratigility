@@ -2,19 +2,26 @@
 namespace Phly\Conduit\Http;
 
 use ArrayObject;
-use Psr\Http\Message\IncomingRequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamableInterface;
 
 /**
- * Decorator for PSR IncomingRequestInterface
+ * Decorator for PSR ServerRequestInterface
  *
  * Decorates the PSR incoming request interface to add the ability to 
  * manipulate arbitrary instance members.
  *
  * @property \Phly\Http\Uri $originalUrl Original URL of this instance
  */
-class Request implements IncomingRequestInterface
+class Request implements ServerRequestInterface
 {
+    /**
+     * Current absolute URI (URI set in the proxy)
+     * 
+     * @var string
+     */
+    private $currentAbsoluteUri;
+
     /**
      * Current URL (URL set in the proxy)
      * 
@@ -23,14 +30,14 @@ class Request implements IncomingRequestInterface
     private $currentUrl;
 
     /**
-     * @var IncomingRequestInterface
+     * @var ServerRequestInterface
      */
     private $psrRequest;
 
     /**
-     * @param IncomingRequestInterface $request
+     * @param ServerRequestInterface $request
      */
-    public function __construct(IncomingRequestInterface $request)
+    public function __construct(ServerRequestInterface $request)
     {
         $this->psrRequest = $request;
         $this->originalUrl = $request->getUrl();
@@ -39,7 +46,7 @@ class Request implements IncomingRequestInterface
     /**
      * Return the original PSR request object
      *
-     * @return IncomingRequestInterface
+     * @return ServerRequestInterface
      */
     public function getOriginalRequest()
     {
@@ -96,7 +103,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getProtocolVersion()
+     * Proxy to ServerRequestInterface::getProtocolVersion()
      *
      * @return string HTTP protocol version.
      */
@@ -106,7 +113,17 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getBody()
+     * Proxy to ServerRequestInterface::setProtocolVersion()
+     *
+     * @param string $version HTTP protocol version.
+     */
+    public function setProtocolVersion($version)
+    {
+        return $this->psrRequest->setProtocolVersion($version);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::getBody()
      *
      * @return StreamableInterface Returns the body stream.
      */
@@ -116,7 +133,18 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getHeaders()
+     * Proxy to ServerRequestInterface::setBody()
+     *
+     * @param StreamableInterface $body Body.
+     * @throws \InvalidArgumentException When the body is not valid.
+     */
+    public function setBody(StreamableInterface $body)
+    {
+        return $this->psrRequest->setBody($body);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::getHeaders()
      *
      * @return array Returns an associative array of the message's headers.
      */
@@ -126,7 +154,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::hasHeader()
+     * Proxy to ServerRequestInterface::hasHeader()
      *
      * @param string $header Case-insensitive header name.
      * @return bool Returns true if any header names match the given header
@@ -139,7 +167,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getHeader()
+     * Proxy to ServerRequestInterface::getHeader()
      *
      * @param string $header Case-insensitive header name.
      * @return string
@@ -150,18 +178,50 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getHeaderAsArray()
+     * Proxy to ServerRequestInterface::getHeaderLines()
      *
      * @param string $header Case-insensitive header name.
      * @return string[]
      */
-    public function getHeaderAsArray($header)
+    public function getHeaderLines($header)
     {
-        return $this->psrRequest->getHeaderAsArray($header);
+        return $this->psrRequest->getHeaderLines($header);
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getMethod()
+     * Proxy to ServerRequestInterface::setHeader()
+     *
+     * @param string $header Header name
+     * @param string|string[] $value  Header value(s)
+     */
+    public function setHeader($header, $value)
+    {
+        return $this->psrRequest->setHeader($header, $value);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::addHeader()
+     *
+     * @param string $header Header name to add or append
+     * @param string|string[] $value Value(s) to add or merge into the header
+     */
+    public function addHeader($header, $value)
+    {
+        return $this->psrRequest->addHeader($header, $value);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::removeHeader()
+     *
+     * @param string $header HTTP header to remove
+     */
+    public function removeHeader($header)
+    {
+        return $this->psrRequest->removeHeader($header);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::getMethod()
      *
      * @return string Returns the request method.
      */
@@ -171,7 +231,50 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getUrl()
+     * Proxy to ServerRequestInterface::setMethod()
+     *
+     * @param string $method The request method.
+     */
+    public function setMethod($method)
+    {
+        $this->psrRequest->setMethod($method);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::getAbsoluteUri()
+     *
+     * @return string Returns the absolute URI as a string
+     * @link http://tools.ietf.org/html/rfc3986#section-4.3
+     */
+    public function getAbsoluteUri()
+    {
+        if ($this->currentAbsoluteUri) {
+            return $this->currentAbsoluteUri;
+        }
+
+        return $this->psrRequest->getAbsoluteUri();
+    }
+
+    /**
+     * Allow mutating the absolute URI
+     *
+     * Also sets originalAbsoluteUri property if not previously set.
+     *
+     * @link http://tools.ietf.org/html/rfc3986#section-4.3
+     * @param string|object $uri Absolute request URI.
+     * @throws \InvalidArgumentException If the URL is invalid.
+     */
+    public function setAbsoluteUri($uri)
+    {
+        $this->currentAbsoluteUri = $uri;
+
+        if (! $this->originalAbsoluteUri) {
+            $this->originalAbsoluteUri = $this->psrRequest->getAbsoluteUri();
+        }
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::getUrl()
      *
      * @return string|object Returns the URL as a string, or an object that
      *    implements the `__toString()` method. The URL must be an absolute URI
@@ -206,7 +309,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getServerParams()
+     * Proxy to ServerRequestInterface::getServerParams()
      * 
      * @return array
      */
@@ -216,7 +319,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getCookieParams()
+     * Proxy to ServerRequestInterface::getCookieParams()
      *
      * @return array
      */
@@ -226,7 +329,17 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getQueryParams()
+     * Proxy to ServerRequestInterface::setCookieParams()
+     *
+     * @param array $cookies
+     */
+    public function setCookieParams(array $cookies)
+    {
+        $this->psrRequest->setCookieParams($cookies);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::getQueryParams()
      * 
      * @return array
      */
@@ -236,7 +349,17 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getFileParams()
+     * Proxy to ServerRequestInterface::setQueryParams()
+     * 
+     * @param array $query
+     */
+    public function setQueryParams(array $query)
+    {
+        $this->psrRequest->setQueryParams($query);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::getFileParams()
      * 
      * @return array Upload file(s) metadata, if any.
      */
@@ -246,7 +369,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getBodyParams()
+     * Proxy to ServerRequestInterface::getBodyParams()
      *
      * 
      * @return array The deserialized body parameters, if any.
@@ -257,7 +380,18 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getAttributes()
+     * Proxy to ServerRequestInterface::setBodyParams()
+     *
+     * 
+     * @param array $params The deserialized body parameters.
+     */
+    public function setBodyParams(array $params)
+    {
+        return $this->psrRequest->setBodyParams($params);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::getAttributes()
      *
      * @return array Attributes derived from the request
      */
@@ -267,7 +401,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::getAttribute()
+     * Proxy to ServerRequestInterface::getAttribute()
      * 
      * @param string $attribute 
      * @param mixed $default 
@@ -279,7 +413,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::setAttributes()
+     * Proxy to ServerRequestInterface::setAttributes()
      *
      * @param array Attributes derived from the request
      */
@@ -289,7 +423,7 @@ class Request implements IncomingRequestInterface
     }
 
     /**
-     * Proxy to IncomingRequestInterface::setAttribute()
+     * Proxy to ServerRequestInterface::setAttribute()
      * 
      * @param string $attribute 
      * @param mixed $value 

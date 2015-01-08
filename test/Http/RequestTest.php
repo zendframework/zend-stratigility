@@ -2,7 +2,7 @@
 namespace PhlyTest\Conduit\Http;
 
 use Phly\Conduit\Http\Request;
-use Phly\Http\IncomingRequest as PsrRequest;
+use Phly\Http\ServerRequest as PsrRequest;
 use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 
@@ -10,12 +10,9 @@ class RequestTest extends TestCase
 {
     public function setUp()
     {
-        $this->original = new PsrRequest(
-            'http://example.com/',
-            'GET',
-            [],
-            'php://memory'
-        );
+        $this->original = new PsrRequest('php://memory');
+        $this->original->setMethod('GET');
+        $this->original->setAbsoluteUri('http://example.com/');
         $this->request  = new Request($this->original);
     }
 
@@ -41,23 +38,29 @@ class RequestTest extends TestCase
         $this->assertEquals($original, $this->request->anArray->getArrayCopy());
     }
 
-    public function testCallingSetUrlSetsOriginalUrlProperty()
+    public function testCallingSetAbsoluteUriSetsOriginalAbsoluteUriProperty()
     {
         $url = 'http://example.com/foo';
+        $this->request->setAbsoluteUri($url);
+        $this->assertSame('http://example.com/', $this->request->originalAbsoluteUri);
+        $this->assertSame($url, $this->request->getAbsoluteUri());
+    }
+
+    public function testCallingSetUrlSetsOriginalUrlProperty()
+    {
+        $url = '/foo';
         $this->request->setUrl($url);
-        $this->assertSame('http://example.com/', $this->request->originalUrl);
+        $this->assertSame('/', $this->request->originalUrl);
         $this->assertSame($url, $this->request->getUrl());
     }
 
     public function testConstructorSetsOriginalUrlIfDecoratedRequestHasUrl()
     {
         $url = 'http://example.com/foo';
-        $baseRequest = new PsrRequest(
-            $url,
-            'GET',
-            [],
-            'php://memory'
-        );
+        $baseRequest = new PsrRequest('php://memory');
+        $baseRequest->setMethod('GET');
+        $baseRequest->setAbsoluteUri($url);
+
         $request = new Request($baseRequest);
         $this->assertSame($baseRequest->getUrl(), $request->originalUrl);
     }
@@ -70,15 +73,11 @@ class RequestTest extends TestCase
     public function testDecoratorProxiesToAllMethods()
     {
         $stream = $this->getMock('Psr\Http\Message\StreamableInterface');
-        $psrRequest = new PsrRequest(
-            'http://example.com/',
-            'POST',
-            [
-                'Accept' => 'application/xml',
-                'X-URL'  => 'http://example.com/foo',
-            ],
-            $stream
-        );
+        $psrRequest = new PsrRequest($stream);
+        $psrRequest->setMethod('POST');
+        $psrRequest->setAbsoluteUri('http://example.com/');
+        $psrRequest->setHeader('Accept', 'application/xml');
+        $psrRequest->setHeader('X-URL', 'http://example.com/foo');
         $request = new Request($psrRequest);
 
         $this->assertEquals('1.1', $request->getProtocolVersion());

@@ -6,21 +6,20 @@ use Phly\Conduit\Http\Request;
 use Phly\Conduit\Http\Response;
 use Phly\Conduit\Next;
 use Phly\Conduit\Route;
-use Phly\Http\IncomingRequest as PsrRequest;
-use Phly\Http\OutgoingResponse as PsrResponse;
+use Phly\Http\ServerRequest as PsrRequest;
+use Phly\Http\Response as PsrResponse;
 use PHPUnit_Framework_TestCase as TestCase;
 
 class NextTest extends TestCase
 {
     public function setUp()
     {
+        $psrRequest = new PsrRequest('php://memory');
+        $psrRequest->setMethod('GET');
+        $psrRequest->setAbsoluteUri('http://example.com/');
+
         $this->stack    = new ArrayObject();
-        $this->request  = new Request(new PsrRequest(
-            'http://example.com/',
-            'GET',
-            [],
-            'php://memory'
-        ));
+        $this->request  = new Request($psrRequest);
         $this->response = new Response(new PsrResponse());
     }
 

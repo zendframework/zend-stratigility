@@ -1,7 +1,7 @@
 <?php
 namespace Phly\Conduit\Http;
 
-use Psr\Http\Message\OutgoingResponseInterface;
+use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use Psr\Http\Message\StreamableInterface;
 
 /**
@@ -11,7 +11,7 @@ use Psr\Http\Message\StreamableInterface;
  * to provide a common interface for all PSR HTTP implementations.
  */
 class Response implements
-    OutgoingResponseInterface,
+    PsrResponseInterface,
     ResponseInterface
 {
     /**
@@ -20,14 +20,14 @@ class Response implements
     private $complete = false;
 
     /**
-     * @var BaseResponseInterface
+     * @var PsrResponseInterface
      */
     private $psrResponse;
 
     /**
-     * @param OutgoingResponseInterface $response
+     * @param PsrResponseInterface $response
      */
-    public function __construct(OutgoingResponseInterface $response)
+    public function __construct(PsrResponseInterface $response)
     {
         $this->psrResponse = $response;
     }
@@ -35,7 +35,7 @@ class Response implements
     /**
      * Return the original PSR response object
      *
-     * @return BaseResponseInterface
+     * @return PsrResponseInterface
      */
     public function getOriginalResponse()
     {
@@ -95,7 +95,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::getProtocolVersion()
+     * Proxy to PsrResponseInterface::getProtocolVersion()
      *
      * @return string HTTP protocol version.
      */
@@ -105,7 +105,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::setProtocolVersion()
+     * Proxy to PsrResponseInterface::setProtocolVersion()
      * 
      * @param string $version 
      * @return void
@@ -116,7 +116,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::getBody()
+     * Proxy to PsrResponseInterface::getBody()
      *
      * @return StreamableInterface|null Returns the body, or null if not set.
      */
@@ -126,7 +126,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::setBody()
+     * Proxy to PsrResponseInterface::setBody()
      *
      * @param StreamableInterface $body Body.
      * @throws \InvalidArgumentException When the body is not valid.
@@ -141,7 +141,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::getHeaders()
+     * Proxy to PsrResponseInterface::getHeaders()
      *
      * @return array Returns an associative array of the message's headers.
      */
@@ -151,7 +151,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::hasHeader()
+     * Proxy to PsrResponseInterface::hasHeader()
      *
      * @param string $header Case-insensitive header name.
      * @return bool Returns true if any header names match the given header
@@ -164,7 +164,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::getHeader()
+     * Proxy to PsrResponseInterface::getHeader()
      *
      * @param string $header Case-insensitive header name.
      * @return string
@@ -175,18 +175,18 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::getHeaderAsArray()
+     * Proxy to PsrResponseInterface::getHeaderAsArray()
      *
      * @param string $header Case-insensitive header name.
      * @return string[]
      */
-    public function getHeaderAsArray($header)
+    public function getHeaderLines($header)
     {
-        return $this->psrResponse->getHeaderAsArray($header);
+        return $this->psrResponse->getHeaderLines($header);
     }
 
     /**
-     * Proxy to BaseResponseInterface::setHeader()
+     * Proxy to PsrResponseInterface::setHeader()
      *
      * @param string $header Header name
      * @param string|string[] $value  Header value(s)
@@ -201,7 +201,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::addHeader()
+     * Proxy to PsrResponseInterface::addHeader()
      *
      * @param string $header Header name to add or append
      * @param string|string[] $value Value(s) to add or merge into the header
@@ -216,7 +216,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::removeHeader()
+     * Proxy to PsrResponseInterface::removeHeader()
      *
      * @param string $header HTTP header to remove
      */
@@ -230,7 +230,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::getStatusCode()
+     * Proxy to PsrResponseInterface::getStatusCode()
      *
      * @return integer Status code.
      */
@@ -240,7 +240,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::setStatus()
+     * Proxy to PsrResponseInterface::setStatus()
      *
      * @param integer $code The 3-digit integer result code to set.
      * @param null|string $reasonPhrase The reason phrase to use with the status, if any.
@@ -255,7 +255,7 @@ class Response implements
     }
 
     /**
-     * Proxy to BaseResponseInterface::getReasonPhrase()
+     * Proxy to PsrResponseInterface::getReasonPhrase()
      *
      * @return string|null Reason phrase, or null if unknown.
      */
