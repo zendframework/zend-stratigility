@@ -88,7 +88,7 @@ class FinalHandler
     {
         $this->response->setStatus(404);
 
-        $url     = $this->request->originalUrl ?: $this->request->getUrl();
+        $url     = $this->request->originalAbsoluteUri ?: $this->request->getAbsoluteUri();
         $escaper = new Escaper();
         $message = sprintf(
             "Cannot %s %s\n",

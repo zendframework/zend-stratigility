@@ -104,14 +104,14 @@ class FinalHandlerTest extends TestCase
         $this->assertEquals(404, $this->response->getStatusCode());
     }
 
-    public function test404ResponseIncludesOriginalRequestUrl()
+    public function test404ResponseIncludesOriginalRequestAbsoluteUri()
     {
         $originalUrl = 'http://local.example.com/bar/foo';
         $psrRequest = new PsrRequest('php://memory');
         $psrRequest->setMethod('GET');
         $psrRequest->setAbsoluteUri($originalUrl);
         $request = new Request($psrRequest);
-        $request->setUrl('http://local.example.com/foo');
+        $request->setAbsoluteUri('http://local.example.com/foo');
 
         $final = new FinalHandler($request, $this->response);
         call_user_func($final);
