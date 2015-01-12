@@ -27,7 +27,7 @@
   },
   "require": {
     "php": ">=5.4.8",
-    "phly/http": "dev-feature/psr7-full-mutability@dev",
+    "phly/http": "dev-feature/immutability@dev",
     "psr/http-message": "dev-feature/full-mutability@dev",
     "zendframework/zend-escaper": "~2.3@stable"
   },
@@ -47,11 +47,11 @@
   },
   "repositories": [
     {
-      "url": "git://github.com/weierophinney/http-message.git",
+      "url": "https://github.com/weierophinney/http-message.git",
       "type": "vcs"
     },
     {
-      "url": "git://github.com/weierophinney/http.git",
+      "url": "https://github.com/weierophinney/http.git",
       "type": "vcs"
     }
   ]
