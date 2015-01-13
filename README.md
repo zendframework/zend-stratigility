@@ -260,25 +260,17 @@ Handlers are executed in the order in which they are piped to the `Middleware` i
 
 ### Next
 
-`Phly\Conduit\Next` is primarily an implementation detail of middleware, and
-exists to allow delegating to middleware registered later in the stack.
+`Phly\Conduit\Next` is primarily an implementation detail of middleware, and exists to allow delegating to middleware registered later in the stack.
 
-Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to
-your Request and/or Response instances, you will have new instances, and will
-need to make these known to the next middleware in the chain. `Next` allows this
-by allowing the following argument combinations:
+Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to your Request and/or Response instances, you will have new instances, and will need to make these known to the next middleware in the chain. `Next` allows this by allowing the following argument combinations:
 
 - `Next()` will re-use the currently registered Request and Response instances.
-- `Next(ResponseInterface $response)` indicates that handling is done, and the
-  provided `$response` will be returned.
-- `Next(RequestInterface $request)` will register the provided `$request` with
-  itself, and that instance will be used for subsequent invocations.
-- `Next(RequestInterface|null $request, ResponseInterface $response)` will
-  register the provided `$response` with itself, and that instance will be used
-  for subsequent invocations; if a request is also provided, it will be
-  registered as well.
-- If any other argument is provided for the first argument, it is considered the
-  error to report and pass to registered error middleware.
+- `Next(RequestInterface $request)` will register the provided `$request` with itself, and that instance will be used for subsequent invocations.
+- `Next(ResponseInterface $response)` will register the provided `$response` with itself, and that instance will be used for subsequent invocations.  provided `$response` will be returned.
+- `Next(RequestInterface $request, ResponseInterface $response)` will register each of the provided `$request` and `$response` with itself, and those instances will be used for subsequent invocations.
+- If any other argument is provided for the first argument, it is considered the error to report and pass to registered error middleware.
+
+Note: you **can** pass an error as the first argument and a response as the second, and `Next` will reset the response in that condition as well.
 
 As examples:
 
@@ -294,7 +286,7 @@ function ($request, $response, $next) use ($bodyParser)
 }
 ```
 
-#### Providing an altered request:
+#### Providing an altered response:
 
 ```php
 function ($request, $response, $next)
@@ -304,7 +296,7 @@ function ($request, $response, $next)
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $next(null, $response); // Next will now register this altered
+    return $next($response); // Next will now register this altered
                                    // response instance
 }
 ```
@@ -326,21 +318,7 @@ function ($request, $response, $next) use ($bodyParser)
 
 #### Returning a response to complete the request
 
-```php
-function ($request, $response, $next)
-{
-    $response = $response->addHeader('Cache-Control', [
-        'public',
-        'max-age=18600',
-        's-maxage=18600',
-    ]);
-    return $next($response); // This response will be used, and no more
-                             // middleware will be executed.
-}
-```
-
-A shorthand for the above is to omit the call to `$next()`, and simply return
-the response instance:
+If you want to complete the request, don't call `$next()`. However, if you have modified, populated, or created a response that you want returned, you can return it from your middleware, and that value will be returned on the completion of the current iteration of `$next()`.
 
 ```php
 function ($request, $response, $next)
@@ -352,6 +330,14 @@ function ($request, $response, $next)
     ]);
     return $response;
 }
+```
+
+One caveat: if you are in a nested middleware or not the first in the stack, all parent and/or previous middleware must also call `return $next(/* ... */)` for this to work correctly.
+
+As such, _I recommend always returning `$next()` when invoking it in your middleware_:
+
+```php
+return $next(/* ... */);
 ```
 
 #### Raising an error condition

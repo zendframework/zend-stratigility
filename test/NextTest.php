@@ -178,26 +178,22 @@ class NextTest extends TestCase
         $this->assertSame($this->response, $result);
     }
 
-    public function testMiddlewareCallingNextWithResponseShortCircuits()
+    public function testMiddlewareCallingNextWithResponseAsFirstArgumentResetsResponse()
     {
         $phpunit = $this;
         $cannedResponse = new Response(new PsrResponse());
+        $triggered = false;
 
         $route1 = new Route('/foo', function ($req, $res, $next) use ($cannedResponse) {
             return $next($cannedResponse);
         });
-        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit) {
-            $next();
-            $phpunit->fail('Should not hit route2 handler');
-        });
-        $route3 = new Route('/foo/baz', function ($req, $res, $next) use ($phpunit) {
-            $next();
-            $phpunit->fail('Should not hit route3 handler');
+        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit, $cannedResponse, &$triggered) {
+            $phpunit->assertSame($cannedResponse, $res);
+            $triggered = true;
         });
 
         $this->stack->append($route1);
         $this->stack->append($route2);
-        $this->stack->append($route3);
 
         $done = function ($err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
@@ -206,6 +202,7 @@ class NextTest extends TestCase
         $request = $this->request->setUrl('http://example.com/foo/bar/baz');
         $next = new Next($this->stack, $request, $this->response, $done);
         $result = $next();
+        $this->assertTrue($triggered);
         $this->assertSame($cannedResponse, $result);
     }
 

@@ -75,7 +75,7 @@ class Next
         $resetRequest = false;
 
         if ($state instanceof ResponseInterface) {
-            return $state;
+            $this->response = $state;
         }
 
         if ($state instanceof ServerRequestInterface) {
