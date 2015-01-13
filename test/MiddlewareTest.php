@@ -209,7 +209,7 @@ class MiddlewareTest extends TestCase
         $return = new Response();
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            return $next();
+            $next();
         });
         $this->middleware->pipe(function ($req, $res, $next) {
             return $next();

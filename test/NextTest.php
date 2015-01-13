@@ -259,4 +259,30 @@ class NextTest extends TestCase
         $next = new Next($this->stack, $request, $this->response, $done);
         $next();
     }
+
+    public function testNextShouldReturnCurrentResponseAlways()
+    {
+        $phpunit        = $this;
+        $cannedResponse = new Response(new PsrResponse());
+
+        $route1 = new Route('/foo', function ($req, $res, $next) use ($cannedResponse) {
+            $next(null, $cannedResponse);
+        });
+        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit, $cannedResponse) {
+            $phpunit->assertSame($cannedResponse, $res);
+            return $res;
+        });
+
+        $this->stack->append($route1);
+        $this->stack->append($route2);
+
+        $done = function ($err) use ($phpunit) {
+            $phpunit->fail('Should not hit final handler');
+        };
+
+        $request = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $next    = new Next($this->stack, $request, $this->response, $done);
+        $result  = $next();
+        $this->assertSame($cannedResponse, $result);
+    }
 }

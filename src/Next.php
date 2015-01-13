@@ -67,6 +67,7 @@ class Next
      *
      * @param null|ServerRequestInterface|ResponseInterface|mixed $state
      * @param null|ResponseInterface $response
+     * @return ResponseInterface
      */
     public function __invoke($state = null, ResponseInterface $response = null)
     {
@@ -121,7 +122,11 @@ class Next
             $this->stripRouteFromPath($route);
         }
 
-        return $dispatch($layer, $err, $this->request, $this->response, $this);
+        $result = $dispatch($layer, $err, $this->request, $this->response, $this);
+        if ($result instanceof ResponseInterface) {
+            $this->response = $result;
+        }
+        return $this->response;
     }
 
     /**
