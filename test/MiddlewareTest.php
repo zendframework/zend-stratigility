@@ -180,4 +180,55 @@ class MiddlewareTest extends TestCase
 
         $this->assertTrue($executed);
     }
+
+    public function testReturnsOrigionalResponseIfStackDoesNotReturnAResponse()
+    {
+        $this->middleware->pipe(function ($req, $res, $next) {
+            $next();
+        });
+        $this->middleware->pipe(function ($req, $res, $next) {
+            $next();
+        });
+        $this->middleware->pipe(function ($req, $res, $next) {
+            return;
+        });
+        $phpunit = $this;
+        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
+            $phpunit->fail('Should not hit fourth handler!');
+        });
+
+        $request = new Request('php://memory');
+        $request = $request->setMethod('GET');
+        $request = $request->setAbsoluteUri('http://local.example.com/foo');
+        $result  = $this->middleware->__invoke($request, $this->response);
+        $this->assertSame($this->response, $result->getOriginalResponse());
+    }
+
+    public function testReturnsResponseReturnedByStack()
+    {
+        $return = new Response();
+
+        $this->middleware->pipe(function ($req, $res, $next) {
+            return $next();
+        });
+        $this->middleware->pipe(function ($req, $res, $next) {
+            return $next();
+        });
+        $this->middleware->pipe(function ($req, $res, $next) use ($return) {
+            return $return;
+        });
+        $phpunit = $this;
+        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
+            $phpunit->fail('Should not hit fourth handler!');
+        });
+
+        $request = new Request('php://memory');
+        $request = $request->setMethod('GET');
+        $request = $request->setAbsoluteUri('http://local.example.com/foo');
+        $result  = $this->middleware->__invoke($request, $this->response);
+        $this->assertSame($return, $result, var_export([
+            spl_object_hash($return) => get_class($return),
+            spl_object_hash($result) => get_class($result),
+        ], 1));
+    }
 }

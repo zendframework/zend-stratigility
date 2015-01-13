@@ -61,16 +61,21 @@ class Middleware
      * @param Request $request
      * @param Response $response
      * @param callable $out
-     * @return void
+     * @return Response
      */
     public function __invoke(Request $request, Response $response, callable $out = null)
     {
         $request  = $this->decorateRequest($request);
         $response = $this->decorateResponse($response);
 
-        $done  = is_callable($out) ? $out : new FinalHandler($request, $response);
-        $next  = new Next($this->stack, $request, $response, $done);
-        $next();
+        $done   = is_callable($out) ? $out : new FinalHandler($request, $response);
+        $next   = new Next($this->stack, $request, $response, $done);
+        $result = $next();
+
+        if ($result instanceof Response) {
+            return $result;
+        }
+        return $response;
     }
 
     /**
