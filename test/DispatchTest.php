@@ -133,4 +133,57 @@ class DispatchTest extends TestCase
         $dispatch($route, $err, $this->request, $this->response, $next);
         $this->assertSame($exception, $triggered);
     }
+
+    public function testReturnsValueFromNonErrorHandler()
+    {
+        $phpunit = $this;
+        $handler = function ($req, $res, $next) {
+            return $res;
+        };
+        $next = function ($err) use ($phpunit) {
+            $phpunit->fail('Next was called; it should not have been');
+        };
+
+        $route = new Route('/foo', $handler);
+        $dispatch = new Dispatch();
+        $err = null;
+        $result = $dispatch($route, $err, $this->request, $this->response, $next);
+        $this->assertSame($this->response, $result);
+    }
+
+    public function testReturnsValueFromErrorHandler()
+    {
+        $phpunit = $this;
+        $handler = function ($err, $req, $res, $next) {
+            return $res;
+        };
+        $next = function ($err) use ($phpunit) {
+            $phpunit->fail('Next was called; it should not have been');
+        };
+
+        $route = new Route('/foo', $handler);
+        $dispatch = new Dispatch();
+        $err = (object) ['error' => true];
+        $result = $dispatch($route, $err, $this->request, $this->response, $next);
+        $this->assertSame($this->response, $result);
+    }
+
+    public function testReturnsValueFromTriggeringNextAfterThrowingExceptionInNonErrorHandler()
+    {
+        $phpunit   = $this;
+        $exception = new RuntimeException;
+
+        $handler = function ($req, $res, $next) use ($exception) {
+            throw $exception;
+        };
+        $next = function ($err) {
+            return $err;
+        };
+
+        $route = new Route('/foo', $handler);
+        $dispatch = new Dispatch();
+        $err = null;
+        $result = $dispatch($route, $err, $this->request, $this->response, $next);
+        $this->assertSame($exception, $result);
+    }
 }

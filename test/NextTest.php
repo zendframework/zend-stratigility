@@ -15,8 +15,8 @@ class NextTest extends TestCase
     public function setUp()
     {
         $psrRequest = new PsrRequest('php://memory');
-        $psrRequest->setMethod('GET');
-        $psrRequest->setAbsoluteUri('http://example.com/');
+        $psrRequest = $psrRequest->setMethod('GET');
+        $psrRequest = $psrRequest->setAbsoluteUri('http://example.com/');
 
         $this->stack    = new ArrayObject();
         $this->request  = new Request($psrRequest);
@@ -92,9 +92,9 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit done handler');
         };
 
-        $this->request->setUrl('http://local.example.com/foo');
+        $request = $this->request->setUrl('http://local.example.com/foo');
 
-        $next = new Next($this->stack, $this->request, $this->response, $done);
+        $next = new Next($this->stack, $request, $this->response, $done);
         $next();
         $this->assertTrue($triggered);
     }
@@ -114,9 +114,9 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit done handler');
         };
 
-        $this->request->setUrl('http://local.example.com/foo/bar');
+        $request = $this->request->setUrl('http://local.example.com/foo/bar');
 
-        $next = new Next($this->stack, $this->request, $this->response, $done);
+        $next = new Next($this->stack, $request, $this->response, $done);
         $next();
         $this->assertEquals('/bar', $triggered);
     }
@@ -131,6 +131,7 @@ class NextTest extends TestCase
         });
         $route3 = new Route('/foo/baz', function ($req, $res, $next) {
             $res->end('done');
+            return $res;
         });
 
         $this->stack->append($route1);
@@ -142,9 +143,120 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit final handler');
         };
 
-        $this->request->setUrl('http://example.com/foo/baz/bat');
-        $next = new Next($this->stack, $this->request, $this->response, $done);
+        $request = $this->request->setUrl('http://example.com/foo/baz/bat');
+        $next = new Next($this->stack, $request, $this->response, $done);
         $next();
         $this->assertEquals('done', (string) $this->response->getBody());
+    }
+
+    public function testMiddlewareReturningResponseShortcircuits()
+    {
+        $phpunit = $this;
+        $route1 = new Route('/foo', function ($req, $res, $next) {
+            return $res;
+        });
+        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit) {
+            $next();
+            $phpunit->fail('Should not hit route2 handler');
+        });
+        $route3 = new Route('/foo/baz', function ($req, $res, $next) use ($phpunit) {
+            $next();
+            $phpunit->fail('Should not hit route3 handler');
+        });
+
+        $this->stack->append($route1);
+        $this->stack->append($route2);
+        $this->stack->append($route3);
+
+        $done = function ($err) use ($phpunit) {
+            $phpunit->fail('Should not hit final handler');
+        };
+
+        $request = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $next = new Next($this->stack, $request, $this->response, $done);
+        $result = $next();
+        $this->assertSame($this->response, $result);
+    }
+
+    public function testMiddlewareCallingNextWithResponseShortCircuits()
+    {
+        $phpunit = $this;
+        $cannedResponse = new Response(new PsrResponse());
+
+        $route1 = new Route('/foo', function ($req, $res, $next) use ($cannedResponse) {
+            return $next($cannedResponse);
+        });
+        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit) {
+            $next();
+            $phpunit->fail('Should not hit route2 handler');
+        });
+        $route3 = new Route('/foo/baz', function ($req, $res, $next) use ($phpunit) {
+            $next();
+            $phpunit->fail('Should not hit route3 handler');
+        });
+
+        $this->stack->append($route1);
+        $this->stack->append($route2);
+        $this->stack->append($route3);
+
+        $done = function ($err) use ($phpunit) {
+            $phpunit->fail('Should not hit final handler');
+        };
+
+        $request = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $next = new Next($this->stack, $request, $this->response, $done);
+        $result = $next();
+        $this->assertSame($cannedResponse, $result);
+    }
+
+    public function testMiddlewareCallingNextWithRequestResetsRequest()
+    {
+        $phpunit       = $this;
+        $request       = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $cannedRequest = clone $request;
+        $cannedRequest = $cannedRequest->setMethod('POST');
+
+        $route1 = new Route('/foo/bar', function ($req, $res, $next) use ($cannedRequest) {
+            return $next($cannedRequest);
+        });
+        $route2 = new Route('/foo/bar/baz', function ($req, $res, $next) use ($phpunit, $cannedRequest) {
+            $phpunit->assertEquals($cannedRequest->getMethod(), $req->getMethod());
+            return $res;
+        });
+
+        $this->stack->append($route1);
+        $this->stack->append($route2);
+
+        $done = function ($err) use ($phpunit) {
+            $phpunit->fail('Should not hit final handler');
+        };
+
+        $next = new Next($this->stack, $request, $this->response, $done);
+        $next();
+    }
+
+    public function testMiddlewareCallingNextWithResponseResetsResponse()
+    {
+        $phpunit        = $this;
+        $cannedResponse = new Response(new PsrResponse());
+
+        $route1 = new Route('/foo', function ($req, $res, $next) use ($cannedResponse) {
+            return $next(null, $cannedResponse);
+        });
+        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit, $cannedResponse) {
+            $phpunit->assertSame($cannedResponse, $res);
+            return $res;
+        });
+
+        $this->stack->append($route1);
+        $this->stack->append($route2);
+
+        $done = function ($err) use ($phpunit) {
+            $phpunit->fail('Should not hit final handler');
+        };
+
+        $request = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $next = new Next($this->stack, $request, $this->response, $done);
+        $next();
     }
 }

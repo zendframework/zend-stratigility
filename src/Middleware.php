@@ -68,7 +68,6 @@ class Middleware
         $request  = $this->decorateRequest($request);
         $response = $this->decorateResponse($response);
 
-        $request->setUrl($this->getUrlFromRequest($request));
         $done  = is_callable($out) ? $out : new FinalHandler($request, $response);
         $next  = new Next($this->stack, $request, $response, $done);
         $next();
@@ -122,21 +121,6 @@ class Middleware
         // @todo Trigger event here with route details?
         $this->stack->append(new Route($path, $handler));
         return $this;
-    }
-
-    /**
-     * Ensure the request URI is an Uri instance
-     *
-     * @param Request $request
-     * @return Uri
-     */
-    protected function getUrlFromRequest(Request $request)
-    {
-        $url = $request->getUrl();
-        if (is_string($url)) {
-            $url = new Uri($url);
-        }
-        return $url;
     }
 
     /**

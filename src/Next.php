@@ -3,6 +3,8 @@ namespace Phly\Conduit;
 
 use ArrayObject;
 use Phly\Http\Uri;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Iterate a stack of middlewares and execute them
@@ -63,15 +65,36 @@ class Next
     /**
      * Call the next Route in the stack
      *
-     * @param null|mixed $err
+     * @param null|ServerRequestInterface|ResponseInterface|mixed $state
+     * @param null|ResponseInterface $response
      */
-    public function __invoke($err = null)
+    public function __invoke($state = null, ResponseInterface $response = null)
     {
-        $request  = $this->request;
+        $err          = null;
+        $resetRequest = false;
+
+        if ($state instanceof ResponseInterface) {
+            return $state;
+        }
+
+        if ($state instanceof ServerRequestInterface) {
+            $this->request = $state;
+            $resetRequest  = true;
+        }
+
+        if ($response instanceof ResponseInterface) {
+            $this->response = $response;
+        }
+
+        if (! $state instanceof ServerRequestInterface
+            && ! $state instanceof ResponseInterface
+        ) {
+            $err = $state;
+        }
+
         $dispatch = $this->dispatch;
         $done     = $this->done;
-
-        $this->resetPath($request);
+        $this->resetPath($this->request, $resetRequest);
 
         // No middleware remains; done
         if (! isset($this->stack[$this->index])) {
@@ -79,7 +102,7 @@ class Next
         }
 
         $layer = $this->stack[$this->index++];
-        $path  = parse_url($this->request->getUrl(), PHP_URL_PATH) ?: '/';
+        $path  = parse_url($this->request->getAbsoluteUri(), PHP_URL_PATH) ?: '/';
         $route = $layer->path;
 
         // Skip if layer path does not match current url
@@ -98,25 +121,35 @@ class Next
             $this->stripRouteFromPath($route);
         }
 
-        $dispatch($layer, $err, $this->request, $this->response, $this);
+        return $dispatch($layer, $err, $this->request, $this->response, $this);
     }
 
     /**
      * Reset the path, if a segment was previously stripped
      *
      * @param Http\Request $request
+     * @param bool $resetRequest Whether or not the request was reset in this iteration
      */
-    private function resetPath(Http\Request $request)
+    private function resetPath(Http\Request $request, $resetRequest = false)
     {
         if (! $this->removed) {
             return;
         }
 
-        $uri  = new Uri($this->request->getUrl());
-        $path = $this->removed . $uri->path;
+        $uri  = new Uri($request->getAbsoluteUri());
+        $path = $uri->path;
+
+        if ($resetRequest
+            && strlen($path) >= strlen($this->removed)
+            && 0 === strpos($path, $this->removed)
+        ) {
+            $path = str_replace($this->removed, '', $path);
+        }
+
+        $path = $this->removed . $path;
         $new  = $uri->setPath($path);
-        $request->setUrl((string) $new);
         $this->removed = '';
+        $this->request = $request->setAbsoluteUri((string) $new);
     }
 
     /**
@@ -144,9 +177,9 @@ class Next
     {
         $this->removed = $route;
 
-        $uri  = new Uri($this->request->getUrl());
+        $uri  = new Uri($this->request->getAbsoluteUri());
         $path = substr($uri->path, strlen($route));
         $new  = $uri->setPath($path);
-        $this->request->setUrl((string) $new);
+        $this->request = $this->request->setAbsoluteUri((string) $new);
     }
 }
