@@ -76,7 +76,7 @@ $server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES)
 
 // Landing page
 $app->pipe('/', function ($req, $res, $next) {
-    if ($req->getUrl()->path !== '/') {
+    if (parse_url($req->getUrl(), PHP_URL_PATH) !== '/') {
         return $next();
     }
     $res->end('Hello world!');
@@ -137,13 +137,13 @@ $app = new Middleware();
 $app->pipe('/api', $api);
 ```
 
-Another way to create middleware is to write a callable capable of receiving minimally a request and a response object, and optionally a callback to call the next in the chain. In this callback, you can handle as much or as little of the request as you want -- including delegating to other handlers. If your middleware also accepts a `$next` argument, if it is unable to complete the request, or allows further processing, it can call it to return handling to the parent middleware.
+Another way to create middleware is to write a callable capable of receiving minimally a request and a response object, and optionally a callback to call the next in the chain. In your middleware callable, you can handle as much or as little of the request as you want -- including delegating to other handlers. If your middleware also accepts a `$next` argument, if it is unable to complete the request, or allows further processing, it can call it to return handling to the parent middleware.
 
 As an example, consider the following middleware which will use an external router to map the incoming request path to a handler; if unable to map the request, it returns processing to the next middleware.
 
 ```php
 $app->pipe(function ($req, $res, $next) use ($router) {
-    $path = $req->getUrl()->path;
+    $path = parse_url($req->getUrl(), PHP_URL_PATH);
 
     // Route the path
     $route = $router->route($path);
@@ -169,8 +169,8 @@ In all cases, if you wish to implement typehinting, the signature is:
 
 ```php
 function (
-    Psr\Http\Message\IncomingRequestInterface $request,
-    Psr\Http\Message\OutgoingResponseInterface $response,
+    Psr\Http\Message\ServerRequestInterface $request,
+    Psr\Http\Message\ResponseInterface $response,
     callable $next = null
 ) {
 }
@@ -181,28 +181,28 @@ Error handler middleware has the following signature:
 ```php
 function (
     $error, // Can be any type
-    Psr\Http\Message\IncomingRequestInterface $request,
-    Psr\Http\Message\OutgoingResponseInterface $response,
+    Psr\Http\Message\ServerRequestInterface $request,
+    Psr\Http\Message\ResponseInterface $response,
     callable $next
 ) {
 }
 ```
 
-Another approach is to extend the `Phly\Conduit\Middleware` class itself -- particularly if you want to allow attaching other middleware to your own middleware. In such a case, you will generally override the `handle()` method to perform any additional logic you have, and then call on the parent in order to iterate through your stack of middleware:
+Another approach is to extend the `Phly\Conduit\Middleware` class itself -- particularly if you want to allow attaching other middleware to your own middleware. In such a case, you will generally override the `__invoke()` method to perform any additional logic you have, and then call on the parent in order to iterate through your stack of middleware:
 
 ```php
 use Phly\Conduit\Middleware;
-use Psr\Http\Message\IncomingRequestInterface as Request;
-use Psr\Http\Message\OutgoingResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 
 class CustomMiddleware extends Middleware
 {
-    public function handle(Request $request, Response $response, callable $next = null)
+    public function __invoke(Request $request, Response $response, callable $next = null)
     {
         // perform some work...
 
         // delegate to parent
-        parent::handle($request, $response, $next);
+        parent::__invoke($request, $response, $next);
 
         // maybe do more work?
     }
@@ -245,8 +245,8 @@ class Middleware
 {
     public function pipe($path, $handler = null);
     public function handle(
-        Psr\Http\Message\IncomingRequestInterface $request = null,
-        Psr\Http\Message\OutgoingResponseInterface $response = null,
+        Psr\Http\Message\ServerRequestInterface $request = null,
+        Psr\Http\Message\ResponseInterface $response = null,
         callable $out = null
     );
 }
@@ -256,7 +256,116 @@ class Middleware
 
 Handlers are executed in the order in which they are piped to the `Middleware` instance.
 
-`handle()` is itself a middleware handler. If `$out` is not provided, an instance of `Phly\Conduit\FinalHandler` will be created, and used in the event that the pipe stack is exhausted.
+`__invoke()` is itself a middleware handler. If `$out` is not provided, an instance of `Phly\Conduit\FinalHandler` will be created, and used in the event that the pipe stack is exhausted.
+
+### Next
+
+`Phly\Conduit\Next` is primarily an implementation detail of middleware, and
+exists to allow delegating to middleware registered later in the stack.
+
+Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to
+your Request and/or Response instances, you will have new instances, and will
+need to make these known to the next middleware in the chain. `Next` allows this
+by allowing the following argument combinations:
+
+- `Next()` will re-use the currently registered Request and Response instances.
+- `Next(ResponseInterface $response)` indicates that handling is done, and the
+  provided `$response` will be returned.
+- `Next(RequestInterface $request)` will register the provided `$request` with
+  itself, and that instance will be used for subsequent invocations.
+- `Next(RequestInterface|null $request, ResponseInterface $response)` will
+  register the provided `$response` with itself, and that instance will be used
+  for subsequent invocations; if a request is also provided, it will be
+  registered as well.
+- If any other argument is provided for the first argument, it is considered the
+  error to report and pass to registered error middleware.
+
+As examples:
+
+#### Providing an altered request:
+
+```php
+function ($request, $response, $next) use ($bodyParser)
+{
+    $bodyParams = $bodyParser($request);
+    $request = $request->setBodyParams($bodyParams);
+    return $next($request); // Next will now register this altered request
+                            // instance
+}
+```
+
+#### Providing an altered request:
+
+```php
+function ($request, $response, $next)
+{
+    $response = $response->addHeader('Cache-Control', [
+        'public',
+        'max-age=18600',
+        's-maxage=18600',
+    ]);
+    return $next(null, $response); // Next will now register this altered
+                                   // response instance
+}
+```
+
+#### Providing both an altered request and response:
+
+```php
+function ($request, $response, $next) use ($bodyParser)
+{
+    $request  = $request->setBodyParams($bodyParser($request));
+    $response = $response->addHeader('Cache-Control', [
+        'public',
+        'max-age=18600',
+        's-maxage=18600',
+    ]);
+    return $next($request, $response);
+}
+```
+
+#### Returning a response to complete the request
+
+```php
+function ($request, $response, $next)
+{
+    $response = $response->addHeader('Cache-Control', [
+        'public',
+        'max-age=18600',
+        's-maxage=18600',
+    ]);
+    return $next($response); // This response will be used, and no more
+                             // middleware will be executed.
+}
+```
+
+A shorthand for the above is to omit the call to `$next()`, and simply return
+the response instance:
+
+```php
+function ($request, $response, $next)
+{
+    $response = $response->addHeader('Cache-Control', [
+        'public',
+        'max-age=18600',
+        's-maxage=18600',
+    ]);
+    return $response;
+}
+```
+
+#### Raising an error condition
+
+```php
+function ($request, $response, $next)
+{
+    try {
+        // try some operation...
+    } catch (Exception $e) {
+        return $next($e); // Next registered error middleware will be invoked
+    }
+}
+```
 
 ### FinalHandler
 
@@ -264,21 +373,47 @@ Handlers are executed in the order in which they are piped to the `Middleware` i
 
 `FinalHandler` allows an optional third argument during instantiation, `$options`, an array of options with which to configure itself. These options currently include:
 
-- env, the application environment. If set to "production", no stack traces will be provided.
-- onerror, a callable to execute if an error is passed when `FinalHandler` is invoked. The callable is invoked with the error, the request, and the response.
+- `env`, the application environment. If set to "production", no stack traces will be provided.
+- `onerror`, a callable to execute if an error is passed when `FinalHandler` is invoked. The callable is invoked with the error, the request, and the response.
 
 ### HTTP Messages
 
 #### Phly\Conduit\Http\Request
 
-`Phly\Conduit\Http\Request` acts as a decorator for a `Psr\Http\Message\IncomingRequestInterface` instance, and implements property overloading, allowing the developer to set and retrieve arbitrary properties other than those exposed via getters. This allows the ability to pass values between handlers.
+`Phly\Conduit\Http\Request` acts as a decorator for a `Psr\Http\Message\ServerRequestInterface` instance. The primary reason is to allow composing middleware to get a request instance that has a "root path".
 
-Property overloading writes to the _attributes_ property of the incoming request, ensuring that the two are synchronized; in essence, it offers a convenience API to the various `(get|set)Attributes?()` methods.
+As an example, consider the following:
+
+```php
+$app1 = new Middleware();
+$app1->pipe('/foo', $fooCallback);
+
+$app2 = new Middleware();
+$app2->pipe('/root', $app1);
+
+$server = Server::createServer($app2 /* ... */);
+```
+
+In the above, if the URI of the original incoming request is `/root/foo`, what `$fooCallback` will receive is a URI with a past consisting of only `/foo`. This practice ensures that middleware can be nested safely and resolve regardless of the nesting level.
+
+If you want access to the full URI -- for instance, to construct a fully qualified URI to your current middleware -- `Phly\Conduit\Http\Request` contains a method, `getOriginalRequest()`, which will always return the original request provided:
+
+```php
+function ($request, $response, $next)
+{
+    $location = $request->getOriginalRequest()->getAbsoluteUri() . '/[:id]';
+    $response = $response->setHeader('Location', $location);
+    $response = $response->setStatus(302);
+    return $response;
+}
+```
 
 #### Phly\Conduit\Http\Response
 
-`Phly\Conduit\Http\Response` acts as a decorator for a `Psr\Http\Message\OutgoingResponseInterface` instance, and also implements `Phly\Conduit\Http\ResponseInterface`, which provides the following convenience methods:
+`Phly\Conduit\Http\Response` acts as a decorator for a `Psr\Http\Message\ResponseInterface` instance, and also implements `Phly\Conduit\Http\ResponseInterface`, which provides the following convenience methods:
 
 - `write()`, which proxies to the `write()` method of the composed response stream.
 - `end()`, which marks the response as complete; it can take an optional argument, which, when provided, will be passed to the `write()` method. Once `end()` has been called, the response is immutable.
 - `isComplete()` indicates whether or not `end()` has been called.
+
+Additionally, it provides access to the original response created by the server via the method `getOriginalResponse()`.
