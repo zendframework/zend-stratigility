@@ -28,7 +28,7 @@
   "require": {
     "php": ">=5.4.8",
     "phly/http": "dev-feature/immutability@dev",
-    "psr/http-message": "dev-feature/full-mutability@dev",
+    "psr/http-message": "dev-feature/immutability@dev",
     "zendframework/zend-escaper": "~2.3@stable"
   },
   "require-dev": {
