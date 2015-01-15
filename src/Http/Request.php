@@ -4,14 +4,13 @@ namespace Phly\Conduit\Http;
 use ArrayObject;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamableInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * Decorator for PSR ServerRequestInterface
  *
  * Decorates the PSR incoming request interface to add the ability to
  * manipulate arbitrary instance members.
- *
- * @property \Phly\Http\Uri $originalUrl Original URL of this instance
  */
 class Request implements ServerRequestInterface
 {
@@ -43,7 +42,7 @@ class Request implements ServerRequestInterface
         }
 
         $this->originalRequest = $originalRequest;
-        $this->psrRequest      = $decoratedRequest->setAttribute('originalUrl', $originalRequest->getUrl());
+        $this->psrRequest      = $decoratedRequest->withAttribute('originalUri', $originalRequest->getUri());
     }
 
     /**
@@ -77,14 +76,14 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::setProtocolVersion()
+     * Proxy to ServerRequestInterface::withProtocolVersion()
      *
      * @param string $version HTTP protocol version.
      * @return Request
      */
-    public function setProtocolVersion($version)
+    public function withProtocolVersion($version)
     {
-        $new = $this->psrRequest->setProtocolVersion($version);
+        $new = $this->psrRequest->withProtocolVersion($version);
         return new self($new, $this->originalRequest);
     }
 
@@ -99,15 +98,15 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::setBody()
+     * Proxy to ServerRequestInterface::withBody()
      *
      * @param StreamableInterface $body Body.
      * @return Request
      * @throws \InvalidArgumentException When the body is not valid.
      */
-    public function setBody(StreamableInterface $body)
+    public function withBody(StreamableInterface $body)
     {
-        $new = $this->psrRequest->setBody($body);
+        $new = $this->psrRequest->withBody($body);
         return new self($new, $this->originalRequest);
     }
 
@@ -157,15 +156,15 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::setHeader()
+     * Proxy to ServerRequestInterface::withHeader()
      *
      * @param string $header Header name
      * @param string|string[] $value  Header value(s)
      * @return Request
      */
-    public function setHeader($header, $value)
+    public function withHeader($header, $value)
     {
-        $new = $this->psrRequest->setHeader($header, $value);
+        $new = $this->psrRequest->withHeader($header, $value);
         return new self($new, $this->originalRequest);
     }
 
@@ -176,9 +175,9 @@ class Request implements ServerRequestInterface
      * @param string|string[] $value Value(s) to add or merge into the header
      * @return Request
      */
-    public function addHeader($header, $value)
+    public function withAddedHeader($header, $value)
     {
-        $new = $this->psrRequest->addHeader($header, $value);
+        $new = $this->psrRequest->withAddedHeader($header, $value);
         return new self($new, $this->originalRequest);
     }
 
@@ -188,9 +187,9 @@ class Request implements ServerRequestInterface
      * @param string $header HTTP header to remove
      * @return Request
      */
-    public function removeHeader($header)
+    public function withoutHeader($header)
     {
-        $new = $this->psrRequest->removeHeader($header);
+        $new = $this->psrRequest->withoutHeader($header);
         return new self($new, $this->originalRequest);
     }
 
@@ -205,66 +204,39 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::setMethod()
+     * Proxy to ServerRequestInterface::withMethod()
      *
      * @param string $method The request method.
      * @return Request
      */
-    public function setMethod($method)
+    public function withMethod($method)
     {
-        $new = $this->psrRequest->setMethod($method);
+        $new = $this->psrRequest->withMethod($method);
         return new self($new, $this->originalRequest);
     }
 
     /**
-     * Proxy to ServerRequestInterface::getAbsoluteUri()
+     * Proxy to ServerRequestInterface::getUri()
      *
-     * @return string Returns the absolute URI as a string
+     * @return UriInterface Returns a UriInterface instance
      * @link http://tools.ietf.org/html/rfc3986#section-4.3
      */
-    public function getAbsoluteUri()
+    public function getUri()
     {
-        return $this->psrRequest->getAbsoluteUri();
+        return $this->psrRequest->getUri();
     }
 
     /**
-     * Allow mutating the absolute URI
+     * Allow mutating the URI
      *
      * @link http://tools.ietf.org/html/rfc3986#section-4.3
-     * @param string|object $uri Absolute request URI.
+     * @param UriInterface $uri Request URI.
      * @return Request
-     * @throws \InvalidArgumentException If the URL is invalid.
+     * @throws \InvalidArgumentException If the URI is invalid.
      */
-    public function setAbsoluteUri($uri)
+    public function withUri(UriInterface $uri)
     {
-        $new = $this->psrRequest->setAbsoluteUri($uri);
-        return new self($new, $this->originalRequest);
-    }
-
-    /**
-     * Proxy to ServerRequestInterface::getUrl()
-     *
-     * @return string|object Returns the URL as a string, or an object that
-     *    implements the `__toString()` method. The URL must be an absolute URI
-     *    as specified in RFC 3986.
-     * @link http://tools.ietf.org/html/rfc3986#section-4.3
-     */
-    public function getUrl()
-    {
-        return $this->psrRequest->getUrl();
-    }
-
-    /**
-     * Allow mutating the URL
-     *
-     * @link http://tools.ietf.org/html/rfc3986#section-4.3
-     * @param string|object $url Request URL.
-     * @return Request
-     * @throws \InvalidArgumentException If the URL is invalid.
-     */
-    public function setUrl($url)
-    {
-        $new = $this->psrRequest->setUrl($url);
+        $new = $this->psrRequest->withUri($uri);
         return new self($new, $this->originalRequest);
     }
 
@@ -289,14 +261,14 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::setCookieParams()
+     * Proxy to ServerRequestInterface::withCookieParams()
      *
      * @param array $cookies
      * @return Request
      */
-    public function setCookieParams(array $cookies)
+    public function withCookieParams(array $cookies)
     {
-        $new = $this->psrRequest->setCookieParams($cookies);
+        $new = $this->psrRequest->withCookieParams($cookies);
         return new self($new, $this->originalRequest);
     }
 
@@ -311,14 +283,14 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::setQueryParams()
+     * Proxy to ServerRequestInterface::withQueryParams()
      *
      * @param array $query
      * @return Request
      */
-    public function setQueryParams(array $query)
+    public function withQueryParams(array $query)
     {
-        $new = $this->psrRequest->setQueryParams($query);
+        $new = $this->psrRequest->withQueryParams($query);
         return new self($new, $this->originalRequest);
     }
 
@@ -344,14 +316,14 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::setBodyParams()
+     * Proxy to ServerRequestInterface::withBodyParams()
      *
      * @param array $params The deserialized body parameters.
      * @return Request
      */
-    public function setBodyParams(array $params)
+    public function withBodyParams(array $params)
     {
-        $new = $this->psrRequest->setBodyParams($params);
+        $new = $this->psrRequest->withBodyParams($params);
         return new self($new, $this->originalRequest);
     }
 
@@ -378,27 +350,27 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::setAttributes()
+     * Proxy to ServerRequestInterface::withAttributes()
      *
      * @param array Attributes derived from the request
      * @return Request
      */
-    public function setAttributes(array $values)
+    public function withAttributes(array $values)
     {
-        $new = $this->psrRequest->setAttributes($values);
+        $new = $this->psrRequest->withAttributes($values);
         return new self($new, $this->originalRequest);
     }
 
     /**
-     * Proxy to ServerRequestInterface::setAttribute()
+     * Proxy to ServerRequestInterface::withAttribute()
      *
      * @param string $attribute
      * @param mixed $value
      * @return Request
      */
-    public function setAttribute($attribute, $value)
+    public function withAttribute($attribute, $value)
     {
-        $new = $this->psrRequest->setAttribute($attribute, $value);
+        $new = $this->psrRequest->withAttribute($attribute, $value);
         return new self($new, $this->originalRequest);
     }
 }

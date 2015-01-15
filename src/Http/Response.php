@@ -108,14 +108,14 @@ class Response implements
     }
 
     /**
-     * Proxy to PsrResponseInterface::setProtocolVersion()
+     * Proxy to PsrResponseInterface::withProtocolVersion()
      *
      * @param string $version
      * @return Response
      */
-    public function setProtocolVersion($version)
+    public function withProtocolVersion($version)
     {
-        $new = $this->psrResponse->setProtocolVersion($version);
+        $new = $this->psrResponse->withProtocolVersion($version);
         return new self($new);
     }
 
@@ -130,19 +130,19 @@ class Response implements
     }
 
     /**
-     * Proxy to PsrResponseInterface::setBody()
+     * Proxy to PsrResponseInterface::withBody()
      *
      * @param StreamableInterface $body Body.
      * @return Response
      * @throws \InvalidArgumentException When the body is not valid.
      */
-    public function setBody(StreamableInterface $body)
+    public function withBody(StreamableInterface $body)
     {
         if ($this->complete) {
             return $this;
         }
 
-        $new = $this->psrResponse->setBody($body);
+        $new = $this->psrResponse->withBody($body);
         return new self($new);
     }
 
@@ -192,52 +192,52 @@ class Response implements
     }
 
     /**
-     * Proxy to PsrResponseInterface::setHeader()
+     * Proxy to PsrResponseInterface::withHeader()
      *
      * @param string $header Header name
      * @param string|string[] $value  Header value(s)
      * @return Response
      */
-    public function setHeader($header, $value)
+    public function withHeader($header, $value)
     {
         if ($this->complete) {
             return $this;
         }
 
-        $new = $this->psrResponse->setHeader($header, $value);
+        $new = $this->psrResponse->withHeader($header, $value);
         return new self($new);
     }
 
     /**
-     * Proxy to PsrResponseInterface::addHeader()
+     * Proxy to PsrResponseInterface::withAddedHeader()
      *
      * @param string $header Header name to add or append
      * @param string|string[] $value Value(s) to add or merge into the header
      * @return Response
      */
-    public function addHeader($header, $value)
+    public function withAddedHeader($header, $value)
     {
         if ($this->complete) {
             return $this;
         }
 
-        $new = $this->psrResponse->addHeader($header, $value);
+        $new = $this->psrResponse->withAddedHeader($header, $value);
         return new self($new);
     }
 
     /**
-     * Proxy to PsrResponseInterface::removeHeader()
+     * Proxy to PsrResponseInterface::withoutHeader()
      *
      * @param string $header HTTP header to remove
      * @return Response
      */
-    public function removeHeader($header)
+    public function withoutHeader($header)
     {
         if ($this->complete) {
             return $this;
         }
 
-        $new = $this->psrResponse->removeHeader($header);
+        $new = $this->psrResponse->withoutHeader($header);
         return new self($new);
     }
 
@@ -252,19 +252,19 @@ class Response implements
     }
 
     /**
-     * Proxy to PsrResponseInterface::setStatus()
+     * Proxy to PsrResponseInterface::withStatus()
      *
      * @param integer $code The 3-digit integer result code to set.
      * @param null|string $reasonPhrase The reason phrase to use with the status, if any.
      * @return Response
      */
-    public function setStatus($code, $reasonPhrase = null)
+    public function withStatus($code, $reasonPhrase = null)
     {
         if ($this->complete) {
             return $this;
         }
 
-        $new = $this->psrResponse->setStatus($code, $reasonPhrase);
+        $new = $this->psrResponse->withStatus($code, $reasonPhrase);
         return new self($new);
     }
 

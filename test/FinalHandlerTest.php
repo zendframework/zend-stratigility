@@ -7,6 +7,7 @@ use Phly\Conduit\Http\Request;
 use Phly\Conduit\Http\Response;
 use Phly\Http\ServerRequest as PsrRequest;
 use Phly\Http\Response as PsrResponse;
+use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 use Zend\Escaper\Escaper;
 
@@ -15,8 +16,8 @@ class FinalHandlerTest extends TestCase
     public function setUp()
     {
         $psrRequest = new PsrRequest('php://memory');
-        $psrRequest = $psrRequest->setMethod('GET');
-        $psrRequest = $psrRequest->setAbsoluteUri('http://example.com/');
+        $psrRequest = $psrRequest->withMethod('GET');
+        $psrRequest = $psrRequest->withUri(new Uri('http://example.com/'));
 
         $this->escaper  = new Escaper();
         $this->request  = new Request($psrRequest);
@@ -104,14 +105,14 @@ class FinalHandlerTest extends TestCase
         $this->assertEquals(404, $response->getStatusCode());
     }
 
-    public function test404ResponseIncludesOriginalRequestAbsoluteUri()
+    public function test404ResponseIncludesOriginalRequestUri()
     {
         $originalUrl = 'http://local.example.com/bar/foo';
         $psrRequest  = new PsrRequest('php://memory');
-        $psrRequest  = $psrRequest->setMethod('GET');
-        $psrRequest  = $psrRequest->setAbsoluteUri($originalUrl);
+        $psrRequest  = $psrRequest->withMethod('GET');
+        $psrRequest  = $psrRequest->withUri(new Uri($originalUrl));
         $request     = new Request($psrRequest);
-        $request     = $request->setAbsoluteUri('http://local.example.com/foo');
+        $request     = $request->withUri(new Uri('http://local.example.com/foo'));
 
         $final    = new FinalHandler($request, $this->response);
         $response = call_user_func($final);

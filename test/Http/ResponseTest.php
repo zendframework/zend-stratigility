@@ -36,12 +36,12 @@ class ResponseTest extends TestCase
 
     public function testCannotMutateResponseAfterCallingEnd()
     {
-        $response = $this->response->setStatus(201);
+        $response = $this->response->withStatus(201);
         $response = $response->write("First\n");
         $response = $response->end('DONE');
 
-        $test = $response->setStatus(200);
-        $test = $test->setHeader('X-Foo', 'Foo');
+        $test = $response->withStatus(200);
+        $test = $test->withHeader('X-Foo', 'Foo');
         $test = $test->write('MOAR!');
 
         $this->assertSame($response, $test);
@@ -57,7 +57,7 @@ class ResponseTest extends TestCase
         $response = $this->response->end('foo');
 
         $body = new Stream('php://memory', 'r+');
-        $response = $response->setBody($body);
+        $response = $response->withBody($body);
 
         $this->assertEquals('foo', (string) $response->getBody());
     }
@@ -65,7 +65,7 @@ class ResponseTest extends TestCase
     public function testAddHeaderDoesNothingIfComplete()
     {
         $response = $this->response->end('foo');
-        $response = $response->addHeader('Content-Type', 'application/json');
+        $response = $response->withAddedHeader('Content-Type', 'application/json');
         $this->assertFalse($response->hasHeader('Content-Type'));
     }
 
@@ -86,26 +86,26 @@ class ResponseTest extends TestCase
         $this->assertEquals('1.1', $this->response->getProtocolVersion());
 
         $stream = $this->getMock('Psr\Http\Message\StreamableInterface');
-        $response = $this->response->setBody($stream);
+        $response = $this->response->withBody($stream);
         $this->assertNotSame($this->response, $response);
         $this->assertSame($stream, $response->getBody());
 
         $this->assertSame($this->original->getHeaders(), $this->response->getHeaders());
 
-        $response = $this->response->setHeader('Accept', 'application/xml');
+        $response = $this->response->withHeader('Accept', 'application/xml');
         $this->assertNotSame($this->response, $response);
         $this->assertTrue($response->hasHeader('Accept'));
         $this->assertEquals('application/xml', $response->getHeader('Accept'));
 
-        $response = $this->response->addHeader('X-URL', 'http://example.com/foo');
+        $response = $this->response->withAddedHeader('X-URL', 'http://example.com/foo');
         $this->assertNotSame($this->response, $response);
         $this->assertTrue($response->hasHeader('X-URL'));
 
-        $response = $this->response->removeHeader('X-URL');
+        $response = $this->response->withoutHeader('X-URL');
         $this->assertNotSame($this->response, $response);
         $this->assertFalse($response->hasHeader('X-URL'));
 
-        $response = $this->response->setStatus(200, 'FOOBAR');
+        $response = $this->response->withStatus(200, 'FOOBAR');
         $this->assertNotSame($this->response, $response);
         $this->assertEquals('FOOBAR', $response->getReasonPhrase());
     }

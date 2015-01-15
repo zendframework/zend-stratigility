@@ -5,6 +5,7 @@ use ArrayObject;
 use Phly\Http\Uri;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 
 /**
  * Iterate a stack of middlewares and execute them
@@ -103,7 +104,7 @@ class Next
         }
 
         $layer = $this->stack[$this->index++];
-        $path  = parse_url($this->request->getAbsoluteUri(), PHP_URL_PATH) ?: '/';
+        $path  = $this->request->getUri()->getPath() ?: '/';
         $route = $layer->path;
 
         // Skip if layer path does not match current url
@@ -141,8 +142,8 @@ class Next
             return;
         }
 
-        $uri  = new Uri($request->getAbsoluteUri());
-        $path = $uri->path;
+        $uri  = $request->getUri();
+        $path = $uri->getPath();
 
         if ($resetRequest
             && strlen($path) >= strlen($this->removed)
@@ -152,9 +153,9 @@ class Next
         }
 
         $path = $this->removed . $path;
-        $new  = $uri->setPath($path);
+        $new  = $uri->withPath($path);
         $this->removed = '';
-        $this->request = $request->setAbsoluteUri((string) $new);
+        $this->request = $request->withUri($new);
     }
 
     /**
@@ -182,9 +183,36 @@ class Next
     {
         $this->removed = $route;
 
-        $uri  = new Uri($this->request->getAbsoluteUri());
-        $path = substr($uri->path, strlen($route));
-        $new  = $uri->setPath($path);
-        $this->request = $this->request->setAbsoluteUri((string) $new);
+        $uri  = $this->request->getUri();
+        $path = $this->getTruncatedPath($route, $uri->getPath());
+        $new  = $uri->withPath($path);
+
+        $this->request = $this->request->withUri($new);
+    }
+
+    /**
+     * Strip the segment from the start of the given path.
+     *
+     * @param string $segment
+     * @param string $path
+     * @return string Truncated path
+     * @throws RuntimeException if the segment does not begin the path.
+     */
+    private function getTruncatedPath($segment, $path)
+    {
+        if ($path === $segment) {
+            // Segment and path are same; return empty string
+            return '';
+        }
+
+        if (strlen($path) > $segment) {
+            // Strip segment from start of path
+            return substr($path, strlen($segment));
+        }
+
+        // Segment is longer than path. There's an issue
+        throw new RuntimeException(
+            'Layer and request path have gone out of sync'
+        );
     }
 }

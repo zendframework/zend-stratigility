@@ -11,36 +11,27 @@ class RequestTest extends TestCase
     public function setUp()
     {
         $psrRequest = new PsrRequest('php://memory');
-        $psrRequest = $psrRequest->setMethod('GET');
-        $psrRequest = $psrRequest->setAbsoluteUri('http://example.com/');
+        $psrRequest = $psrRequest->withMethod('GET');
+        $psrRequest = $psrRequest->withUri(new Uri('http://example.com/'));
         $this->original = $psrRequest;
         $this->request  = new Request($this->original);
     }
 
-    public function testCallingSetAbsoluteUriSetsUriInRequestAndOriginalRequestInClone()
+    public function testCallingSetUriSetsUriInRequestAndOriginalRequestInClone()
     {
         $url = 'http://example.com/foo';
-        $request = $this->request->setAbsoluteUri($url);
+        $request = $this->request->withUri(new Uri($url));
         $this->assertNotSame($this->request, $request);
         $this->assertSame($this->original, $request->getOriginalRequest());
-        $this->assertSame($url, $request->getAbsoluteUri());
-    }
-
-    public function testCallingSetUrlSetsOriginalUrlPropertyInClone()
-    {
-        $url = '/foo';
-        $request = $this->request->setUrl($url);
-        $this->assertNotSame($this->request, $request);
-        $this->assertSame('/', $request->getAttribute('originalUrl'));
-        $this->assertSame($url, $request->getUrl());
+        $this->assertSame($url, (string) $request->getUri());
     }
 
     public function testConstructorSetsOriginalRequestIfNoneProvided()
     {
         $url = 'http://example.com/foo';
         $baseRequest = new PsrRequest('php://memory');
-        $baseRequest = $baseRequest->setMethod('GET');
-        $baseRequest = $baseRequest->setAbsoluteUri($url);
+        $baseRequest = $baseRequest->withMethod('GET');
+        $baseRequest = $baseRequest->withUri(new Uri($url));
 
         $request = new Request($baseRequest);
         $this->assertSame($baseRequest, $request->getOriginalRequest());
@@ -50,12 +41,12 @@ class RequestTest extends TestCase
     {
         $url = 'http://example.com/foo';
         $baseRequest = new PsrRequest('php://memory');
-        $baseRequest = $baseRequest->setMethod('GET');
-        $baseRequest = $baseRequest->setAbsoluteUri($url);
+        $baseRequest = $baseRequest->withMethod('GET');
+        $baseRequest = $baseRequest->withUri(new Uri($url));
 
         $request = new Request($baseRequest);
-        $request = $request->setMethod('POST');
-        $new     = $request->addHeader('X-Foo', 'Bar');
+        $request = $request->withMethod('POST');
+        $new     = $request->withAddedHeader('X-Foo', 'Bar');
 
         $this->assertNotSame($request, $new);
         $this->assertNotSame($baseRequest, $new);
@@ -72,10 +63,10 @@ class RequestTest extends TestCase
     {
         $stream = $this->getMock('Psr\Http\Message\StreamableInterface');
         $psrRequest = new PsrRequest($stream);
-        $psrRequest = $psrRequest->setMethod('POST');
-        $psrRequest = $psrRequest->setAbsoluteUri('http://example.com/');
-        $psrRequest = $psrRequest->setHeader('Accept', 'application/xml');
-        $psrRequest = $psrRequest->setHeader('X-URL', 'http://example.com/foo');
+        $psrRequest = $psrRequest->withMethod('POST');
+        $psrRequest = $psrRequest->withUri(new Uri('http://example.com/'));
+        $psrRequest = $psrRequest->withHeader('Accept', 'application/xml');
+        $psrRequest = $psrRequest->withHeader('X-URL', 'http://example.com/foo');
         $request = new Request($psrRequest);
 
         $this->assertEquals('1.1', $request->getProtocolVersion());

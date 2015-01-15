@@ -66,7 +66,7 @@ class FinalHandler
      */
     private function handleError($error)
     {
-        $response = $this->response->setStatus(
+        $response = $this->response->withStatus(
             $this->getStatusCode($error, $this->response)
         );
 
@@ -90,15 +90,15 @@ class FinalHandler
      */
     private function create404()
     {
-        $response = $this->response->setStatus(404);
+        $response = $this->response->withStatus(404);
 
         $originalRequest = $this->request->getOriginalRequest();
-        $url             = $originalRequest->getAbsoluteUri();
+        $uri             = $originalRequest->getUri();
         $escaper         = new Escaper();
         $message         = sprintf(
             "Cannot %s %s\n",
             $escaper->escapeHtml($this->request->getMethod()),
-            $escaper->escapeHtml((string) $url)
+            $escaper->escapeHtml((string) $uri)
         );
         $response->end($message);
         return $response;

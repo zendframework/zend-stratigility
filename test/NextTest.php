@@ -8,6 +8,7 @@ use Phly\Conduit\Next;
 use Phly\Conduit\Route;
 use Phly\Http\ServerRequest as PsrRequest;
 use Phly\Http\Response as PsrResponse;
+use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 
 class NextTest extends TestCase
@@ -15,8 +16,8 @@ class NextTest extends TestCase
     public function setUp()
     {
         $psrRequest = new PsrRequest('php://memory');
-        $psrRequest = $psrRequest->setMethod('GET');
-        $psrRequest = $psrRequest->setAbsoluteUri('http://example.com/');
+        $psrRequest = $psrRequest->withMethod('GET');
+        $psrRequest = $psrRequest->withUri(new Uri('http://example.com/'));
 
         $this->stack    = new ArrayObject();
         $this->request  = new Request($psrRequest);
@@ -50,7 +51,7 @@ class NextTest extends TestCase
             $triggered = true;
         };
 
-        $this->request->setUrl('http://local.example.com/bar');
+        $this->request->withUri(new Uri('http://local.example.com/bar'));
 
         $next = new Next($this->stack, $this->request, $this->response, $done);
         $next();
@@ -71,7 +72,7 @@ class NextTest extends TestCase
             $triggered = true;
         };
 
-        $this->request->setUrl('http://local.example.com/foobar');
+        $this->request->withUri(new Uri('http://local.example.com/foobar'));
 
         $next = new Next($this->stack, $this->request, $this->response, $done);
         $next();
@@ -92,7 +93,7 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit done handler');
         };
 
-        $request = $this->request->setUrl('http://local.example.com/foo');
+        $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
 
         $next = new Next($this->stack, $request, $this->response, $done);
         $next();
@@ -105,7 +106,7 @@ class NextTest extends TestCase
         // then the URI path in the handler is "/bar"
         $triggered = null;
         $route = new Route('/foo', function ($req, $res, $next) use (&$triggered) {
-            $triggered = parse_url($req->getUrl(), PHP_URL_PATH);
+            $triggered = $req->getUri()->getPath();
         });
         $this->stack[] = $route;
 
@@ -114,7 +115,7 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit done handler');
         };
 
-        $request = $this->request->setUrl('http://local.example.com/foo/bar');
+        $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
 
         $next = new Next($this->stack, $request, $this->response, $done);
         $next();
@@ -143,7 +144,7 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit final handler');
         };
 
-        $request = $this->request->setUrl('http://example.com/foo/baz/bat');
+        $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
         $next = new Next($this->stack, $request, $this->response, $done);
         $next();
         $this->assertEquals('done', (string) $this->response->getBody());
@@ -172,7 +173,7 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit final handler');
         };
 
-        $request = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $next = new Next($this->stack, $request, $this->response, $done);
         $result = $next();
         $this->assertSame($this->response, $result);
@@ -199,7 +200,7 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit final handler');
         };
 
-        $request = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $next = new Next($this->stack, $request, $this->response, $done);
         $result = $next();
         $this->assertTrue($triggered);
@@ -209,9 +210,9 @@ class NextTest extends TestCase
     public function testMiddlewareCallingNextWithRequestResetsRequest()
     {
         $phpunit       = $this;
-        $request       = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $request       = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $cannedRequest = clone $request;
-        $cannedRequest = $cannedRequest->setMethod('POST');
+        $cannedRequest = $cannedRequest->withMethod('POST');
 
         $route1 = new Route('/foo/bar', function ($req, $res, $next) use ($cannedRequest) {
             return $next($cannedRequest);
@@ -252,7 +253,7 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit final handler');
         };
 
-        $request = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $next = new Next($this->stack, $request, $this->response, $done);
         $next();
     }
@@ -277,7 +278,7 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit final handler');
         };
 
-        $request = $this->request->setUrl('http://example.com/foo/bar/baz');
+        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $next    = new Next($this->stack, $request, $this->response, $done);
         $result  = $next();
         $this->assertSame($cannedResponse, $result);

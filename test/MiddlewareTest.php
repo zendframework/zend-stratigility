@@ -7,6 +7,7 @@ use Phly\Conduit\Middleware;
 use Phly\Conduit\Utils;
 use Phly\Http\ServerRequest as Request;
 use Phly\Http\Response;
+use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
 
@@ -15,8 +16,8 @@ class MiddlewareTest extends TestCase
     public function setUp()
     {
         $request = new Request('php://memory');
-        $request = $request->setMethod('GET');
-        $request = $request->setAbsoluteUri('http://example.com/');
+        $request = $request->withMethod('GET');
+        $request = $request->withUri(new Uri('http://example.com/'));
         $this->request = $request;
 
         $this->response   = new Response();
@@ -64,8 +65,8 @@ class MiddlewareTest extends TestCase
         });
 
         $request = new Request('php://memory');
-        $request = $request->setMethod('GET');
-        $request = $request->setAbsoluteUri('http://local.example.com/foo');
+        $request = $request->withMethod('GET');
+        $request = $request->withUri(new Uri('http://local.example.com/foo'));
         $this->middleware->__invoke($request, $this->response);
         $body = (string) $this->response->getBody();
         $this->assertContains('First', $body);
@@ -94,8 +95,8 @@ class MiddlewareTest extends TestCase
         });
 
         $request = new Request('php://memory');
-        $request = $request->setMethod('GET');
-        $request = $request->setAbsoluteUri('http://local.example.com/foo');
+        $request = $request->withMethod('GET');
+        $request = $request->withUri(new Uri('http://local.example.com/foo'));
         $this->middleware->__invoke($request, $this->response);
         $body = (string) $this->response->getBody();
         $this->assertContains('First', $body);
@@ -121,8 +122,8 @@ class MiddlewareTest extends TestCase
         });
 
         $request = new Request('php://memory');
-        $request = $request->setMethod('GET');
-        $request = $request->setAbsoluteUri('http://local.example.com/foo');
+        $request = $request->withMethod('GET');
+        $request = $request->withUri(new Uri('http://local.example.com/foo'));
         $this->middleware->__invoke($request, $this->response, $out);
         $this->assertTrue($triggered);
     }
@@ -159,8 +160,8 @@ class MiddlewareTest extends TestCase
     public function testCanUseDecoratedRequestAndResponseDirectly()
     {
         $baseRequest = new Request('php://memory');
-        $baseRequest = $baseRequest->setMethod('GET');
-        $baseRequest = $baseRequest->setAbsoluteUri('http://local.example.com/foo');
+        $baseRequest = $baseRequest->withMethod('GET');
+        $baseRequest = $baseRequest->withUri(new Uri('http://local.example.com/foo'));
 
         $request  = new RequestDecorator($baseRequest);
         $response = new ResponseDecorator($this->response);
@@ -198,8 +199,8 @@ class MiddlewareTest extends TestCase
         });
 
         $request = new Request('php://memory');
-        $request = $request->setMethod('GET');
-        $request = $request->setAbsoluteUri('http://local.example.com/foo');
+        $request = $request->withMethod('GET');
+        $request = $request->withUri(new Uri('http://local.example.com/foo'));
         $result  = $this->middleware->__invoke($request, $this->response);
         $this->assertSame($this->response, $result->getOriginalResponse());
     }
@@ -223,8 +224,8 @@ class MiddlewareTest extends TestCase
         });
 
         $request = new Request('php://memory');
-        $request = $request->setMethod('GET');
-        $request = $request->setAbsoluteUri('http://local.example.com/foo');
+        $request = $request->withMethod('GET');
+        $request = $request->withUri(new Uri('http://local.example.com/foo'));
         $result  = $this->middleware->__invoke($request, $this->response);
         $this->assertSame($return, $result, var_export([
             spl_object_hash($return) => get_class($return),
