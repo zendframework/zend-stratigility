@@ -10,9 +10,7 @@ class RequestTest extends TestCase
 {
     public function setUp()
     {
-        $psrRequest = new PsrRequest('php://memory');
-        $psrRequest = $psrRequest->withMethod('GET');
-        $psrRequest = $psrRequest->withUri(new Uri('http://example.com/'));
+        $psrRequest     = new PsrRequest([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->original = $psrRequest;
         $this->request  = new Request($this->original);
     }
@@ -29,9 +27,7 @@ class RequestTest extends TestCase
     public function testConstructorSetsOriginalRequestIfNoneProvided()
     {
         $url = 'http://example.com/foo';
-        $baseRequest = new PsrRequest('php://memory');
-        $baseRequest = $baseRequest->withMethod('GET');
-        $baseRequest = $baseRequest->withUri(new Uri($url));
+        $baseRequest = new PsrRequest([], [], $url, 'GET', 'php://memory');
 
         $request = new Request($baseRequest);
         $this->assertSame($baseRequest, $request->getOriginalRequest());
@@ -40,9 +36,7 @@ class RequestTest extends TestCase
     public function testCallingSettersRetainsOriginalRequest()
     {
         $url = 'http://example.com/foo';
-        $baseRequest = new PsrRequest('php://memory');
-        $baseRequest = $baseRequest->withMethod('GET');
-        $baseRequest = $baseRequest->withUri(new Uri($url));
+        $baseRequest = new PsrRequest([], [], $url, 'GET', 'php://memory');
 
         $request = new Request($baseRequest);
         $request = $request->withMethod('POST');
@@ -62,11 +56,10 @@ class RequestTest extends TestCase
     public function testDecoratorProxiesToAllMethods()
     {
         $stream = $this->getMock('Psr\Http\Message\StreamableInterface');
-        $psrRequest = new PsrRequest($stream);
-        $psrRequest = $psrRequest->withMethod('POST');
-        $psrRequest = $psrRequest->withUri(new Uri('http://example.com/'));
-        $psrRequest = $psrRequest->withHeader('Accept', 'application/xml');
-        $psrRequest = $psrRequest->withHeader('X-URL', 'http://example.com/foo');
+        $psrRequest = new PsrRequest([], [], 'http://example.com', 'POST', $stream, [
+            'Accept' => 'application/xml',
+            'X-URL' => 'http://example.com/foo',
+        ]);
         $request = new Request($psrRequest);
 
         $this->assertEquals('1.1', $request->getProtocolVersion());

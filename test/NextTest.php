@@ -15,10 +15,7 @@ class NextTest extends TestCase
 {
     public function setUp()
     {
-        $psrRequest = new PsrRequest('php://memory');
-        $psrRequest = $psrRequest->withMethod('GET');
-        $psrRequest = $psrRequest->withUri(new Uri('http://example.com/'));
-
+        $psrRequest     = new PsrRequest([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->stack    = new ArrayObject();
         $this->request  = new Request($psrRequest);
         $this->response = new Response(new PsrResponse());

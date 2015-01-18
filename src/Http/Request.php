@@ -4,7 +4,7 @@ namespace Phly\Conduit\Http;
 use ArrayObject;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamableInterface;
-use Psr\Http\Message\UriInterface;
+use Psr\Http\Message\UriTargetInterface;
 
 /**
  * Decorator for PSR ServerRequestInterface
@@ -79,7 +79,7 @@ class Request implements ServerRequestInterface
      * Proxy to ServerRequestInterface::withProtocolVersion()
      *
      * @param string $version HTTP protocol version.
-     * @return Request
+     * @return self
      */
     public function withProtocolVersion($version)
     {
@@ -101,7 +101,7 @@ class Request implements ServerRequestInterface
      * Proxy to ServerRequestInterface::withBody()
      *
      * @param StreamableInterface $body Body.
-     * @return Request
+     * @return self
      * @throws \InvalidArgumentException When the body is not valid.
      */
     public function withBody(StreamableInterface $body)
@@ -160,7 +160,7 @@ class Request implements ServerRequestInterface
      *
      * @param string $header Header name
      * @param string|string[] $value  Header value(s)
-     * @return Request
+     * @return self
      */
     public function withHeader($header, $value)
     {
@@ -173,7 +173,7 @@ class Request implements ServerRequestInterface
      *
      * @param string $header Header name to add or append
      * @param string|string[] $value Value(s) to add or merge into the header
-     * @return Request
+     * @return self
      */
     public function withAddedHeader($header, $value)
     {
@@ -185,7 +185,7 @@ class Request implements ServerRequestInterface
      * Proxy to ServerRequestInterface::removeHeader()
      *
      * @param string $header HTTP header to remove
-     * @return Request
+     * @return self
      */
     public function withoutHeader($header)
     {
@@ -207,7 +207,7 @@ class Request implements ServerRequestInterface
      * Proxy to ServerRequestInterface::withMethod()
      *
      * @param string $method The request method.
-     * @return Request
+     * @return self
      */
     public function withMethod($method)
     {
@@ -218,7 +218,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getUri()
      *
-     * @return UriInterface Returns a UriInterface instance
+     * @return UriTargetInterface Returns a UriTargetInterface instance
      * @link http://tools.ietf.org/html/rfc3986#section-4.3
      */
     public function getUri()
@@ -230,11 +230,11 @@ class Request implements ServerRequestInterface
      * Allow mutating the URI
      *
      * @link http://tools.ietf.org/html/rfc3986#section-4.3
-     * @param UriInterface $uri Request URI.
-     * @return Request
+     * @param UriTargetInterface $uri Request URI.
+     * @return self
      * @throws \InvalidArgumentException If the URI is invalid.
      */
-    public function withUri(UriInterface $uri)
+    public function withUri(UriTargetInterface $uri)
     {
         $new = $this->psrRequest->withUri($uri);
         return new self($new, $this->originalRequest);
@@ -264,7 +264,7 @@ class Request implements ServerRequestInterface
      * Proxy to ServerRequestInterface::withCookieParams()
      *
      * @param array $cookies
-     * @return Request
+     * @return self
      */
     public function withCookieParams(array $cookies)
     {
@@ -286,7 +286,7 @@ class Request implements ServerRequestInterface
      * Proxy to ServerRequestInterface::withQueryParams()
      *
      * @param array $query
-     * @return Request
+     * @return self
      */
     public function withQueryParams(array $query)
     {
@@ -319,7 +319,7 @@ class Request implements ServerRequestInterface
      * Proxy to ServerRequestInterface::withBodyParams()
      *
      * @param array $params The deserialized body parameters.
-     * @return Request
+     * @return self
      */
     public function withBodyParams(array $params)
     {
@@ -350,27 +350,27 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::withAttributes()
-     *
-     * @param array Attributes derived from the request
-     * @return Request
-     */
-    public function withAttributes(array $values)
-    {
-        $new = $this->psrRequest->withAttributes($values);
-        return new self($new, $this->originalRequest);
-    }
-
-    /**
      * Proxy to ServerRequestInterface::withAttribute()
      *
      * @param string $attribute
      * @param mixed $value
-     * @return Request
+     * @return self
      */
     public function withAttribute($attribute, $value)
     {
         $new = $this->psrRequest->withAttribute($attribute, $value);
+        return new self($new, $this->originalRequest);
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::withoutAttribute()
+     *
+     * @param string $attribute
+     * @return self
+     */
+    public function withoutAttribute($attribute)
+    {
+        $new = $this->psrRequest->withoutAttribute($attribute);
         return new self($new, $this->originalRequest);
     }
 }

@@ -15,10 +15,7 @@ class FinalHandlerTest extends TestCase
 {
     public function setUp()
     {
-        $psrRequest = new PsrRequest('php://memory');
-        $psrRequest = $psrRequest->withMethod('GET');
-        $psrRequest = $psrRequest->withUri(new Uri('http://example.com/'));
-
+        $psrRequest     = new PsrRequest([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->escaper  = new Escaper();
         $this->request  = new Request($psrRequest);
         $this->response = new Response(new PsrResponse());
@@ -108,9 +105,7 @@ class FinalHandlerTest extends TestCase
     public function test404ResponseIncludesOriginalRequestUri()
     {
         $originalUrl = 'http://local.example.com/bar/foo';
-        $psrRequest  = new PsrRequest('php://memory');
-        $psrRequest  = $psrRequest->withMethod('GET');
-        $psrRequest  = $psrRequest->withUri(new Uri($originalUrl));
+        $psrRequest  = new PsrRequest([], [], $originalUrl, 'GET', 'php://memory');
         $request     = new Request($psrRequest);
         $request     = $request->withUri(new Uri('http://local.example.com/foo'));
 
