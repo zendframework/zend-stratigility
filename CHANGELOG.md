@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.9.1 - 2015-01-19
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Use phly/http >= 0.8.2, as that is the first version that properly supports
+  PHP 5.4, allowing Conduit to work under PHP 5.4.
+
 ## 0.9.0 - 2015-01-18
 
 This version syncs Conduit with psr/http-message 0.6.0 and phly/http 0.8.1. The
