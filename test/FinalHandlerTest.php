@@ -5,8 +5,9 @@ use Exception;
 use Phly\Conduit\FinalHandler;
 use Phly\Conduit\Http\Request;
 use Phly\Conduit\Http\Response;
-use Phly\Http\IncomingRequest as PsrRequest;
-use Phly\Http\OutgoingResponse as PsrResponse;
+use Phly\Http\ServerRequest as PsrRequest;
+use Phly\Http\Response as PsrResponse;
+use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 use Zend\Escaper\Escaper;
 
@@ -14,54 +15,55 @@ class FinalHandlerTest extends TestCase
 {
     public function setUp()
     {
+        $psrRequest     = new PsrRequest([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->escaper  = new Escaper();
-        $this->request  = new Request(new PsrRequest('http://example.com/', 'GET', [], 'php://memory'));
+        $this->request  = new Request($psrRequest);
         $this->response = new Response(new PsrResponse());
         $this->final    = new FinalHandler($this->request, $this->response);
     }
 
     public function testInvokingWithErrorAndNoStatusCodeSetsStatusTo500()
     {
-        $error = 'error';
-        call_user_func($this->final, $error);
-        $this->assertEquals(500, $this->response->getStatusCode());
+        $error    = 'error';
+        $response = call_user_func($this->final, $error);
+        $this->assertEquals(500, $response->getStatusCode());
     }
 
     public function testInvokingWithExceptionWithValidCodeSetsStatusToExceptionCode()
     {
-        $error = new Exception('foo', 400);
-        call_user_func($this->final, $error);
-        $this->assertEquals(400, $this->response->getStatusCode());
+        $error    = new Exception('foo', 400);
+        $response = call_user_func($this->final, $error);
+        $this->assertEquals(400, $response->getStatusCode());
     }
 
     public function testInvokingWithExceptionWithInvalidCodeSetsStatusTo500()
     {
-        $error = new Exception('foo', 32001);
-        call_user_func($this->final, $error);
-        $this->assertEquals(500, $this->response->getStatusCode());
+        $error    = new Exception('foo', 32001);
+        $response = call_user_func($this->final, $error);
+        $this->assertEquals(500, $response->getStatusCode());
     }
 
     public function testInvokingWithErrorInNonProductionModeSetsResponseBodyToError()
     {
-        $error = 'error';
-        call_user_func($this->final, $error);
-        $this->assertEquals($error, (string) $this->response->getBody());
+        $error    = 'error';
+        $response = call_user_func($this->final, $error);
+        $this->assertEquals($error, (string) $response->getBody());
     }
 
     public function testInvokingWithExceptionInNonProductionModeIncludesExceptionMessageInResponseBody()
     {
-        $error = new Exception('foo', 400);
-        call_user_func($this->final, $error);
+        $error    = new Exception('foo', 400);
+        $response = call_user_func($this->final, $error);
         $expected = $this->escaper->escapeHtml($error->getMessage());
-        $this->assertContains($expected, (string) $this->response->getBody());
+        $this->assertContains($expected, (string) $response->getBody());
     }
 
     public function testInvokingWithExceptionInNonProductionModeIncludesTraceInResponseBody()
     {
-        $error = new Exception('foo', 400);
-        call_user_func($this->final, $error);
+        $error    = new Exception('foo', 400);
+        $response = call_user_func($this->final, $error);
         $expected = $this->escaper->escapeHtml($error->getTraceAsString());
-        $this->assertContains($expected, (string) $this->response->getBody());
+        $this->assertContains($expected, (string) $response->getBody());
     }
 
     public function testInvokingWithErrorInProductionSetsResponseToReasonPhrase()
@@ -69,9 +71,9 @@ class FinalHandlerTest extends TestCase
         $final = new FinalHandler($this->request, $this->response, [
             'env' => 'production',
         ]);
-        $error = new Exception('foo', 400);
-        $final($error);
-        $this->assertEquals($this->response->getReasonPhrase(), (string) $this->response->getBody());
+        $error    = new Exception('foo', 400);
+        $response = $final($error);
+        $this->assertEquals($response->getReasonPhrase(), (string) $response->getBody());
     }
 
     public function testTriggersOnErrorCallableWithErrorWhenPresent()
@@ -86,33 +88,29 @@ class FinalHandlerTest extends TestCase
             'env' => 'production',
             'onerror' => $callback,
         ]);
-        $final($error);
+        $response = $final($error);
         $this->assertInternalType('array', $triggered);
         $this->assertEquals(3, count($triggered));
         $this->assertSame($error, array_shift($triggered));
         $this->assertSame($this->request, array_shift($triggered));
-        $this->assertSame($this->response, array_shift($triggered));
+        $this->assertSame($response, array_shift($triggered));
     }
 
     public function testCreates404ResponseWhenNoErrorIsPresent()
     {
-        call_user_func($this->final);
-        $this->assertEquals(404, $this->response->getStatusCode());
+        $response = call_user_func($this->final);
+        $this->assertEquals(404, $response->getStatusCode());
     }
 
-    public function test404ResponseIncludesOriginalRequestUrl()
+    public function test404ResponseIncludesOriginalRequestUri()
     {
         $originalUrl = 'http://local.example.com/bar/foo';
-        $request = new Request(new PsrRequest(
-            $originalUrl,
-            'GET',
-            [],
-            'php://memory'
-        ));
-        $request->setUrl('http://local.example.com/foo');
+        $psrRequest  = new PsrRequest([], [], $originalUrl, 'GET', 'php://memory');
+        $request     = new Request($psrRequest);
+        $request     = $request->withUri(new Uri('http://local.example.com/foo'));
 
-        $final = new FinalHandler($request, $this->response);
-        call_user_func($final);
-        $this->assertContains($originalUrl, (string) $this->response->getBody());
+        $final    = new FinalHandler($request, $this->response);
+        $response = call_user_func($final);
+        $this->assertContains($originalUrl, (string) $response->getBody());
     }
 }

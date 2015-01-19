@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.9.0 - 2015-01-18
+
+This version syncs Conduit with psr/http-message 0.6.0 and phly/http 0.8.1. The
+primary changes are:
+
+- `Phly\Conduit\Http\Request` now implements
+  `Psr\Http\Message\ServerRequestInterface`, and extends
+  `Phly\Http\ServerRequest`, which means it is also now immutable. It no longer
+  provides property access to attributes, and also now stores the original
+  request, not the original URI, as a property, providing an accessor to it.
+- `Phly\Conduit\Http\Response` now implements
+  `Psr\Http\Message\ResponseInterface`, which means it is now immutable.
+- The logic in `Phly\Conduit\Next`'s `__invoke()` was largely rewritten due to
+  the fact that the request/response pair are now immutable, and the fact that
+  the URI is now an object (simplifying many operations).
+- The logic in `Phly\Conduit\Middleware`, `Phly\Conduit\Dispatch`, and
+  `Phly\Conduit\FinalHandler` also needed slight updates to work with the
+  request/response changes.
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
+
 ## 0.8.2 - 2014-11-05
 
 ### Added

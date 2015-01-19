@@ -3,6 +3,9 @@ namespace Phly\Conduit;
 
 use ArrayObject;
 use Phly\Http\Uri;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 
 /**
  * Iterate a stack of middlewares and execute them
@@ -63,15 +66,37 @@ class Next
     /**
      * Call the next Route in the stack
      *
-     * @param null|mixed $err
+     * @param null|ServerRequestInterface|ResponseInterface|mixed $state
+     * @param null|ResponseInterface $response
+     * @return ResponseInterface
      */
-    public function __invoke($err = null)
+    public function __invoke($state = null, ResponseInterface $response = null)
     {
-        $request  = $this->request;
+        $err          = null;
+        $resetRequest = false;
+
+        if ($state instanceof ResponseInterface) {
+            $this->response = $state;
+        }
+
+        if ($state instanceof ServerRequestInterface) {
+            $this->request = $state;
+            $resetRequest  = true;
+        }
+
+        if ($response instanceof ResponseInterface) {
+            $this->response = $response;
+        }
+
+        if (! $state instanceof ServerRequestInterface
+            && ! $state instanceof ResponseInterface
+        ) {
+            $err = $state;
+        }
+
         $dispatch = $this->dispatch;
         $done     = $this->done;
-
-        $this->resetPath($request);
+        $this->resetPath($this->request, $resetRequest);
 
         // No middleware remains; done
         if (! isset($this->stack[$this->index])) {
@@ -79,7 +104,7 @@ class Next
         }
 
         $layer = $this->stack[$this->index++];
-        $path  = parse_url($this->request->getUrl(), PHP_URL_PATH) ?: '/';
+        $path  = $this->request->getUri()->getPath() ?: '/';
         $route = $layer->path;
 
         // Skip if layer path does not match current url
@@ -98,25 +123,39 @@ class Next
             $this->stripRouteFromPath($route);
         }
 
-        $dispatch($layer, $err, $this->request, $this->response, $this);
+        $result = $dispatch($layer, $err, $this->request, $this->response, $this);
+        if ($result instanceof ResponseInterface) {
+            $this->response = $result;
+        }
+        return $this->response;
     }
 
     /**
      * Reset the path, if a segment was previously stripped
      *
      * @param Http\Request $request
+     * @param bool $resetRequest Whether or not the request was reset in this iteration
      */
-    private function resetPath(Http\Request $request)
+    private function resetPath(Http\Request $request, $resetRequest = false)
     {
         if (! $this->removed) {
             return;
         }
 
-        $uri  = new Uri($this->request->getUrl());
-        $path = $this->removed . $uri->path;
-        $new  = $uri->setPath($path);
-        $request->setUrl((string) $new);
+        $uri  = $request->getUri();
+        $path = $uri->getPath();
+
+        if ($resetRequest
+            && strlen($path) >= strlen($this->removed)
+            && 0 === strpos($path, $this->removed)
+        ) {
+            $path = str_replace($this->removed, '', $path);
+        }
+
+        $path = $this->removed . $path;
+        $new  = $uri->withPath($path);
         $this->removed = '';
+        $this->request = $request->withUri($new);
     }
 
     /**
@@ -144,9 +183,36 @@ class Next
     {
         $this->removed = $route;
 
-        $uri  = new Uri($this->request->getUrl());
-        $path = substr($uri->path, strlen($route));
-        $new  = $uri->setPath($path);
-        $this->request->setUrl((string) $new);
+        $uri  = $this->request->getUri();
+        $path = $this->getTruncatedPath($route, $uri->getPath());
+        $new  = $uri->withPath($path);
+
+        $this->request = $this->request->withUri($new);
+    }
+
+    /**
+     * Strip the segment from the start of the given path.
+     *
+     * @param string $segment
+     * @param string $path
+     * @return string Truncated path
+     * @throws RuntimeException if the segment does not begin the path.
+     */
+    private function getTruncatedPath($segment, $path)
+    {
+        if ($path === $segment) {
+            // Segment and path are same; return empty string
+            return '';
+        }
+
+        if (strlen($path) > $segment) {
+            // Strip segment from start of path
+            return substr($path, strlen($segment));
+        }
+
+        // Segment is longer than path. There's an issue
+        throw new RuntimeException(
+            'Layer and request path have gone out of sync'
+        );
     }
 }

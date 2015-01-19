@@ -4,8 +4,8 @@ namespace Phly\Conduit;
 use ArrayObject;
 use InvalidArgumentException;
 use Phly\Http\Uri;
-use Psr\Http\Message\IncomingRequestInterface as Request;
-use Psr\Http\Message\OutgoingResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 
 /**
  * Middleware
@@ -61,17 +61,21 @@ class Middleware
      * @param Request $request
      * @param Response $response
      * @param callable $out
-     * @return void
+     * @return Response
      */
     public function __invoke(Request $request, Response $response, callable $out = null)
     {
         $request  = $this->decorateRequest($request);
         $response = $this->decorateResponse($response);
 
-        $request->setUrl($this->getUrlFromRequest($request));
-        $done  = is_callable($out) ? $out : new FinalHandler($request, $response);
-        $next  = new Next($this->stack, $request, $response, $done);
-        $next();
+        $done   = is_callable($out) ? $out : new FinalHandler($request, $response);
+        $next   = new Next($this->stack, $request, $response, $done);
+        $result = $next();
+
+        if ($result instanceof Response) {
+            return $result;
+        }
+        return $response;
     }
 
     /**
@@ -122,21 +126,6 @@ class Middleware
         // @todo Trigger event here with route details?
         $this->stack->append(new Route($path, $handler));
         return $this;
-    }
-
-    /**
-     * Ensure the request URI is an Uri instance
-     *
-     * @param Request $request
-     * @return Uri
-     */
-    protected function getUrlFromRequest(Request $request)
-    {
-        $url = $request->getUrl();
-        if (is_string($url)) {
-            $url = new Uri($url);
-        }
-        return $url;
     }
 
     /**

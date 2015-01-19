@@ -45,15 +45,15 @@ class FinalHandler
      * Otherwise, a 404 status is created.
      *
      * @param null|mixed $err
+     * @return Http\Response
      */
     public function __invoke($err = null)
     {
         if ($err) {
-            $this->handleError($err);
-            return;
+            return $this->handleError($err);
         }
 
-        $this->create404();
+        return $this->create404();
     }
 
     /**
@@ -62,40 +62,46 @@ class FinalHandler
      * Use the $error to create details for the response.
      *
      * @param mixed $error
+     * @return Http\Response
      */
     private function handleError($error)
     {
-        $this->response->setStatus(
+        $response = $this->response->withStatus(
             $this->getStatusCode($error, $this->response)
         );
 
-        $message = $this->response->getReasonPhrase() ?: 'Unknown Error';
+        $message = $response->getReasonPhrase() ?: 'Unknown Error';
         if (! isset($this->options['env'])
             || $this->options['env'] !== 'production'
         ) {
             $message = $this->createDevelopmentErrorMessage($error);
         }
 
-        $this->triggerError($error, $this->request, $this->response);
+        $this->triggerError($error, $this->request, $response);
 
-        $this->response->end($message);
+        $response->end($message);
+        return $response;
     }
 
     /**
      * Create a 404 status in the response
+     *
+     * @return Http\Response
      */
     private function create404()
     {
-        $this->response->setStatus(404);
+        $response = $this->response->withStatus(404);
 
-        $url     = $this->request->originalUrl ?: $this->request->getUrl();
-        $escaper = new Escaper();
-        $message = sprintf(
+        $originalRequest = $this->request->getOriginalRequest();
+        $uri             = $originalRequest->getUri();
+        $escaper         = new Escaper();
+        $message         = sprintf(
             "Cannot %s %s\n",
             $escaper->escapeHtml($this->request->getMethod()),
-            $escaper->escapeHtml((string) $url)
+            $escaper->escapeHtml((string) $uri)
         );
-        $this->response->end($message);
+        $response->end($message);
+        return $response;
     }
 
     /**
