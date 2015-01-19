@@ -91,12 +91,13 @@ class Middleware
      *
      * A handler can be any callable, or an object with a handle() method.
      *
-     * Handlers with arity >= 4 are considered error handlers, and will
+     * Handlers with parity >= 4 are considered error handlers, and will
      * be executed when a handler calls $next with an argument or raises
      * an exception.
      *
      * @param string|callable|object $path Either a URI path prefix, or a handler
      * @param null|callable|object $handler A handler
+     * @return $this|void
      */
     public function pipe($path, $handler = null)
     {
