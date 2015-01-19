@@ -97,7 +97,7 @@ class Middleware
      *
      * @param string|callable|object $path Either a URI path prefix, or a handler
      * @param null|callable|object $handler A handler
-     * @return $this|void
+     * @return self
      */
     public function pipe($path, $handler = null)
     {
