@@ -91,7 +91,7 @@ class Middleware
      *
      * A handler can be any callable, or an object with a handle() method.
      *
-     * Handlers with parity >= 4 are considered error handlers, and will
+     * Handlers with arity >= 4 are considered error handlers, and will
      * be executed when a handler calls $next with an argument or raises
      * an exception.
      *
