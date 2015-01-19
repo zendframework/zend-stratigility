@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file, in reverse 
 
 - Use phly/http >= 0.8.2, as that is the first version that properly supports
   PHP 5.4, allowing Conduit to work under PHP 5.4.
+- Updated return value annotation in `Middleware::pipe` to read solely `self`.
 
 ## 0.9.0 - 2015-01-18
 
