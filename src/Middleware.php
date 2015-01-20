@@ -68,7 +68,7 @@ class Middleware
         $request  = $this->decorateRequest($request);
         $response = $this->decorateResponse($response);
 
-        $done   = is_callable($out) ? $out : new FinalHandler($request, $response);
+        $done   = is_callable($out) ? $out : new FinalHandler();
         $next   = new Next($this->stack, $request, $response, $done);
         $result = $next();
 

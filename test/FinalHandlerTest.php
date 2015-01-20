@@ -19,41 +19,41 @@ class FinalHandlerTest extends TestCase
         $this->escaper  = new Escaper();
         $this->request  = new Request($psrRequest);
         $this->response = new Response(new PsrResponse());
-        $this->final    = new FinalHandler($this->request, $this->response);
+        $this->final    = new FinalHandler();
     }
 
     public function testInvokingWithErrorAndNoStatusCodeSetsStatusTo500()
     {
         $error    = 'error';
-        $response = call_user_func($this->final, $error);
+        $response = call_user_func($this->final, $error, $this->request, $this->response);
         $this->assertEquals(500, $response->getStatusCode());
     }
 
     public function testInvokingWithExceptionWithValidCodeSetsStatusToExceptionCode()
     {
         $error    = new Exception('foo', 400);
-        $response = call_user_func($this->final, $error);
+        $response = call_user_func($this->final, $error, $this->request, $this->response);
         $this->assertEquals(400, $response->getStatusCode());
     }
 
     public function testInvokingWithExceptionWithInvalidCodeSetsStatusTo500()
     {
         $error    = new Exception('foo', 32001);
-        $response = call_user_func($this->final, $error);
+        $response = call_user_func($this->final, $error, $this->request, $this->response);
         $this->assertEquals(500, $response->getStatusCode());
     }
 
     public function testInvokingWithErrorInNonProductionModeSetsResponseBodyToError()
     {
         $error    = 'error';
-        $response = call_user_func($this->final, $error);
+        $response = call_user_func($this->final, $error, $this->request, $this->response);
         $this->assertEquals($error, (string) $response->getBody());
     }
 
     public function testInvokingWithExceptionInNonProductionModeIncludesExceptionMessageInResponseBody()
     {
         $error    = new Exception('foo', 400);
-        $response = call_user_func($this->final, $error);
+        $response = call_user_func($this->final, $error, $this->request, $this->response);
         $expected = $this->escaper->escapeHtml($error->getMessage());
         $this->assertContains($expected, (string) $response->getBody());
     }
@@ -61,18 +61,18 @@ class FinalHandlerTest extends TestCase
     public function testInvokingWithExceptionInNonProductionModeIncludesTraceInResponseBody()
     {
         $error    = new Exception('foo', 400);
-        $response = call_user_func($this->final, $error);
+        $response = call_user_func($this->final, $error, $this->request, $this->response);
         $expected = $this->escaper->escapeHtml($error->getTraceAsString());
         $this->assertContains($expected, (string) $response->getBody());
     }
 
     public function testInvokingWithErrorInProductionSetsResponseToReasonPhrase()
     {
-        $final = new FinalHandler($this->request, $this->response, [
+        $final = new FinalHandler([
             'env' => 'production',
         ]);
         $error    = new Exception('foo', 400);
-        $response = $final($error);
+        $response = $final($error, $this->request, $this->response);
         $this->assertEquals($response->getReasonPhrase(), (string) $response->getBody());
     }
 
@@ -84,11 +84,11 @@ class FinalHandlerTest extends TestCase
             $triggered = func_get_args();
         };
 
-        $final = new FinalHandler($this->request, $this->response, [
+        $final = new FinalHandler([
             'env' => 'production',
             'onerror' => $callback,
         ]);
-        $response = $final($error);
+        $response = $final($error, $this->request, $this->response);
         $this->assertInternalType('array', $triggered);
         $this->assertEquals(3, count($triggered));
         $this->assertSame($error, array_shift($triggered));
@@ -98,7 +98,7 @@ class FinalHandlerTest extends TestCase
 
     public function testCreates404ResponseWhenNoErrorIsPresent()
     {
-        $response = call_user_func($this->final);
+        $response = call_user_func($this->final, null, $this->request, $this->response);
         $this->assertEquals(404, $response->getStatusCode());
     }
 
@@ -109,8 +109,8 @@ class FinalHandlerTest extends TestCase
         $request     = new Request($psrRequest);
         $request     = $request->withUri(new Uri('http://local.example.com/foo'));
 
-        $final    = new FinalHandler($request, $this->response);
-        $response = call_user_func($final);
+        $final    = new FinalHandler();
+        $response = call_user_func($final, null, $request, $this->response);
         $this->assertContains($originalUrl, (string) $response->getBody());
     }
 }

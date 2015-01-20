@@ -15,24 +15,11 @@ class FinalHandler
     private $options;
 
     /**
-     * @var Http\Request
+     * @param array $options Options that change default override behavior.
      */
-    private $request;
-
-    /**
-     * @var Http\Response
-     */
-    private $response;
-
-    /**
-     * @param Http\Request $request
-     * @param Http\Response $response
-     */
-    public function __construct(Http\Request $request, Http\Response $response, array $options = [])
+    public function __construct(array $options = [])
     {
-        $this->request  = $request;
-        $this->response = $response;
-        $this->options  = $options;
+        $this->options = $options;
     }
 
     /**
@@ -44,16 +31,18 @@ class FinalHandler
      *
      * Otherwise, a 404 status is created.
      *
-     * @param null|mixed $err
+     * @param mixed $err
+     * @param Http\Request $request Request instance.
+     * @param Http\Response $response Response instance.
      * @return Http\Response
      */
-    public function __invoke($err = null)
+    public function __invoke($err, Http\Request $request, Http\Response $response)
     {
         if ($err) {
-            return $this->handleError($err);
+            return $this->handleError($err, $request, $response);
         }
 
-        return $this->create404();
+        return $this->create404($request, $response);
     }
 
     /**
@@ -62,12 +51,14 @@ class FinalHandler
      * Use the $error to create details for the response.
      *
      * @param mixed $error
+     * @param Http\Request $request Request instance.
+     * @param Http\Response $response Response instance.
      * @return Http\Response
      */
-    private function handleError($error)
+    private function handleError($error, Http\Request $request, Http\Response $response)
     {
-        $response = $this->response->withStatus(
-            $this->getStatusCode($error, $this->response)
+        $response = $response->withStatus(
+            $this->getStatusCode($error, $response)
         );
 
         $message = $response->getReasonPhrase() ?: 'Unknown Error';
@@ -77,31 +68,32 @@ class FinalHandler
             $message = $this->createDevelopmentErrorMessage($error);
         }
 
-        $this->triggerError($error, $this->request, $response);
+        $response = $response->end($message);
 
-        $response->end($message);
+        $this->triggerError($error, $request, $response);
+
         return $response;
     }
 
     /**
      * Create a 404 status in the response
      *
+     * @param Http\Request $request Request instance.
+     * @param Http\Response $response Response instance.
      * @return Http\Response
      */
-    private function create404()
+    private function create404(Http\Request $request, Http\Response $response)
     {
-        $response = $this->response->withStatus(404);
-
-        $originalRequest = $this->request->getOriginalRequest();
+        $response        = $response->withStatus(404);
+        $originalRequest = $request->getOriginalRequest();
         $uri             = $originalRequest->getUri();
         $escaper         = new Escaper();
         $message         = sprintf(
             "Cannot %s %s\n",
-            $escaper->escapeHtml($this->request->getMethod()),
+            $escaper->escapeHtml($request->getMethod()),
             $escaper->escapeHtml((string) $uri)
         );
-        $response->end($message);
-        return $response;
+        return $response->end($message);
     }
 
     /**

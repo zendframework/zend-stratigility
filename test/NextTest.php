@@ -230,6 +230,9 @@ class NextTest extends TestCase
         $next();
     }
 
+    /**
+     * @group fail
+     */
     public function testMiddlewareCallingNextWithResponseResetsResponse()
     {
         $phpunit        = $this;
@@ -255,6 +258,9 @@ class NextTest extends TestCase
         $next();
     }
 
+    /**
+     * @group fail
+     */
     public function testNextShouldReturnCurrentResponseAlways()
     {
         $phpunit        = $this;

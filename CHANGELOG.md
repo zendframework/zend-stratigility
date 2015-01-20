@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.10.0 - TBD
+
+### Added
+
+- `FinalHandler::__invoke`'s signature was modified to require the error
+  argument, as well as a request and response instance. It now also returns a
+  response.
+- `Next::__invoke`'s signature was modified to remove the typehint from the
+  second argument, and to add a third argument, typehinted against
+  `Psr\Http\Message\ResponseInterface`. This change allows passing both an
+  updated request and response in error conditions. It also now passes all three
+  arguments to the final handler.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- `FinalHandler::__construct` removes the arguments representing the request and
+  response instances.
+
+### Fixed
+
+- The changes listed in "Added" and "Removed" fix a condition whereby error
+  handlers were not getting updated response instances, causing those that
+  introspect the response to fail. With the changes, behavior returns to normal.
+
 ## 0.9.1 - 2015-01-19
 
 ### Added

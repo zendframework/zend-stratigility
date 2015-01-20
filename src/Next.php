@@ -70,7 +70,7 @@ class Next
      * @param null|ResponseInterface $response
      * @return ResponseInterface
      */
-    public function __invoke($state = null, ResponseInterface $response = null)
+    public function __invoke($state = null, $requestOrResponse = null, ResponseInterface $response = null)
     {
         $err          = null;
         $resetRequest = false;
@@ -84,11 +84,23 @@ class Next
             $resetRequest  = true;
         }
 
-        if ($response instanceof ResponseInterface) {
+        if ($requestOrResponse instanceof ServerRequestInterface) {
+            $this->request = $requestOrResponse;
+            $resetRequest  = true;
+        }
+
+        if ($requestOrResponse instanceof ResponseInterface) {
+            $this->response = $requestOrResponse;
+        }
+
+        if (! $requestOrResponse instanceof ResponseInterface
+            && $response instanceof ResponseInterface
+        ) {
             $this->response = $response;
         }
 
-        if (! $state instanceof ServerRequestInterface
+        if (null !== $state
+            && ! $state instanceof ServerRequestInterface
             && ! $state instanceof ResponseInterface
         ) {
             $err = $state;
@@ -100,7 +112,7 @@ class Next
 
         // No middleware remains; done
         if (! isset($this->stack[$this->index])) {
-            return $done($err);
+            return $done($err, $this->request, $this->response);
         }
 
         $layer = $this->stack[$this->index++];

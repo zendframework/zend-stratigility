@@ -79,12 +79,12 @@ $app->pipe('/', function ($req, $res, $next) {
     if (parse_url($req->getUrl(), PHP_URL_PATH) !== '/') {
         return $next();
     }
-    $res->end('Hello world!');
+    return $res->end('Hello world!');
 });
 
 // Another page
 $app->pipe('/foo', function ($req, $res, $next) {
-    $res->end('FOO!');
+    return $res->end('FOO!');
 });
 
 $server->listen();
@@ -152,7 +152,7 @@ $app->pipe(function ($req, $res, $next) use ($router) {
     }
 
     $handler = $route->getHandler();
-    $handler($req, $res, $next);
+    return $handler($req, $res, $next);
 });
 ```
 
@@ -163,7 +163,6 @@ Middleware written in this way can be any of the following:
 - Static class methods
 - PHP array callbacks (e.g., `[ $dispatcher, 'dispatch' ]`, where `$dispatcher` is a class instance)
 - Invokable PHP objects (i.e., instances of classes implementing `__invoke()`)
-- PHP objects implementing a `handle()` instance method
 
 In all cases, if you wish to implement typehinting, the signature is:
 
@@ -244,7 +243,7 @@ The following make up the primary API of Conduit.
 class Middleware
 {
     public function pipe($path, $handler = null);
-    public function handle(
+    public function __invoke(
         Psr\Http\Message\ServerRequestInterface $request = null,
         Psr\Http\Message\ResponseInterface $response = null,
         callable $out = null
@@ -268,7 +267,7 @@ Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to yo
 - `Next(RequestInterface $request)` will register the provided `$request` with itself, and that instance will be used for subsequent invocations.
 - `Next(ResponseInterface $response)` will register the provided `$response` with itself, and that instance will be used for subsequent invocations.  provided `$response` will be returned.
 - `Next(RequestInterface $request, ResponseInterface $response)` will register each of the provided `$request` and `$response` with itself, and those instances will be used for subsequent invocations.
-- If any other argument is provided for the first argument, it is considered the error to report and pass to registered error middleware.
+- If any other argument is provided for the first argument, it is considered the error to report and pass to registered error middleware. If an error provided, the second argument may be either a request instance or a response instance; if the second argument is a request instance, a response instance may be passed as the third argument.
 
 Note: you **can** pass an error as the first argument and a response as the second, and `Next` will reset the response in that condition as well.
 
@@ -353,14 +352,30 @@ function ($request, $response, $next)
 }
 ```
 
+#### Raising an error condition with a request and/or response
+
+```php
+function ($request, $response, $next)
+{
+    try {
+        // try some operation...
+    } catch (Exception $e) {
+        $next($e, $request); // Error with updated request; OR
+        $next($e, $response); // Error with updated response; OR
+        $next($e, $request, $response); // Error with updated request
+                                               // AND response
+    }
+}
+```
+
 ### FinalHandler
 
-`Phly\Conduit\FinalHandler` is a default implementation of middleware to execute when the stack exhausts itself. It is provided the request and response object to the constructor, and expects zero or one arguments when invoked; one argument indicates an error condition.
+`Phly\Conduit\FinalHandler` is a default implementation of middleware to execute when the stack exhausts itself. It expects three argumets when invoked: an error condition (or `null` for no error), a request instance, and a response instance. It returns a response.
 
-`FinalHandler` allows an optional third argument during instantiation, `$options`, an array of options with which to configure itself. These options currently include:
+`FinalHandler` allows an optional argument during instantiation, `$options`, an array of options with which to configure itself. These options currently include:
 
 - `env`, the application environment. If set to "production", no stack traces will be provided.
-- `onerror`, a callable to execute if an error is passed when `FinalHandler` is invoked. The callable is invoked with the error, the request, and the response.
+- `onerror`, a callable to execute if an error is passed when `FinalHandler` is invoked. The callable is invoked with the error (which will be `null` in the absence of an error), the request, and the response.
 
 ### HTTP Messages
 

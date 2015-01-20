@@ -71,26 +71,25 @@ class MiddlewareTest extends TestCase
     public function testHandleInvokesFirstErrorHandlerOnErrorInChain()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
-            $res->write("First\n");
-            $next();
+            $next($res->write("First\n"));
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next('error');
+            return $next('error');
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $res->write("Third\n");
+            return $res->write("Third\n");
         });
         $this->middleware->pipe(function ($err, $req, $res, $next) {
-            $res->write("ERROR HANDLER\n");
+            return $res->write("ERROR HANDLER\n");
         });
         $phpunit = $this;
         $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
             $phpunit->fail('Should not hit fourth handler!');
         });
 
-        $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $this->middleware->__invoke($request, $this->response);
-        $body = (string) $this->response->getBody();
+        $request  = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
+        $response = $this->middleware->__invoke($request, $this->response);
+        $body     = (string) $response->getBody();
         $this->assertContains('First', $body);
         $this->assertContains('ERROR HANDLER', $body);
         $this->assertNotContains('Third', $body);
