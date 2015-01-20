@@ -216,7 +216,7 @@ class MiddlewareTest extends TestCase
         ], 1));
     }
 
-    public function testSlashAppended()
+    public function testSlashShouldNotBeAppendedInChildMiddleware()
     {
         $this->middleware->pipe('/admin', function ($req, $res, $next) {
             return $next();
@@ -227,7 +227,7 @@ class MiddlewareTest extends TestCase
         });
         $request = new Request([], [], 'http://local.example.com/admin', 'GET', 'php://memory');
         $result  = $this->middleware->__invoke($request, $this->response);
-        $body     = (string) $this->response->getBody();
+        $body    = (string) $result->getBody();
         $this->assertSame('/admin', $body);
     }
 }
