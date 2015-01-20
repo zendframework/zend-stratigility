@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.10.1 - 2015-01-20
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- The logic in `Middleware` was changed to store the route as provided, without
+  stripping the trailing slash. This allows matching with or without it.
+- The logic in `Next` was updated to ensure that if a trailing slash was present
+  in the route, resetting the request URI path retains it; alternately, if none
+  was present, it is omitted.
+
 ## 0.10.0 - 2015-01-19
 
 ### Added

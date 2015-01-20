@@ -115,17 +115,18 @@ class Next
             return $done($err, $this->request, $this->response);
         }
 
-        $layer = $this->stack[$this->index++];
-        $path  = $this->request->getUri()->getPath() ?: '/';
-        $route = $layer->path;
+        $layer           = $this->stack[$this->index++];
+        $path            = $this->request->getUri()->getPath() ?: '/';
+        $route           = $layer->path;
+        $normalizedRoute = (strlen($route) > 1) ? rtrim($route, '/') : $route;
 
         // Skip if layer path does not match current url
-        if (substr(strtolower($path), 0, strlen($route)) !== strtolower($route)) {
+        if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
             return $this($err);
         }
 
         // Skip if match is not at a border ('/', '.', or end)
-        $border = $this->getBorder($path, $route);
+        $border = $this->getBorder($path, $normalizedRoute);
         if ($border && '/' !== $border && '.' !== $border) {
             return $this($err);
         }
@@ -165,6 +166,15 @@ class Next
         }
 
         $path = $this->removed . $path;
+
+        // Strip trailing slash if original path did not have it
+        if ('/' !== substr($this->removed, -1)) {
+            $path = rtrim($path, '/');
+        }
+
+        // Normalize to remove double-slashes
+        $path = str_replace('//', '/', $path);
+
         $new  = $uri->withPath($path);
         $this->removed = '';
         $this->request = $request->withUri($new);
@@ -217,9 +227,15 @@ class Next
             return '';
         }
 
-        if (strlen($path) > $segment) {
+        $segmentLength = strlen($segment);
+        if (strlen($path) > $segmentLength) {
             // Strip segment from start of path
-            return substr($path, strlen($segment));
+            return substr($path, $segmentLength);
+        }
+
+        if ('/' === substr($segment, -1)) {
+            // Re-try by submitting with / stripped from end of segment
+            return $this->getTruncatedPath(rtrim($segment, '/'), $path);
         }
 
         // Segment is longer than path. There's an issue
