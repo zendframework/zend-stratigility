@@ -139,11 +139,6 @@ class Middleware
      */
     private function normalizePipePath($path)
     {
-        // Strip trailing slash
-        if ('/' === substr($path, -1)) {
-            $path = substr($path, 0, -1);
-        }
-
         // Prepend slash if missing
         if (empty($path) || $path[0] !== '/') {
             $path = '/' . $path;

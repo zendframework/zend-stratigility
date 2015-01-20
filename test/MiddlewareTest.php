@@ -216,7 +216,7 @@ class MiddlewareTest extends TestCase
         ], 1));
     }
 
-    public function testSlashShouldNotBeAppendedInChildMiddleware()
+    public function testSlashShouldNotBeAppendedInChildMiddlewareWhenLayerDoesNotIncludeIt()
     {
         $this->middleware->pipe('/admin', function ($req, $res, $next) {
             return $next();
@@ -229,5 +229,20 @@ class MiddlewareTest extends TestCase
         $result  = $this->middleware->__invoke($request, $this->response);
         $body    = (string) $result->getBody();
         $this->assertSame('/admin', $body);
+    }
+
+    public function testSlashShouldBeAppendedInChildMiddlewareWhenLayerDoesIncludesIt()
+    {
+        $this->middleware->pipe('/admin/', function ($req, $res, $next) {
+            return $next();
+        });
+        $phpunit = $this;
+        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
+            return $res->write($req->getUri()->getPath());
+        });
+        $request = new Request([], [], 'http://local.example.com/admin', 'GET', 'php://memory');
+        $result  = $this->middleware->__invoke($request, $this->response);
+        $body    = (string) $result->getBody();
+        $this->assertSame('/admin/', $body);
     }
 }
