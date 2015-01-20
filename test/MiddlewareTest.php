@@ -215,4 +215,19 @@ class MiddlewareTest extends TestCase
             spl_object_hash($result) => get_class($result),
         ], 1));
     }
+
+    public function testSlashAppended()
+    {
+        $this->middleware->pipe('/admin', function ($req, $res, $next) {
+            return $next();
+        });
+        $phpunit = $this;
+        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
+            return $res->write($req->getUri()->getPath());
+        });
+        $request = new Request([], [], 'http://local.example.com/admin', 'GET', 'php://memory');
+        $result  = $this->middleware->__invoke($request, $this->response);
+        $body     = (string) $this->response->getBody();
+        $this->assertSame('/admin', $body);
+    }
 }
