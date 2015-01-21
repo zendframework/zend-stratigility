@@ -10,31 +10,23 @@ use Psr\Http\Message\ResponseInterface as Response;
 /**
  * Middleware queue
  *
- * Middleware accepts a request and a response, and optionally a
- * callback "$next" (called if the middleware wants to allow further
- * middleware to process the incoming request).
+ * This class implements a queue of middleware, which can be attached using
+ * the `pipe()` method, and is itself middleware.
  *
  * The request and response objects are decorated using the Phly\Conduit\Http
  * variants in this package, ensuring that the request may store arbitrary
- * properties, and the response exposes the convenience write(), end(), and
- * isComplete() methods.
+ * properties, and the response exposes the convenience `write()`, `end()`, and
+ * `isComplete()` methods.
  *
- * Middleware can also accept an initial argument, an error; if middleware
- * accepts errors, it will only be called when an either an exception
- * is raised, or `$next` is called with a non-message argument in the first
- * position (the argument is considered the error condition).
- *
- * Middleware that does not need or desire further processing should not
- * call `$next`, and should usually call `return $response->end();`.
- *
- * This class implements a queue of middleware, which can be attached using
- * the `pipe()` method.
+ * It creates an instance of `Next` internally, invoking it with the provided
+ * request and response instances; if no `$out` argument is provided, it will
+ * create a `FinalHandler` instance and pass that to `Next` as well.
  *
  * Inspired by Sencha Connect.
  *
  * @see https://github.com/sencha/connect
  */
-class MiddlewareQueue
+class MiddlewareQueue implements MiddlewareInterface
 {
     /**
      * @var ArrayObject
@@ -75,16 +67,11 @@ class MiddlewareQueue
         $next   = new Next($this->queue, $request, $response, $done);
         $result = $next();
 
-        if ($result instanceof Response) {
-            return $result;
-        }
-        return $response;
+        return ($result instanceof Response ? $result : $response);
     }
 
     /**
-     * Attach middleware to the conduit
-     *
-     * Was "use", but "use" is a reserved keyword in PHP
+     * Attach middleware to the queue.
      *
      * Each middleware can be associated with a particular path; if that
      * path is matched when that middleware is invoked, it will be processed;
@@ -92,43 +79,37 @@ class MiddlewareQueue
      *
      * No path means it should be executed every request cycle.
      *
-     * A handler can be any callable, or an object with a handle() method.
+     * A handler CAN implement MiddlewareInterface, but MUST be callable.
      *
-     * Handlers with arity >= 4 are considered error handlers, and will
-     * be executed when a handler calls $next with an argument or raises
-     * an exception.
+     * Handlers with arity >= 4 or those implementing ErrorMiddlewareInterface
+     * are considered error handlers, and will be executed when a handler calls
+     * $next with an error or raises an exception.
      *
-     * @param string|callable|object $path Either a URI path prefix, or a handler
-     * @param null|callable|object $handler A handler
+     * @see MiddlewareInterface
+     * @see ErrorMiddlewareInterface
+     * @see Next
+     * @param string|callable|object $path Either a URI path prefix, or middleware.
+     * @param null|callable|object $middleware Middleware
      * @return self
      */
-    public function pipe($path, $handler = null)
+    public function pipe($path, $middleware = null)
     {
-        if (! is_string($path)) {
-            $handler = $path;
-            $path    = '/';
+        if (null === $middleware && is_callable($path)) {
+            $middleware = $path;
+            $path       = '/';
         }
-
-        $path = $this->normalizePipePath($path);
 
         // Ensure we have a valid handler
-        if (! is_callable($handler)
-            && (! is_object($handler) || ! method_exists($handler, 'handle'))
-        ) {
-            throw new InvalidArgumentException(
-                'Handler must be callable or an object implementing the method "handle"'
-            );
+        if (! is_callable($middleware)) {
+            throw new InvalidArgumentException('Middleware must be callable');
         }
 
-        // Munge Object::handle() to a callback
-        if (! is_callable($handler)
-            && (is_object($handler) && method_exists($handler, 'handle'))
-        ) {
-            $handler = $this->createPipeHandlerCallback($handler);
-        }
+        $this->queue->append(new Route(
+            $this->normalizePipePath($path),
+            $middleware
+        ));
 
         // @todo Trigger event here with route details?
-        $this->queue->append(new Route($path, $handler));
         return $this;
     }
 
@@ -148,29 +129,6 @@ class MiddlewareQueue
         }
 
         return $path;
-    }
-
-    /**
-     * Create a callback for an object implementing a handle method
-     *
-     * Uses the method arity to create a closure wrapping the call.
-     *
-     * @param object $handler
-     * @return callable
-     */
-    private function createPipeHandlerCallback($handler)
-    {
-        if (Utils::getArity($handler) < 4) {
-            // Regular handler
-            return function ($request, $response, $next) use ($handler) {
-                $handler->handle($request, $response, $next);
-            };
-        }
-
-        // Error handler
-        return function ($err, $request, $response, $next) use ($handler) {
-            $handler->handle($err, $request, $response, $next);
-        };
     }
 
     /**

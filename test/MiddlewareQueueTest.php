@@ -117,20 +117,6 @@ class MiddlewareQueueTest extends TestCase
         $this->assertTrue($triggered);
     }
 
-    public function testPipeWillCreateClosureForObjectImplementingHandle()
-    {
-        $handler = new TestAsset\NormalHandler();
-        $this->middleware->pipe($handler);
-        $r = new ReflectionProperty($this->middleware, 'queue');
-        $r->setAccessible(true);
-        $queue = $r->getValue($this->middleware);
-        $route = $queue[$queue->count() - 1];
-        $this->assertInstanceOf('Phly\Conduit\Route', $route);
-        $handler = $route->handler;
-        $this->assertInstanceOf('Closure', $handler);
-        $this->assertEquals(3, Utils::getArity($handler));
-    }
-
     public function testPipeWillCreateErrorClosureForObjectImplementingHandle()
     {
         $this->markTestIncomplete();

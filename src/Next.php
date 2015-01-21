@@ -67,6 +67,33 @@ class Next
     /**
      * Call the next Route in the stack
      *
+     * Next can accept up to 3 arguments, ith the following signatures:
+     *
+     * - `Next()`, which will reuse the current request/response values, and
+     *   which will only invoke non-error middleware.
+     * - `Next($err)`, which will reuse the current request/response values, and
+     *   which will only invoke error middleware, using the provided `$err`.
+     * - `Next($request)`, which will replace the current request instance with
+     *   the one provided, and only invoke non-error middleware.
+     * - `Next($response)`, which will replace the current response instance with
+     *   the one provided, and only invoke non-error middleware.
+     * - `Next($request, $response)`, which will replace both the current
+     *   request and response instance with those provided, and only invoke
+     *   non-error middleware.
+     * - `Next($err, $request)`, which will replace the current request
+     *   instance with the one provided, and only invoke error middleware, using
+     *   the provided `$err`.
+     * - `Next($err, $response)`, which will replace the current response
+     *   instance with the one provided, and only invoke error middleware, using
+     *   the provided `$err`.
+     * - `Next($err, $request, $response)`, which will replace both the current
+     *   request and response instance with those provided, and only invoke
+     *   error middleware, using the provided `$err`.
+     *
+     * Once dispatch is complete, if the result is a response instance, that
+     * value will be returned; otherwise, the currently registered response
+     * instance will be returned.
+     *
      * @param null|ServerRequestInterface|ResponseInterface|mixed $state
      * @param null|ServerRequestInterface|ResponseInterface $response
      * @param null|ResponseInterface $response

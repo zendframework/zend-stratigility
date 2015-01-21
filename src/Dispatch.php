@@ -45,9 +45,20 @@ class Dispatch
         Http\Response $response,
         callable $next
     ) {
-        $arity    = Utils::getArity($route->handler);
-        $hasError = (bool) $err;
         $handler  = $route->handler;
+        $hasError = (null !== $err);
+
+        switch (true) {
+            case ($handler instanceof ErrorMiddlewareInterface):
+                $arity = 4;
+                break;
+            case ($handler instanceof MiddlewareInterface):
+                $arity = 3;
+                break;
+            default:
+                $arity = Utils::getArity($handler);
+                break;
+        }
 
         // @todo Trigger event with Route, original URL from request?
 
