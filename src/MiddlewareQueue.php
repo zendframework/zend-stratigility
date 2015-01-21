@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
 /**
- * Middleware
+ * Middleware queue
  *
  * Middleware accepts a request and a response, and optionally a
  * callback "$next" (called if the middleware wants to allow further
@@ -21,41 +21,44 @@ use Psr\Http\Message\ResponseInterface as Response;
  *
  * Middleware can also accept an initial argument, an error; if middleware
  * accepts errors, it will only be called when an either an exception
- * is raised, or $next is called with an argument (the argument is considered
- * the error condition).
+ * is raised, or `$next` is called with a non-message argument in the first
+ * position (the argument is considered the error condition).
  *
  * Middleware that does not need or desire further processing should not
- * call $next, and should usually call $response->end().
+ * call `$next`, and should usually call `return $response->end();`.
+ *
+ * This class implements a queue of middleware, which can be attached using
+ * the `pipe()` method.
  *
  * Inspired by Sencha Connect.
  *
  * @see https://github.com/sencha/connect
  */
-class Middleware
+class MiddlewareQueue
 {
     /**
      * @var ArrayObject
      */
-    protected $stack;
+    protected $queue;
 
     /**
      * Constructor
      *
-     * Initializes the stack.
+     * Initializes the queue.
      */
     public function __construct()
     {
-        $this->stack = new ArrayObject(array());
+        $this->queue = new ArrayObject(array());
     }
 
     /**
      * Handle a request
      *
-     * Takes the stack, creates a Next handler, and delegates to the
+     * Takes the queue, creates a Next handler, and delegates to the
      * Next handler.
      *
      * If $out is a callable, it is used as the "final handler" when
-     * $next has exhausted the stack; otherwise, a FinalHandler instance
+     * $next has exhausted the queue; otherwise, a FinalHandler instance
      * is created and passed to $next during initialization.
      *
      * @param Request $request
@@ -69,7 +72,7 @@ class Middleware
         $response = $this->decorateResponse($response);
 
         $done   = is_callable($out) ? $out : new FinalHandler();
-        $next   = new Next($this->stack, $request, $response, $done);
+        $next   = new Next($this->queue, $request, $response, $done);
         $result = $next();
 
         if ($result instanceof Response) {
@@ -125,7 +128,7 @@ class Middleware
         }
 
         // @todo Trigger event here with route details?
-        $this->stack->append(new Route($path, $handler));
+        $this->queue->append(new Route($path, $handler));
         return $this;
     }
 

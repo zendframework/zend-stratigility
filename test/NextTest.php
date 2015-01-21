@@ -16,12 +16,12 @@ class NextTest extends TestCase
     public function setUp()
     {
         $psrRequest     = new PsrRequest([], [], 'http://example.com/', 'GET', 'php://memory');
-        $this->stack    = new ArrayObject();
+        $this->queue    = new ArrayObject();
         $this->request  = new Request($psrRequest);
         $this->response = new Response(new PsrResponse());
     }
 
-    public function testDoneHandlerIsInvokedWhenStackIsExhausted()
+    public function testDoneHandlerIsInvokedWhenQueueIsExhausted()
     {
         // e.g., 0 length array, or all handlers call next
         $triggered = null;
@@ -29,7 +29,7 @@ class NextTest extends TestCase
             $triggered = true;
         };
 
-        $next = new Next($this->stack, $this->request, $this->response, $done);
+        $next = new Next($this->queue, $this->request, $this->response, $done);
         $next();
         $this->assertTrue($triggered);
     }
@@ -41,7 +41,7 @@ class NextTest extends TestCase
         $route = new Route('/foo', function ($req, $res, $next) use ($phpunit) {
             $phpunit->fail('Route should not be invoked if path does not match');
         });
-        $this->stack[] = $route;
+        $this->queue[] = $route;
 
         $triggered = null;
         $done = function ($err = null) use (&$triggered) {
@@ -50,7 +50,7 @@ class NextTest extends TestCase
 
         $this->request->withUri(new Uri('http://local.example.com/bar'));
 
-        $next = new Next($this->stack, $this->request, $this->response, $done);
+        $next = new Next($this->queue, $this->request, $this->response, $done);
         $next();
         $this->assertTrue($triggered);
     }
@@ -62,7 +62,7 @@ class NextTest extends TestCase
         $route = new Route('/foo', function ($req, $res, $next) use ($phpunit) {
             $phpunit->fail('Route should not be invoked if path does not match');
         });
-        $this->stack[] = $route;
+        $this->queue[] = $route;
 
         $triggered = null;
         $done = function ($err = null) use (&$triggered) {
@@ -71,7 +71,7 @@ class NextTest extends TestCase
 
         $this->request->withUri(new Uri('http://local.example.com/foobar'));
 
-        $next = new Next($this->stack, $this->request, $this->response, $done);
+        $next = new Next($this->queue, $this->request, $this->response, $done);
         $next();
         $this->assertTrue($triggered);
     }
@@ -83,7 +83,7 @@ class NextTest extends TestCase
         $route = new Route('/foo', function ($req, $res, $next) use (&$triggered) {
             $triggered = true;
         });
-        $this->stack[] = $route;
+        $this->queue[] = $route;
 
         $phpunit = $this;
         $done = function ($err = null) use ($phpunit) {
@@ -92,7 +92,7 @@ class NextTest extends TestCase
 
         $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
 
-        $next = new Next($this->stack, $request, $this->response, $done);
+        $next = new Next($this->queue, $request, $this->response, $done);
         $next();
         $this->assertTrue($triggered);
     }
@@ -105,7 +105,7 @@ class NextTest extends TestCase
         $route = new Route('/foo', function ($req, $res, $next) use (&$triggered) {
             $triggered = $req->getUri()->getPath();
         });
-        $this->stack[] = $route;
+        $this->queue[] = $route;
 
         $phpunit = $this;
         $done = function ($err = null) use ($phpunit) {
@@ -114,7 +114,7 @@ class NextTest extends TestCase
 
         $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
 
-        $next = new Next($this->stack, $request, $this->response, $done);
+        $next = new Next($this->queue, $request, $this->response, $done);
         $next();
         $this->assertEquals('/bar', $triggered);
     }
@@ -132,9 +132,9 @@ class NextTest extends TestCase
             return $res;
         });
 
-        $this->stack->append($route1);
-        $this->stack->append($route2);
-        $this->stack->append($route3);
+        $this->queue->append($route1);
+        $this->queue->append($route2);
+        $this->queue->append($route3);
 
         $phpunit = $this;
         $done = function ($err) use ($phpunit) {
@@ -142,7 +142,7 @@ class NextTest extends TestCase
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
-        $next = new Next($this->stack, $request, $this->response, $done);
+        $next = new Next($this->queue, $request, $this->response, $done);
         $next();
         $this->assertEquals('done', (string) $this->response->getBody());
     }
@@ -162,16 +162,16 @@ class NextTest extends TestCase
             $phpunit->fail('Should not hit route3 handler');
         });
 
-        $this->stack->append($route1);
-        $this->stack->append($route2);
-        $this->stack->append($route3);
+        $this->queue->append($route1);
+        $this->queue->append($route2);
+        $this->queue->append($route3);
 
         $done = function ($err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-        $next = new Next($this->stack, $request, $this->response, $done);
+        $next = new Next($this->queue, $request, $this->response, $done);
         $result = $next();
         $this->assertSame($this->response, $result);
     }
@@ -190,15 +190,15 @@ class NextTest extends TestCase
             $triggered = true;
         });
 
-        $this->stack->append($route1);
-        $this->stack->append($route2);
+        $this->queue->append($route1);
+        $this->queue->append($route2);
 
         $done = function ($err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-        $next = new Next($this->stack, $request, $this->response, $done);
+        $next = new Next($this->queue, $request, $this->response, $done);
         $result = $next();
         $this->assertTrue($triggered);
         $this->assertSame($cannedResponse, $result);
@@ -219,14 +219,14 @@ class NextTest extends TestCase
             return $res;
         });
 
-        $this->stack->append($route1);
-        $this->stack->append($route2);
+        $this->queue->append($route1);
+        $this->queue->append($route2);
 
         $done = function ($err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
-        $next = new Next($this->stack, $request, $this->response, $done);
+        $next = new Next($this->queue, $request, $this->response, $done);
         $next();
     }
 
@@ -243,15 +243,15 @@ class NextTest extends TestCase
             return $res;
         });
 
-        $this->stack->append($route1);
-        $this->stack->append($route2);
+        $this->queue->append($route1);
+        $this->queue->append($route2);
 
         $done = function ($err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-        $next = new Next($this->stack, $request, $this->response, $done);
+        $next = new Next($this->queue, $request, $this->response, $done);
         $next();
     }
 
@@ -268,15 +268,15 @@ class NextTest extends TestCase
             return $res;
         });
 
-        $this->stack->append($route1);
-        $this->stack->append($route2);
+        $this->queue->append($route1);
+        $this->queue->append($route2);
 
         $done = function ($err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-        $next    = new Next($this->stack, $request, $this->response, $done);
+        $next    = new Next($this->queue, $request, $this->response, $done);
         $result  = $next();
         $this->assertSame($cannedResponse, $result);
     }

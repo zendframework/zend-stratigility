@@ -3,7 +3,7 @@ namespace PhlyTest\Conduit;
 
 use Phly\Conduit\Http\Request as RequestDecorator;
 use Phly\Conduit\Http\Response as ResponseDecorator;
-use Phly\Conduit\Middleware;
+use Phly\Conduit\MiddlewareQueue;
 use Phly\Conduit\Utils;
 use Phly\Http\ServerRequest as Request;
 use Phly\Http\Response;
@@ -11,13 +11,13 @@ use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
 
-class MiddlewareTest extends TestCase
+class MiddlewareQueueTest extends TestCase
 {
     public function setUp()
     {
         $this->request    = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->response   = new Response();
-        $this->middleware = new Middleware();
+        $this->middleware = new MiddlewareQueue();
     }
 
     public function invalidHandlers()
@@ -95,7 +95,7 @@ class MiddlewareTest extends TestCase
         $this->assertNotContains('Third', $body);
     }
 
-    public function testHandleInvokesOutHandlerIfStackIsExhausted()
+    public function testHandleInvokesOutHandlerIfQueueIsExhausted()
     {
         $triggered = null;
         $out = function ($err = null) use (&$triggered) {
@@ -121,10 +121,10 @@ class MiddlewareTest extends TestCase
     {
         $handler = new TestAsset\NormalHandler();
         $this->middleware->pipe($handler);
-        $r = new ReflectionProperty($this->middleware, 'stack');
+        $r = new ReflectionProperty($this->middleware, 'queue');
         $r->setAccessible(true);
-        $stack = $r->getValue($this->middleware);
-        $route = $stack[$stack->count() - 1];
+        $queue = $r->getValue($this->middleware);
+        $route = $queue[$queue->count() - 1];
         $this->assertInstanceOf('Phly\Conduit\Route', $route);
         $handler = $route->handler;
         $this->assertInstanceOf('Closure', $handler);
@@ -136,10 +136,10 @@ class MiddlewareTest extends TestCase
         $this->markTestIncomplete();
         $handler = new TestAsset\ErrorHandler();
         $this->middleware->pipe($handler);
-        $r = new ReflectionProperty($this->middleware, 'stack');
+        $r = new ReflectionProperty($this->middleware, 'queue');
         $r->setAccessible(true);
-        $stack = $r->getValue($this->middleware);
-        $route = $stack[$stack->count() - 1];
+        $queue = $r->getValue($this->middleware);
+        $route = $queue[$queue->count() - 1];
         $this->assertInstanceOf('Phly\Conduit\Route', $route);
         $handler = $route->handler;
         $this->assertInstanceOf('Closure', $handler);
@@ -169,7 +169,7 @@ class MiddlewareTest extends TestCase
         $this->assertTrue($executed);
     }
 
-    public function testReturnsOrigionalResponseIfStackDoesNotReturnAResponse()
+    public function testReturnsOrigionalResponseIfQueueDoesNotReturnAResponse()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
             $next();
@@ -190,7 +190,7 @@ class MiddlewareTest extends TestCase
         $this->assertSame($this->response, $result->getOriginalResponse());
     }
 
-    public function testReturnsResponseReturnedByStack()
+    public function testReturnsResponseReturnedByQueue()
     {
         $return = new Response();
 
