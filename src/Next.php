@@ -3,6 +3,7 @@ namespace Phly\Conduit;
 
 use ArrayObject;
 use Phly\Http\Uri;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
@@ -67,44 +68,19 @@ class Next
      * Call the next Route in the stack
      *
      * @param null|ServerRequestInterface|ResponseInterface|mixed $state
+     * @param null|ServerRequestInterface|ResponseInterface $response
      * @param null|ResponseInterface $response
      * @return ResponseInterface
      */
-    public function __invoke($state = null, $requestOrResponse = null, ResponseInterface $response = null)
-    {
-        $err          = null;
-        $resetRequest = false;
+    public function __invoke(
+        $state = null,
+        MessageInterface $requestOrResponse = null,
+        ResponseInterface $response = null
+    ) {
+        $args         = $this->parseArguments($state, $requestOrResponse, $response);
+        $err          = $args->err;
+        $resetRequest = $args->resetRequest;
 
-        if ($state instanceof ResponseInterface) {
-            $this->response = $state;
-        }
-
-        if ($state instanceof ServerRequestInterface) {
-            $this->request = $state;
-            $resetRequest  = true;
-        }
-
-        if ($requestOrResponse instanceof ServerRequestInterface) {
-            $this->request = $requestOrResponse;
-            $resetRequest  = true;
-        }
-
-        if ($requestOrResponse instanceof ResponseInterface) {
-            $this->response = $requestOrResponse;
-        }
-
-        if (! $requestOrResponse instanceof ResponseInterface
-            && $response instanceof ResponseInterface
-        ) {
-            $this->response = $response;
-        }
-
-        if (null !== $state
-            && ! $state instanceof ServerRequestInterface
-            && ! $state instanceof ResponseInterface
-        ) {
-            $err = $state;
-        }
 
         $dispatch = $this->dispatch;
         $done     = $this->done;
@@ -132,7 +108,7 @@ class Next
         }
 
         // Trim off the part of the url that matches the layer route
-        if (strlen($route) !== 0 && $route !== '/') {
+        if (! empty($route) && $route !== '/') {
             $this->stripRouteFromPath($route);
         }
 
@@ -165,17 +141,18 @@ class Next
             $path = str_replace($this->removed, '', $path);
         }
 
-        $path = $this->removed . $path;
+        $resetPath = $this->removed . $path;
 
-        // Strip trailing slash if original path did not have it
-        if ('/' !== substr($this->removed, -1)) {
-            $path = rtrim($path, '/');
+        // Strip trailing slash if current path does not contain it and
+        // original path did not have it
+        if ('/' !== $path && '/' !== substr($this->removed, -1)) {
+            $resetPath = rtrim($resetPath, '/');
         }
 
         // Normalize to remove double-slashes
-        $path = str_replace('//', '/', $path);
+        $resetPath = str_replace('//', '/', $resetPath);
 
-        $new  = $uri->withPath($path);
+        $new  = $uri->withPath($resetPath);
         $this->removed = '';
         $this->request = $request->withUri($new);
     }
@@ -242,5 +219,59 @@ class Next
         throw new RuntimeException(
             'Layer and request path have gone out of sync'
         );
+    }
+
+    /**
+     * Parse invocation arguments.
+     *
+     * Parses invocation arguments and sets request and/or response properties
+     * as needed.
+     *
+     * @param null|ServerRequestInterface|ResponseInterface|mixed $state
+     * @param null|ServerRequestInterface|ResponseInterface $requestOrResponse
+     * @param null|ResponseInterface $response
+     */
+    private function parseArguments(
+        $state,
+        MessageInterface $requestOrResponse = null,
+        ResponseInterface $response = null
+    ) {
+        $args = (object) [
+            'err'          => null,
+            'resetRequest' => false,
+        ];
+
+        if ($state instanceof ResponseInterface) {
+            $this->response = $state;
+        }
+
+        if ($state instanceof ServerRequestInterface) {
+            $this->request      = $state;
+            $args->resetRequest = true;
+        }
+
+        if ($requestOrResponse instanceof ServerRequestInterface) {
+            $this->request      = $requestOrResponse;
+            $args->resetRequest = true;
+        }
+
+        if ($requestOrResponse instanceof ResponseInterface) {
+            $this->response = $requestOrResponse;
+        }
+
+        if (! $requestOrResponse instanceof ResponseInterface
+            && $response instanceof ResponseInterface
+        ) {
+            $this->response = $response;
+        }
+
+        if (null !== $state
+            && ! $state instanceof ServerRequestInterface
+            && ! $state instanceof ResponseInterface
+        ) {
+            $args->err = $state;
+        }
+
+        return $args;
     }
 }

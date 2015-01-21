@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.10.2 - 2015-01-21
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- The logic in `Next` was updated to ensure that if a trailing slash was present
+  in the path, but not the route, resetting the request URI path retains it.
+
 ## 0.10.1 - 2015-01-20
 
 ### Added
