@@ -1,11 +1,11 @@
 <?php
 namespace Phly\Conduit;
 
-use ArrayObject;
 use InvalidArgumentException;
 use Phly\Http\Uri;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use SplQueue;
 
 /**
  * Middleware queue
@@ -29,7 +29,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 class MiddlewareQueue implements MiddlewareInterface
 {
     /**
-     * @var ArrayObject
+     * @var SplQueue
      */
     protected $queue;
 
@@ -40,7 +40,7 @@ class MiddlewareQueue implements MiddlewareInterface
      */
     public function __construct()
     {
-        $this->queue = new ArrayObject(array());
+        $this->queue = new SplQueue();
     }
 
     /**
@@ -64,8 +64,8 @@ class MiddlewareQueue implements MiddlewareInterface
         $response = $this->decorateResponse($response);
 
         $done   = is_callable($out) ? $out : new FinalHandler();
-        $next   = new Next($this->queue, $request, $response, $done);
-        $result = $next();
+        $next   = new Next($this->queue, $done);
+        $result = $next($request, $response);
 
         return ($result instanceof Response ? $result : $response);
     }
@@ -104,7 +104,7 @@ class MiddlewareQueue implements MiddlewareInterface
             throw new InvalidArgumentException('Middleware must be callable');
         }
 
-        $this->queue->append(new Route(
+        $this->queue->enqueue(new Route(
             $this->normalizePipePath($path),
             $middleware
         ));

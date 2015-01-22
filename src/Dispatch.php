@@ -74,6 +74,6 @@ class Dispatch
             $err = $e;
         }
 
-        return $next($err);
+        return $next($request, $response, $err);
     }
 }

@@ -46,11 +46,11 @@ class MiddlewareQueueTest extends TestCase
     {
         $this->middleware->pipe(function ($req, $res, $next) {
             $res->write("First\n");
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
             $res->write("Second\n");
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
             $res->write("Third\n");
@@ -71,10 +71,10 @@ class MiddlewareQueueTest extends TestCase
     public function testHandleInvokesFirstErrorHandlerOnErrorInChain()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next($res->write("First\n"));
+            $next($req, $res->write("First\n"));
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            return $next('error');
+            return $next($req, $res, 'error');
         });
         $this->middleware->pipe(function ($req, $res, $next) {
             return $res->write("Third\n");
@@ -103,13 +103,13 @@ class MiddlewareQueueTest extends TestCase
         };
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
@@ -158,10 +158,10 @@ class MiddlewareQueueTest extends TestCase
     public function testReturnsOrigionalResponseIfQueueDoesNotReturnAResponse()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
             return;
@@ -181,10 +181,10 @@ class MiddlewareQueueTest extends TestCase
         $return = new Response();
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            return $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            return $next();
+            return $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) use ($return) {
             return $return;
@@ -205,7 +205,7 @@ class MiddlewareQueueTest extends TestCase
     public function testSlashShouldNotBeAppendedInChildMiddlewareWhenLayerDoesNotIncludeIt()
     {
         $this->middleware->pipe('/admin', function ($req, $res, $next) {
-            return $next();
+            return $next($req, $res);
         });
         $phpunit = $this;
         $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
@@ -220,7 +220,7 @@ class MiddlewareQueueTest extends TestCase
     public function testSlashShouldBeAppendedInChildMiddlewareWhenLayerDoesIncludesIt()
     {
         $this->middleware->pipe('/admin/', function ($req, $res, $next) {
-            return $next();
+            return $next($req, $res);
         });
         $phpunit = $this;
         $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
@@ -235,7 +235,7 @@ class MiddlewareQueueTest extends TestCase
     public function testSlashShouldBeAppendedInChildMiddlewareWhenRequestUriIncludesIt()
     {
         $this->middleware->pipe('/admin', function ($req, $res, $next) {
-            return $next();
+            return $next($req, $res);
         });
         $phpunit = $this;
         $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
