@@ -246,4 +246,23 @@ class MiddlewarePipeTest extends TestCase
         $body    = (string) $result->getBody();
         $this->assertSame('/admin/', $body);
     }
+
+    public function testSlashShouldBePresentForRootPathsAlways()
+    {
+        $this->middleware->pipe('/', function ($req, $res, $next) {
+            return $next($req, $res);
+        });
+        $phpunit = $this;
+        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
+            return $res->write($req->getUri()->getPath());
+        });
+
+        // Note: no path present in request
+        $request = new Request([], [], 'http://local.example.com', 'GET', 'php://memory');
+        $result  = $this->middleware->__invoke($request, $this->response);
+        $body    = (string) $result->getBody();
+
+        // Assertion is that absence of path == root path
+        $this->assertSame('/', $body);
+    }
 }

@@ -130,7 +130,7 @@ class Next
 
         // Strip trailing slash if current path does not contain it and
         // original path did not have it
-        if ('/' !== $path && '/' !== substr($this->removed, -1)) {
+        if ('/' === $path && '/' !== substr($this->removed, -1)) {
             $resetPath = rtrim($resetPath, '/');
         }
 
@@ -172,6 +172,11 @@ class Next
         $uri  = $request->getUri();
         $path = $this->getTruncatedPath($route, $uri->getPath());
         $new  = $uri->withPath($path);
+
+        // Root path of route is treated differently
+        if ($path === '/' && '/' === substr($uri->getPath(), -1)) {
+            $this->removed .= '/';
+        }
 
         return $request->withUri($new);
     }
