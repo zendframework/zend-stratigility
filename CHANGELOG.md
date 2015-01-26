@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.11.0 - TBD
+
+This release makes several backwards-incompatible changes.
+
+- `Middleware` was renamed to `MiddlewarePipe`. Otherwise, the behavior is
+  exactly the same.
+- `Next` was rewritten to have a consistent invocable signature: 
+  `function (ServerRequestInterface $request, ResponseInterface $response, $err = null)`
+  This change simplifies the logic, removes bugs caused by edge cases, and leads
+  to consistent usage that's easier to remember.
+
+### Added
+
+- `Phly\Conduit\MiddlewareInterface`, which provides an interface to typehint
+  against for middleware. It's usage is not enforced (only a callable is
+  required), but `Phly\Conduit\Dispatch` contains optimizations based on the
+  interface.
+- `Phly\Conduit\ErrorMiddlewareInterface`, which provides an interface to typehint
+  against for error-handling middleware. It's usage is not enforced (only a
+  callable with arity 4 is required), but `Phly\Conduit\Dispatch` contains
+  optimizations based on the interface.
+- `Phly\Conduit\MiddlewarePipe` (replaces by `Phly\Conduit\Middleware`).
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- `Phly\Conduit\Next::__construct` no longer accepts the `$request` or
+  `$response` arguments, as the values are no longer stored internally.
+- `Phly\Conduit\Middleware` (replaced by `Phly\Conduit\MiddlewarePipe`).
+
+### Fixed
+
+- `MiddlewarePipe` was updated to use an `SplQueue` instance internally for
+  modeling the middleware pipeline.
+
 ## 0.10.2 - 2015-01-21
 
 ### Added
