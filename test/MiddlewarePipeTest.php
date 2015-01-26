@@ -3,7 +3,7 @@ namespace PhlyTest\Conduit;
 
 use Phly\Conduit\Http\Request as RequestDecorator;
 use Phly\Conduit\Http\Response as ResponseDecorator;
-use Phly\Conduit\MiddlewareQueue;
+use Phly\Conduit\MiddlewarePipe;
 use Phly\Conduit\Utils;
 use Phly\Http\ServerRequest as Request;
 use Phly\Http\Response;
@@ -11,13 +11,13 @@ use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
 
-class MiddlewareQueueTest extends TestCase
+class MiddlewarePipeTest extends TestCase
 {
     public function setUp()
     {
         $this->request    = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->response   = new Response();
-        $this->middleware = new MiddlewareQueue();
+        $this->middleware = new MiddlewarePipe();
     }
 
     public function invalidHandlers()

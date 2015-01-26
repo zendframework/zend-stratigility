@@ -8,9 +8,9 @@ use Psr\Http\Message\ResponseInterface as Response;
 use SplQueue;
 
 /**
- * Middleware queue
+ * Pipe middleware like unix pipes.
  *
- * This class implements a queue of middleware, which can be attached using
+ * This class implements a pipe-line of middleware, which can be attached using
  * the `pipe()` method, and is itself middleware.
  *
  * The request and response objects are decorated using the Phly\Conduit\Http
@@ -26,12 +26,12 @@ use SplQueue;
  *
  * @see https://github.com/sencha/connect
  */
-class MiddlewareQueue implements MiddlewareInterface
+class MiddlewarePipe implements MiddlewareInterface
 {
     /**
      * @var SplQueue
      */
-    protected $queue;
+    protected $pipeline;
 
     /**
      * Constructor
@@ -40,17 +40,17 @@ class MiddlewareQueue implements MiddlewareInterface
      */
     public function __construct()
     {
-        $this->queue = new SplQueue();
+        $this->pipeline = new SplQueue();
     }
 
     /**
      * Handle a request
      *
-     * Takes the queue, creates a Next handler, and delegates to the
+     * Takes the pipeline, creates a Next handler, and delegates to the
      * Next handler.
      *
      * If $out is a callable, it is used as the "final handler" when
-     * $next has exhausted the queue; otherwise, a FinalHandler instance
+     * $next has exhausted the pipeline; otherwise, a FinalHandler instance
      * is created and passed to $next during initialization.
      *
      * @param Request $request
@@ -64,14 +64,14 @@ class MiddlewareQueue implements MiddlewareInterface
         $response = $this->decorateResponse($response);
 
         $done   = is_callable($out) ? $out : new FinalHandler();
-        $next   = new Next($this->queue, $done);
+        $next   = new Next($this->pipeline, $done);
         $result = $next($request, $response);
 
         return ($result instanceof Response ? $result : $response);
     }
 
     /**
-     * Attach middleware to the queue.
+     * Attach middleware to the pipeline.
      *
      * Each middleware can be associated with a particular path; if that
      * path is matched when that middleware is invoked, it will be processed;
@@ -104,7 +104,7 @@ class MiddlewareQueue implements MiddlewareInterface
             throw new InvalidArgumentException('Middleware must be callable');
         }
 
-        $this->queue->enqueue(new Route(
+        $this->pipeline->enqueue(new Route(
             $this->normalizePipePath($path),
             $middleware
         ));
