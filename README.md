@@ -35,17 +35,17 @@ Usage
 
 Creating an application consists of 3 steps:
 
-- Create middleware
+- Create middleware or a middleware pipeline
 - Create a server, using the middleware
 - Instruct the server to listen for a request
 
 ```php
-use Phly\Conduit\Middleware;
+use Phly\Conduit\MiddlewarePipe;
 use Phly\Http\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$app    = new Middleware();
+$app    = new MiddlewarePipe();
 $server = Server::createServer($app,
   $_SERVER,
   $_GET,
@@ -63,15 +63,15 @@ Middleware
 
 What is middleware?
 
-Middleware is code that exists between the request and response, and which can take the incoming request, perform actions based on it, and either complete the response or pass delegation on to the next middleware in the stack.
+Middleware is code that exists between the request and response, and which can take the incoming request, perform actions based on it, and either complete the response or pass delegation on to the next middleware in the queue.
 
 ```php
-use Phly\Conduit\Middleware;
+use Phly\Conduit\MiddlewarePipe;
 use Phly\Http\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$app    = new Middleware();
+$app    = new MiddlewarePipe();
 $server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
 
 // Landing page
@@ -111,6 +111,11 @@ $app->pipe('/files', $filesMiddleware);
 
 The handlers in each middleware attached this way will see a URI with that path segment stripped -- allowing them to be developed separately and re-used under any path you wish.
 
+Within Conduit, middleware can be:
+
+- Any PHP callable that accepts, minimally, a [PSR-7](https://github.com/php-fig/fig-standards/blob/master/proposed/http-message.md) request and a response (in that order), and, optionally, a callable (for invoking the next middleware in the queue, if any).
+- An object implementing `Phly\Conduit\MiddlewareInterface`. `Phly\Conduit\MiddlewarePipe` implements this interface.
+
 Error Handlers
 --------------
 
@@ -120,29 +125,21 @@ To handle errors, you can write middleware that accepts **exactly** four argumen
 function ($error, $request, $response, $next) { }
 ```
 
-As the stack is executed, if `$next()` is called with an argument, or if an exception is thrown, middleware will iterate through the stack until the first such error handler is found. That error handler can either complete the request, or itself call `$next()`. **Error handlers that call `$next()` SHOULD call it with the error it received itself, or with another error.**
+Alternately, you can implement `Phly\Conduit\ErrorMiddlewareInterface`.
+
+When using `MiddlewarePipe`, as the queue is executed, if `$next()` is called with an argument, or if an exception is thrown, middleware will iterate through the queue until the first such error handler is found. That error handler can either complete the request, or itself call `$next()`. **Error handlers that call `$next()` SHOULD call it with the error it received itself, or with another error.**
 
 Error handlers are usually attached at the end of middleware, to prevent attempts at executing non-error-handling middleware, and to ensure they can intercept errors from any other handlers.
 
 Creating Middleware
 -------------------
 
-The easiest way to create middleware is to either instantiate a `Phly\Conduit\Middleware` instance and attach handlers to it. Attach your middleware instance to the primary application when done.
-
-```php
-$api = new Middleware();
-$api->pipe(/* ... */); // repeat as necessary
-
-$app = new Middleware();
-$app->pipe('/api', $api);
-```
-
-Another way to create middleware is to write a callable capable of receiving minimally a request and a response object, and optionally a callback to call the next in the chain. In your middleware callable, you can handle as much or as little of the request as you want -- including delegating to other handlers. If your middleware also accepts a `$next` argument, if it is unable to complete the request, or allows further processing, it can call it to return handling to the parent middleware.
+To create middleware, write a callable capable of receiving minimally a request and a response object, and optionally a callback to call the next in the chain.  In your middleware, you can handle as much or as little of the request as you want -- including delegating to other middleware. If your middleware accepts a third argument, `$next`, if it is unable to complete the request, or allows further processing, it can call it to return handling to the parent middleware.
 
 As an example, consider the following middleware which will use an external router to map the incoming request path to a handler; if unable to map the request, it returns processing to the next middleware.
 
 ```php
-$app->pipe(function ($req, $res, $next) use ($router) {
+function ($req, $res, $next) use ($router) {
     $path = parse_url($req->getUrl(), PHP_URL_PATH);
 
     // Route the path
@@ -153,7 +150,7 @@ $app->pipe(function ($req, $res, $next) use ($router) {
 
     $handler = $route->getHandler();
     return $handler($req, $res, $next);
-});
+}
 ```
 
 Middleware written in this way can be any of the following:
@@ -163,6 +160,7 @@ Middleware written in this way can be any of the following:
 - Static class methods
 - PHP array callbacks (e.g., `[ $dispatcher, 'dispatch' ]`, where `$dispatcher` is a class instance)
 - Invokable PHP objects (i.e., instances of classes implementing `__invoke()`)
+- Objects implementing `Phly\Conduit\MiddlewareInterface` (including `Phly\Conduit\MiddlewarePipe`)
 
 In all cases, if you wish to implement typehinting, the signature is:
 
@@ -175,7 +173,7 @@ function (
 }
 ```
 
-Error handler middleware has the following signature:
+The implementation Conduit offers also allows you to write specialized error handler middleware. The signature is the same as for normal middleware, except that it expects an additional argument prepended to the signature, `$error`.  (Alternately, you can implement `Phly\Conduit\ErrorMiddlewareInterface`.) The signature is:
 
 ```php
 function (
@@ -187,14 +185,28 @@ function (
 }
 ```
 
-Another approach is to extend the `Phly\Conduit\Middleware` class itself -- particularly if you want to allow attaching other middleware to your own middleware. In such a case, you will generally override the `__invoke()` method to perform any additional logic you have, and then call on the parent in order to iterate through your stack of middleware:
+Executing and composing middleware
+----------------------------------
+
+The easiest way to execute middleware is to write closures and attach them to a `Phly\Conduit\MiddlewarePipe` instance. You can nest `MiddlewarePipe` instances to create groups of related middleware, and attach them using a base path so they only execute if that path is matched.
 
 ```php
-use Phly\Conduit\Middleware;
+$api = new MiddlewarePipe();  // API middleware collection
+$api->pipe(/* ... */);        // repeat as necessary
+
+$app = new MiddlewarePipe();  // Middleware representing the application
+$app->pipe('/api', $api);     // API middleware attached to the path "/api"
+```
+
+
+Another approach is to extend the `Phly\Conduit\MiddlewarePipe` class itself -- particularly if you want to allow attaching other middleware to your own middleware. In such a case, you will generally override the `__invoke()` method to perform any additional logic you have, and then call on the parent in order to iterate through your stack of middleware:
+
+```php
+use Phly\Conduit\MiddlewarePipe;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-class CustomMiddleware extends Middleware
+class CustomMiddleware extends MiddlewarePipe
 {
     public function __invoke(Request $request, Response $response, callable $next = null)
     {
@@ -208,12 +220,12 @@ class CustomMiddleware extends Middleware
 }
 ```
 
-Another approach using this method would be to override the constructor to add in specific middleware, perhaps using configuration provided. In this case, make sure to also call `parent::__construct()` to ensure the middleware stack is initialized; I recommend doing this as the first action of the method.
+Another approach using this method would be to override the constructor to add in specific middleware, perhaps using configuration provided. In this case, make sure to also call `parent::__construct()` to ensure the middleware queue is initialized; I recommend doing this as the first action of the method.
 
 ```php
-use Phly\Conduit\Middleware;
+use Phly\Conduit\MiddlewarePipe;
 
-class CustomMiddleware extends Middleware
+class CustomMiddleware extends MiddlewarePipe
 {
     public function __construct($configuration)
     {
@@ -237,12 +249,12 @@ The following make up the primary API of Conduit.
 
 ### Middleware
 
-`Phly\Conduit\Middleware` is the primary application interface, and has been discussed previously. Its API is:
+`Phly\Conduit\MiddlewarePipe` is the primary application interface, and has been discussed previously. Its API is:
 
 ```php
-class Middleware
+class MiddlewarePipe implements MiddlewareInterface
 {
-    public function pipe($path, $handler = null);
+    public function pipe($path, $middleware = null);
     public function __invoke(
         Psr\Http\Message\ServerRequestInterface $request = null,
         Psr\Http\Message\ResponseInterface $response = null,
@@ -251,11 +263,13 @@ class Middleware
 }
 ```
 
-`pipe()` takes up to two arguments. If only one argument is provided, `$handler` will be assigned that value, and `$path` will be re-assigned to the value `/`; this is an indication that the `$handler` should be invoked for any path. If `$path` is provided, the `$handler` will only be executed for that path and any subpaths.
+`pipe()` takes up to two arguments. If only one argument is provided, `$middleware` will be assigned that value, and `$path` will be re-assigned to the value `/`; this is an indication that the `$middleware` should be invoked for any path. If `$path` is provided, the `$middleware` will only be executed for that path and any subpaths.
 
-Handlers are executed in the order in which they are piped to the `Middleware` instance.
+Middleware is executed in the order in which it is piped to the `MiddlewarePipe` instance.
 
-`__invoke()` is itself a middleware handler. If `$out` is not provided, an instance of `Phly\Conduit\FinalHandler` will be created, and used in the event that the pipe stack is exhausted.
+`__invoke()` is itself middleware. If `$out` is not provided, an instance of `Phly\Conduit\FinalHandler` will be created, and used in the event that the pipe stack is exhausted.
+
+Internally, `MiddlewarePipe` creates an instance of `Phly\Conduit\Next`, feeding it its queue, executes it, and returns a response.
 
 ### Next
 
@@ -263,13 +277,14 @@ Handlers are executed in the order in which they are piped to the `Middleware` i
 
 Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to your Request and/or Response instances, you will have new instances, and will need to make these known to the next middleware in the chain. `Next` allows this by allowing the following argument combinations:
 
-- `Next()` will re-use the currently registered Request and Response instances.
-- `Next(RequestInterface $request)` will register the provided `$request` with itself, and that instance will be used for subsequent invocations.
-- `Next(ResponseInterface $response)` will register the provided `$response` with itself, and that instance will be used for subsequent invocations.  provided `$response` will be returned.
-- `Next(RequestInterface $request, ResponseInterface $response)` will register each of the provided `$request` and `$response` with itself, and those instances will be used for subsequent invocations.
-- If any other argument is provided for the first argument, it is considered the error to report and pass to registered error middleware. If an error provided, the second argument may be either a request instance or a response instance; if the second argument is a request instance, a response instance may be passed as the third argument.
-
-Note: you **can** pass an error as the first argument and a response as the second, and `Next` will reset the response in that condition as well.
+- `Next()`, which will reuse the current request/response values, and which will only invoke non-error middleware.
+- `Next($err)`, which will reuse the current request/response values, and which will only invoke error middleware, using the provided `$err`.
+- `Next($request)`, which will replace the current request instance with the one provided, and only invoke non-error middleware.
+- `Next($response)`, which will replace the current response instance with the one provided, and only invoke non-error middleware.
+- `Next($request, $response)`, which will replace both the current request and response instance with those provided, and only invoke non-error middleware.
+- `Next($err, $request)`, which will replace the current request instance with the one provided, and only invoke error middleware, using the provided `$err`.
+- `Next($err, $response)`, which will replace the current response instance with the one provided, and only invoke error middleware, using the provided `$err`.
+- `Next($err, $request, $response)`, which will replace both the current request and response instance with those provided, and only invoke error middleware, using the provided `$err`.
 
 As examples:
 
@@ -397,12 +412,12 @@ $server = Server::createServer($app2 /* ... */);
 
 In the above, if the URI of the original incoming request is `/root/foo`, what `$fooCallback` will receive is a URI with a past consisting of only `/foo`. This practice ensures that middleware can be nested safely and resolve regardless of the nesting level.
 
-If you want access to the full URI -- for instance, to construct a fully qualified URI to your current middleware -- `Phly\Conduit\Http\Request` contains a method, `getOriginalRequest()`, which will always return the original request provided:
+If you want access to the full URI -- for instance, to construct a fully qualified URI to your current middleware -- `Phly\Conduit\Http\Request` contains a method, `getOriginalRequest()`, which will always return the original request provided to the application:
 
 ```php
 function ($request, $response, $next)
 {
-    $location = $request->getOriginalRequest()->getAbsoluteUri() . '/[:id]';
+    $location = $request->getOriginalRequest()->getUri()->getPath() . '/[:id]';
     $response = $response->setHeader('Location', $location);
     $response = $response->setStatus(302);
     return $response;

@@ -1,15 +1,15 @@
 <?php
 namespace Phly\Conduit;
 
-use ArrayObject;
 use Phly\Http\Uri;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
+use SplQueue;
 
 /**
- * Iterate a stack of middlewares and execute them
+ * Iterate a queue of middlewares and execute them.
  */
 class Next
 {
@@ -24,9 +24,9 @@ class Next
     private $done;
 
     /**
-     * @var int
+     * @var SplQueue
      */
-    private $index = 0;
+    private $queue;
 
     /**
      * @var string
@@ -34,108 +34,93 @@ class Next
     private $removed = '';
 
     /**
-     * @var Http\Request
-     */
-    private $request;
-
-    /**
-     * @var Http\Response
-     */
-    private $response;
-
-    /**
-     * @var ArrayObject
-     */
-    private $stack;
-
-    /**
-     * @param ArrayObject $stack
-     * @param Http\Request $request
-     * @param Http\Response $response
+     * @param SplQueue $queue
      * @param callable $done
      */
-    public function __construct(ArrayObject $stack, Http\Request $request, Http\Response $response, callable $done)
+    public function __construct(SplQueue $queue, callable $done)
     {
-        $this->dispatch = new Dispatch();
-
-        $this->stack    = $stack;
-        $this->request  = $request;
-        $this->response = $response;
+        $this->queue    = $queue;
         $this->done     = $done;
+
+        $this->dispatch = new Dispatch();
     }
 
     /**
-     * Call the next Route in the stack
+     * Call the next Route in the queue.
      *
-     * @param null|ServerRequestInterface|ResponseInterface|mixed $state
-     * @param null|ServerRequestInterface|ResponseInterface $response
-     * @param null|ResponseInterface $response
+     * Next requires that a request and response are provided; these will be
+     * passed to any middleware invoked, including the $done callable, if
+     * invoked.
+     *
+     * If the $err value is not null, the invocation is considered to be an
+     * error invocation, and Next will search for the next error middleware
+     * to dispatch, passing it $err along with the request and response.
+     *
+     * Once dispatch is complete, if the result is a response instance, that
+     * value will be returned; otherwise, the currently registered response
+     * instance will be returned.
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param null|mixed $err
      * @return ResponseInterface
      */
     public function __invoke(
-        $state = null,
-        MessageInterface $requestOrResponse = null,
-        ResponseInterface $response = null
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        $err = null
     ) {
-        $args         = $this->parseArguments($state, $requestOrResponse, $response);
-        $err          = $args->err;
-        $resetRequest = $args->resetRequest;
-
-
         $dispatch = $this->dispatch;
         $done     = $this->done;
-        $this->resetPath($this->request, $resetRequest);
+        $request  = $this->resetPath($request);
 
         // No middleware remains; done
-        if (! isset($this->stack[$this->index])) {
-            return $done($err, $this->request, $this->response);
+        if ($this->queue->isEmpty()) {
+            return $done($err, $request, $response);
         }
 
-        $layer           = $this->stack[$this->index++];
-        $path            = $this->request->getUri()->getPath() ?: '/';
+        $layer           = $this->queue->dequeue();
+        $path            = $request->getUri()->getPath() ?: '/';
         $route           = $layer->path;
         $normalizedRoute = (strlen($route) > 1) ? rtrim($route, '/') : $route;
 
         // Skip if layer path does not match current url
         if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
-            return $this($err);
+            return $this($request, $response, $err);
         }
 
         // Skip if match is not at a border ('/', '.', or end)
         $border = $this->getBorder($path, $normalizedRoute);
         if ($border && '/' !== $border && '.' !== $border) {
-            return $this($err);
+            return $this($request, $response, $err);
         }
 
         // Trim off the part of the url that matches the layer route
         if (! empty($route) && $route !== '/') {
-            $this->stripRouteFromPath($route);
+            $request = $this->stripRouteFromPath($request, $route);
         }
 
-        $result = $dispatch($layer, $err, $this->request, $this->response, $this);
-        if ($result instanceof ResponseInterface) {
-            $this->response = $result;
-        }
-        return $this->response;
+        $result = $dispatch($layer, $err, $request, $response, $this);
+
+        return ($result instanceof ResponseInterface ? $result : $response);
     }
 
     /**
      * Reset the path, if a segment was previously stripped
      *
      * @param Http\Request $request
-     * @param bool $resetRequest Whether or not the request was reset in this iteration
+     * @return Http\Request
      */
-    private function resetPath(Http\Request $request, $resetRequest = false)
+    private function resetPath(Http\Request $request)
     {
         if (! $this->removed) {
-            return;
+            return $request;
         }
 
         $uri  = $request->getUri();
         $path = $uri->getPath();
 
-        if ($resetRequest
-            && strlen($path) >= strlen($this->removed)
+        if (strlen($path) >= strlen($this->removed)
             && 0 === strpos($path, $this->removed)
         ) {
             $path = str_replace($this->removed, '', $path);
@@ -145,7 +130,7 @@ class Next
 
         // Strip trailing slash if current path does not contain it and
         // original path did not have it
-        if ('/' !== $path && '/' !== substr($this->removed, -1)) {
+        if ('/' === $path && '/' !== substr($this->removed, -1)) {
             $resetPath = rtrim($resetPath, '/');
         }
 
@@ -154,7 +139,7 @@ class Next
 
         $new  = $uri->withPath($resetPath);
         $this->removed = '';
-        $this->request = $request->withUri($new);
+        return $request->withUri($new);
     }
 
     /**
@@ -176,17 +161,24 @@ class Next
     /**
      * Strip the route from the request path
      *
+     * @param Http\Request $request
      * @param string $route
+     * @return Http\Request
      */
-    private function stripRouteFromPath($route)
+    private function stripRouteFromPath(Http\Request $request, $route)
     {
         $this->removed = $route;
 
-        $uri  = $this->request->getUri();
+        $uri  = $request->getUri();
         $path = $this->getTruncatedPath($route, $uri->getPath());
         $new  = $uri->withPath($path);
 
-        $this->request = $this->request->withUri($new);
+        // Root path of route is treated differently
+        if ($path === '/' && '/' === substr($uri->getPath(), -1)) {
+            $this->removed .= '/';
+        }
+
+        return $request->withUri($new);
     }
 
     /**
@@ -219,59 +211,5 @@ class Next
         throw new RuntimeException(
             'Layer and request path have gone out of sync'
         );
-    }
-
-    /**
-     * Parse invocation arguments.
-     *
-     * Parses invocation arguments and sets request and/or response properties
-     * as needed.
-     *
-     * @param null|ServerRequestInterface|ResponseInterface|mixed $state
-     * @param null|ServerRequestInterface|ResponseInterface $requestOrResponse
-     * @param null|ResponseInterface $response
-     */
-    private function parseArguments(
-        $state,
-        MessageInterface $requestOrResponse = null,
-        ResponseInterface $response = null
-    ) {
-        $args = (object) [
-            'err'          => null,
-            'resetRequest' => false,
-        ];
-
-        if ($state instanceof ResponseInterface) {
-            $this->response = $state;
-        }
-
-        if ($state instanceof ServerRequestInterface) {
-            $this->request      = $state;
-            $args->resetRequest = true;
-        }
-
-        if ($requestOrResponse instanceof ServerRequestInterface) {
-            $this->request      = $requestOrResponse;
-            $args->resetRequest = true;
-        }
-
-        if ($requestOrResponse instanceof ResponseInterface) {
-            $this->response = $requestOrResponse;
-        }
-
-        if (! $requestOrResponse instanceof ResponseInterface
-            && $response instanceof ResponseInterface
-        ) {
-            $this->response = $response;
-        }
-
-        if (null !== $state
-            && ! $state instanceof ServerRequestInterface
-            && ! $state instanceof ResponseInterface
-        ) {
-            $args->err = $state;
-        }
-
-        return $args;
     }
 }

@@ -26,7 +26,7 @@ class DispatchTest extends TestCase
         $handler = function ($err, $req, $res, $next) use (&$triggered) {
             $triggered = $err;
         };
-        $next = function ($err) use ($phpunit) {
+        $next = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Next was called; it should not have been');
         };
 
@@ -45,7 +45,7 @@ class DispatchTest extends TestCase
         $handler = function ($req, $res, $next) use ($phpunit) {
             $phpunit->fail('Handler was called; it should not have been');
         };
-        $next = function ($err) use (&$triggered) {
+        $next = function ($req, $res, $err) use (&$triggered) {
             $triggered = $err;
         };
 
@@ -64,7 +64,7 @@ class DispatchTest extends TestCase
         $handler = function ($err, $req, $res, $next) use ($phpunit) {
             $phpunit->fail('Handler was called; it should not have been');
         };
-        $next = function ($err) use (&$triggered) {
+        $next = function ($req, $res, $err) use (&$triggered) {
             $triggered = $err;
         };
 
@@ -83,7 +83,7 @@ class DispatchTest extends TestCase
         $handler = function ($req, $res, $next) use (&$triggered) {
             $triggered = $req;
         };
-        $next = function ($err) use ($phpunit) {
+        $next = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Next was called; it should not have been');
         };
 
@@ -103,7 +103,7 @@ class DispatchTest extends TestCase
         $handler = function ($err, $req, $res, $next) use ($exception) {
             throw $exception;
         };
-        $next = function ($err) use (&$triggered) {
+        $next = function ($req, $res, $err) use (&$triggered) {
             $triggered = $err;
         };
 
@@ -123,7 +123,7 @@ class DispatchTest extends TestCase
         $handler = function ($req, $res, $next) use ($exception) {
             throw $exception;
         };
-        $next = function ($err) use (&$triggered) {
+        $next = function ($req, $res, $err) use (&$triggered) {
             $triggered = $err;
         };
 
@@ -140,7 +140,7 @@ class DispatchTest extends TestCase
         $handler = function ($req, $res, $next) {
             return $res;
         };
-        $next = function ($err) use ($phpunit) {
+        $next = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Next was called; it should not have been');
         };
 
@@ -151,13 +151,13 @@ class DispatchTest extends TestCase
         $this->assertSame($this->response, $result);
     }
 
-    public function testReturnsValueFromErrorHandler()
+    public function testIfErrorHandlerReturnsResponseDispatchReturnsTheResponse()
     {
         $phpunit = $this;
         $handler = function ($err, $req, $res, $next) {
             return $res;
         };
-        $next = function ($err) use ($phpunit) {
+        $next = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Next was called; it should not have been');
         };
 
@@ -166,24 +166,5 @@ class DispatchTest extends TestCase
         $err = (object) ['error' => true];
         $result = $dispatch($route, $err, $this->request, $this->response, $next);
         $this->assertSame($this->response, $result);
-    }
-
-    public function testReturnsValueFromTriggeringNextAfterThrowingExceptionInNonErrorHandler()
-    {
-        $phpunit   = $this;
-        $exception = new RuntimeException;
-
-        $handler = function ($req, $res, $next) use ($exception) {
-            throw $exception;
-        };
-        $next = function ($err) {
-            return $err;
-        };
-
-        $route = new Route('/foo', $handler);
-        $dispatch = new Dispatch();
-        $err = null;
-        $result = $dispatch($route, $err, $this->request, $this->response, $next);
-        $this->assertSame($exception, $result);
     }
 }

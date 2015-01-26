@@ -3,7 +3,7 @@ namespace PhlyTest\Conduit;
 
 use Phly\Conduit\Http\Request as RequestDecorator;
 use Phly\Conduit\Http\Response as ResponseDecorator;
-use Phly\Conduit\Middleware;
+use Phly\Conduit\MiddlewarePipe;
 use Phly\Conduit\Utils;
 use Phly\Http\ServerRequest as Request;
 use Phly\Http\Response;
@@ -11,13 +11,13 @@ use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
 
-class MiddlewareTest extends TestCase
+class MiddlewarePipeTest extends TestCase
 {
     public function setUp()
     {
         $this->request    = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->response   = new Response();
-        $this->middleware = new Middleware();
+        $this->middleware = new MiddlewarePipe();
     }
 
     public function invalidHandlers()
@@ -46,11 +46,11 @@ class MiddlewareTest extends TestCase
     {
         $this->middleware->pipe(function ($req, $res, $next) {
             $res->write("First\n");
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
             $res->write("Second\n");
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
             $res->write("Third\n");
@@ -71,10 +71,10 @@ class MiddlewareTest extends TestCase
     public function testHandleInvokesFirstErrorHandlerOnErrorInChain()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next($res->write("First\n"));
+            $next($req, $res->write("First\n"));
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            return $next('error');
+            return $next($req, $res, 'error');
         });
         $this->middleware->pipe(function ($req, $res, $next) {
             return $res->write("Third\n");
@@ -95,7 +95,7 @@ class MiddlewareTest extends TestCase
         $this->assertNotContains('Third', $body);
     }
 
-    public function testHandleInvokesOutHandlerIfStackIsExhausted()
+    public function testHandleInvokesOutHandlerIfQueueIsExhausted()
     {
         $triggered = null;
         $out = function ($err = null) use (&$triggered) {
@@ -103,13 +103,13 @@ class MiddlewareTest extends TestCase
         };
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
@@ -117,29 +117,15 @@ class MiddlewareTest extends TestCase
         $this->assertTrue($triggered);
     }
 
-    public function testPipeWillCreateClosureForObjectImplementingHandle()
-    {
-        $handler = new TestAsset\NormalHandler();
-        $this->middleware->pipe($handler);
-        $r = new ReflectionProperty($this->middleware, 'stack');
-        $r->setAccessible(true);
-        $stack = $r->getValue($this->middleware);
-        $route = $stack[$stack->count() - 1];
-        $this->assertInstanceOf('Phly\Conduit\Route', $route);
-        $handler = $route->handler;
-        $this->assertInstanceOf('Closure', $handler);
-        $this->assertEquals(3, Utils::getArity($handler));
-    }
-
     public function testPipeWillCreateErrorClosureForObjectImplementingHandle()
     {
         $this->markTestIncomplete();
         $handler = new TestAsset\ErrorHandler();
         $this->middleware->pipe($handler);
-        $r = new ReflectionProperty($this->middleware, 'stack');
+        $r = new ReflectionProperty($this->middleware, 'queue');
         $r->setAccessible(true);
-        $stack = $r->getValue($this->middleware);
-        $route = $stack[$stack->count() - 1];
+        $queue = $r->getValue($this->middleware);
+        $route = $queue[$queue->count() - 1];
         $this->assertInstanceOf('Phly\Conduit\Route', $route);
         $handler = $route->handler;
         $this->assertInstanceOf('Closure', $handler);
@@ -169,13 +155,13 @@ class MiddlewareTest extends TestCase
         $this->assertTrue($executed);
     }
 
-    public function testReturnsOrigionalResponseIfStackDoesNotReturnAResponse()
+    public function testReturnsOrigionalResponseIfQueueDoesNotReturnAResponse()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
             return;
@@ -190,15 +176,15 @@ class MiddlewareTest extends TestCase
         $this->assertSame($this->response, $result->getOriginalResponse());
     }
 
-    public function testReturnsResponseReturnedByStack()
+    public function testReturnsResponseReturnedByQueue()
     {
         $return = new Response();
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next();
+            return $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            return $next();
+            return $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) use ($return) {
             return $return;
@@ -219,7 +205,7 @@ class MiddlewareTest extends TestCase
     public function testSlashShouldNotBeAppendedInChildMiddlewareWhenLayerDoesNotIncludeIt()
     {
         $this->middleware->pipe('/admin', function ($req, $res, $next) {
-            return $next();
+            return $next($req, $res);
         });
         $phpunit = $this;
         $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
@@ -234,7 +220,7 @@ class MiddlewareTest extends TestCase
     public function testSlashShouldBeAppendedInChildMiddlewareWhenLayerDoesIncludesIt()
     {
         $this->middleware->pipe('/admin/', function ($req, $res, $next) {
-            return $next();
+            return $next($req, $res);
         });
         $phpunit = $this;
         $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
@@ -249,7 +235,7 @@ class MiddlewareTest extends TestCase
     public function testSlashShouldBeAppendedInChildMiddlewareWhenRequestUriIncludesIt()
     {
         $this->middleware->pipe('/admin', function ($req, $res, $next) {
-            return $next();
+            return $next($req, $res);
         });
         $phpunit = $this;
         $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
@@ -259,5 +245,24 @@ class MiddlewareTest extends TestCase
         $result  = $this->middleware->__invoke($request, $this->response);
         $body    = (string) $result->getBody();
         $this->assertSame('/admin/', $body);
+    }
+
+    public function testSlashShouldBePresentForRootPathsAlways()
+    {
+        $this->middleware->pipe('/', function ($req, $res, $next) {
+            return $next($req, $res);
+        });
+        $phpunit = $this;
+        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
+            return $res->write($req->getUri()->getPath());
+        });
+
+        // Note: no path present in request
+        $request = new Request([], [], 'http://local.example.com', 'GET', 'php://memory');
+        $result  = $this->middleware->__invoke($request, $this->response);
+        $body    = (string) $result->getBody();
+
+        // Assertion is that absence of path == root path
+        $this->assertSame('/', $body);
     }
 }

@@ -2,7 +2,7 @@
 namespace PhlyTest\Conduit;
 
 use Phly\Conduit\Dispatch;
-use Phly\Conduit\Middleware;
+use Phly\Conduit\MiddlewarePipe;
 use Phly\Conduit\Utils;
 use PHPUnit_Framework_TestCase as TestCase;
 
@@ -15,7 +15,7 @@ class UtilsTest extends TestCase
             'closure' => [function ($x, $y) {
             }, 2],
             'invokable' => [new Dispatch(), 5],
-            'handler' => [new Middleware(), 2], // 2 REQUIRED arguments!
+            'interface' => [new MiddlewarePipe(), 2], // 2 REQUIRED arguments!
         ];
     }
 
