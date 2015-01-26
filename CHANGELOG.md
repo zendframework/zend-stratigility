@@ -39,6 +39,10 @@ This release makes several backwards-incompatible changes.
 
 - `MiddlewarePipe` was updated to use an `SplQueue` instance internally for
   modeling the middleware pipeline.
+- Properly fixes problems in `Next` reported in [#25](https://github.com/phly/http/pull/25),
+  [#26](https://github.com/phly/http/pull/26), [#27](https://github.com/phly/http/pull/27),
+  and [#28](https://github.com/phly/http/pull/28), which all revolve around
+  resetting the path when trailing slashes are or are not present.
 
 ## 0.10.2 - 2015-01-21
 
