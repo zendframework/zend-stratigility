@@ -267,7 +267,18 @@ class MiddlewarePipe implements MiddlewareInterface
 
 Middleware is executed in the order in which it is piped to the `MiddlewarePipe` instance.
 
-`__invoke()` is itself middleware. If `$out` is not provided, an instance of `Phly\Conduit\FinalHandler` will be created, and used in the event that the pipe stack is exhausted.
+`__invoke()` is itself middleware. If `$out` is not provided, an instance of
+`Phly\Conduit\FinalHandler` will be created, and used in the event that the pipe
+stack is exhausted. The callable should use the same signature as `Next()`:
+
+```php
+function (
+    Psr\Http\Message\ServerRequestInterface $request,
+    Psr\Http\Message\ResponseInterface $response, 
+    $err = null
+) {
+}
+```
 
 Internally, `MiddlewarePipe` creates an instance of `Phly\Conduit\Next`, feeding it its queue, executes it, and returns a response.
 
@@ -275,16 +286,20 @@ Internally, `MiddlewarePipe` creates an instance of `Phly\Conduit\Next`, feeding
 
 `Phly\Conduit\Next` is primarily an implementation detail of middleware, and exists to allow delegating to middleware registered later in the stack.
 
-Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to your Request and/or Response instances, you will have new instances, and will need to make these known to the next middleware in the chain. `Next` allows this by allowing the following argument combinations:
+Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to your Request and/or Response instances, you will have new instances, and will need to make these known to the next middleware in the chain. `Next` expects these arguments for every invocation. Additionally, if an error condition has occurred, you may pass an optional third argument, `$err`, representing the error condition.
 
-- `Next()`, which will reuse the current request/response values, and which will only invoke non-error middleware.
-- `Next($err)`, which will reuse the current request/response values, and which will only invoke error middleware, using the provided `$err`.
-- `Next($request)`, which will replace the current request instance with the one provided, and only invoke non-error middleware.
-- `Next($response)`, which will replace the current response instance with the one provided, and only invoke non-error middleware.
-- `Next($request, $response)`, which will replace both the current request and response instance with those provided, and only invoke non-error middleware.
-- `Next($err, $request)`, which will replace the current request instance with the one provided, and only invoke error middleware, using the provided `$err`.
-- `Next($err, $response)`, which will replace the current response instance with the one provided, and only invoke error middleware, using the provided `$err`.
-- `Next($err, $request, $response)`, which will replace both the current request and response instance with those provided, and only invoke error middleware, using the provided `$err`.
+```php
+class Next
+{
+    public function __invoke(
+        Psr\Http\Message\ServerRequestInterface $request,
+        Psr\Http\Message\ResponseInterface $response, 
+        $err = null
+    );
+}
+```
+
+You should **always** either capture or return the return value of `$next()` when calling it in your application. The expected return value is a response instance, but if it is not, you may want to return the response provided to you.
 
 As examples:
 
@@ -294,9 +309,10 @@ As examples:
 function ($request, $response, $next) use ($bodyParser)
 {
     $bodyParams = $bodyParser($request);
-    $request = $request->setBodyParams($bodyParams);
-    return $next($request); // Next will now register this altered request
-                            // instance
+    return $next(
+        $request->withBodyParams($bodyParams), // Next will pass the new
+        $response                              // request instance
+    );
 }
 ```
 
@@ -305,13 +321,15 @@ function ($request, $response, $next) use ($bodyParser)
 ```php
 function ($request, $response, $next)
 {
-    $response = $response->addHeader('Cache-Control', [
+    $updated = $response->addHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $next($response); // Next will now register this altered
-                                   // response instance
+    return $next(
+        $request,
+        $updated
+    );
 }
 ```
 
@@ -320,19 +338,21 @@ function ($request, $response, $next)
 ```php
 function ($request, $response, $next) use ($bodyParser)
 {
-    $request  = $request->setBodyParams($bodyParser($request));
-    $response = $response->addHeader('Cache-Control', [
+    $updated = $response->addHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $next($request, $response);
+    return $next(
+        $request->withBodyParams($bodyParser($request)),
+        $updated
+    );
 }
 ```
 
 #### Returning a response to complete the request
 
-If you want to complete the request, don't call `$next()`. However, if you have modified, populated, or created a response that you want returned, you can return it from your middleware, and that value will be returned on the completion of the current iteration of `$next()`.
+If you have no changes to the response, and do not want further middleware in the pipeline to execute, do not call `$next()` and simply return from your middleware. However, it's almost always better and more predictable to return the response instance, as this will ensure it propagates back up to all callers.
 
 ```php
 function ($request, $response, $next)
@@ -354,20 +374,15 @@ As such, _I recommend always returning `$next()` when invoking it in your middle
 return $next(/* ... */);
 ```
 
-#### Raising an error condition
+And, if not calling `$next()`, returning the response instance:
 
 ```php
-function ($request, $response, $next)
-{
-    try {
-        // try some operation...
-    } catch (Exception $e) {
-        return $next($e); // Next registered error middleware will be invoked
-    }
-}
+return $response
 ```
 
-#### Raising an error condition with a request and/or response
+#### Raising an error condition
+
+To raise an error condition, pass a non-null value as the third argument to `$next()`:
 
 ```php
 function ($request, $response, $next)
@@ -375,28 +390,25 @@ function ($request, $response, $next)
     try {
         // try some operation...
     } catch (Exception $e) {
-        $next($e, $request); // Error with updated request; OR
-        $next($e, $response); // Error with updated response; OR
-        $next($e, $request, $response); // Error with updated request
-                                               // AND response
+        return $next($request, $response, $e); // Next registered error middleware will be invoked
     }
 }
 ```
 
 ### FinalHandler
 
-`Phly\Conduit\FinalHandler` is a default implementation of middleware to execute when the stack exhausts itself. It expects three argumets when invoked: an error condition (or `null` for no error), a request instance, and a response instance. It returns a response.
+`Phly\Conduit\FinalHandler` is a default implementation of middleware to execute when the stack exhausts itself. It expects three arguments when invoked: a request instance, a response instance, and an error condition (or `null` for no error). It returns a response.
 
 `FinalHandler` allows an optional argument during instantiation, `$options`, an array of options with which to configure itself. These options currently include:
 
 - `env`, the application environment. If set to "production", no stack traces will be provided.
-- `onerror`, a callable to execute if an error is passed when `FinalHandler` is invoked. The callable is invoked with the error (which will be `null` in the absence of an error), the request, and the response.
+- `onerror`, a callable to execute if an error is passed when `FinalHandler` is invoked. The callable is invoked with the error (which will be `null` in the absence of an error), the request, and the response, in that order.
 
 ### HTTP Messages
 
 #### Phly\Conduit\Http\Request
 
-`Phly\Conduit\Http\Request` acts as a decorator for a `Psr\Http\Message\ServerRequestInterface` instance. The primary reason is to allow composing middleware to get a request instance that has a "root path".
+`Phly\Conduit\Http\Request` acts as a decorator for a `Psr\Http\Message\ServerRequestInterface` instance. The primary reason is to allow composing middleware such that you always have access to the original request instance.
 
 As an example, consider the following:
 
@@ -412,7 +424,7 @@ $server = Server::createServer($app2 /* ... */);
 
 In the above, if the URI of the original incoming request is `/root/foo`, what `$fooCallback` will receive is a URI with a past consisting of only `/foo`. This practice ensures that middleware can be nested safely and resolve regardless of the nesting level.
 
-If you want access to the full URI -- for instance, to construct a fully qualified URI to your current middleware -- `Phly\Conduit\Http\Request` contains a method, `getOriginalRequest()`, which will always return the original request provided to the application:
+If you want access to the full URI — for instance, to construct a fully qualified URI to your current middleware — `Phly\Conduit\Http\Request` contains a method, `getOriginalRequest()`, which will always return the original request provided to the application:
 
 ```php
 function ($request, $response, $next)
