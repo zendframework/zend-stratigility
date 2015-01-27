@@ -265,4 +265,30 @@ class MiddlewarePipeTest extends TestCase
         // Assertion is that absence of path == root path
         $this->assertSame('/', $body);
     }
+
+    public function testNestedMiddlewareMayInvokeDoneToInvokeNextOfParent()
+    {
+        $child = new MiddlewarePipe();
+        $child->pipe('/', function ($req, $res, $next) {
+            return $next($req, $res);
+        });
+
+        $this->middleware->pipe(function ($req, $res, $next) {
+            return $next($req, $res);
+        });
+
+        $this->middleware->pipe('/test', $child);
+
+        $triggered = false;
+        $this->middleware->pipe(function ($req, $res, $next) use (&$triggered) {
+            $triggered = true;
+            return $res;
+        });
+
+        $request = new Request([], [], 'http://local.example.com/test', 'GET', 'php://memory');
+        $result  = $this->middleware->__invoke($request, $this->response);
+        $this->assertTrue($triggered);
+        $this->assertInstanceOf('Phly\Conduit\Http\Response', $result);
+        $this->assertSame($this->response, $result->getOriginalResponse());
+    }
 }

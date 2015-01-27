@@ -76,7 +76,7 @@ class Next
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            return $done($err, $request, $response);
+            return $done($request, $response, $err);
         }
 
         $layer           = $this->queue->dequeue();
