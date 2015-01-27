@@ -25,12 +25,30 @@ class NextTest extends TestCase
     {
         // e.g., 0 length array, or all handlers call next
         $triggered = null;
-        $done = function ($err = null) use (&$triggered) {
+        $done = function ($req, $res, $err = null) use (&$triggered) {
             $triggered = true;
         };
 
         $next = new Next($this->queue, $done);
         $next($this->request, $this->response);
+        $this->assertTrue($triggered);
+    }
+
+    public function testDoneHandlerReceivesRequestAndResponse()
+    {
+        // e.g., 0 length array, or all handlers call next
+        $phpunit   = $this;
+        $request   = $this->request;
+        $response  = $this->response;
+        $triggered = null;
+        $done = function ($req, $res, $err = null) use ($phpunit, $request, $response, &$triggered) {
+            $phpunit->assertSame($request, $req);
+            $phpunit->assertSame($response, $response);
+            $triggered = true;
+        };
+
+        $next = new Next($this->queue, $done);
+        $next($request, $response);
         $this->assertTrue($triggered);
     }
 
@@ -44,7 +62,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route);
 
         $triggered = null;
-        $done = function ($err = null) use (&$triggered) {
+        $done = function ($req, $res, $err = null) use (&$triggered) {
             $triggered = true;
         };
 
@@ -65,7 +83,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route);
 
         $triggered = null;
-        $done = function ($err = null) use (&$triggered) {
+        $done = function ($req, $res, $err = null) use (&$triggered) {
             $triggered = true;
         };
 
@@ -86,7 +104,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route);
 
         $phpunit = $this;
-        $done = function ($err = null) use ($phpunit) {
+        $done = function ($req, $res, $err = null) use ($phpunit) {
             $phpunit->fail('Should not hit done handler');
         };
 
@@ -108,7 +126,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route);
 
         $phpunit = $this;
-        $done = function ($err = null) use ($phpunit) {
+        $done = function ($req, $res, $err = null) use ($phpunit) {
             $phpunit->fail('Should not hit done handler');
         };
 
@@ -137,7 +155,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route3);
 
         $phpunit = $this;
-        $done = function ($err) use ($phpunit) {
+        $done = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
@@ -166,7 +184,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route2);
         $this->queue->enqueue($route3);
 
-        $done = function ($err) use ($phpunit) {
+        $done = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
@@ -193,7 +211,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route1);
         $this->queue->enqueue($route2);
 
-        $done = function ($err) use ($phpunit) {
+        $done = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
@@ -222,7 +240,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route1);
         $this->queue->enqueue($route2);
 
-        $done = function ($err) use ($phpunit) {
+        $done = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
@@ -246,7 +264,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route1);
         $this->queue->enqueue($route2);
 
-        $done = function ($err) use ($phpunit) {
+        $done = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 
@@ -271,7 +289,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route1);
         $this->queue->enqueue($route2);
 
-        $done = function ($err) use ($phpunit) {
+        $done = function ($req, $res, $err) use ($phpunit) {
             $phpunit->fail('Should not hit final handler');
         };
 

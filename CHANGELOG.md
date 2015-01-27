@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.12.0 - 2015-01-27
+
+This release makes one backwards-incompatible change: Due to the changes in
+0.11.0, the `$done` callable to a `Next` instance **MUST** use the same
+signature as `Next::__invoke()`. This is due to the fact that a `MiddlewarePipe`
+instance will pass a `Next` instance to its children; if the signature is not
+the same, the arguments are not provided in the correct order when returning to
+the parent.
+
+The BC break that occurs is in the signature of `FinalHandler::_invoke()`, which
+has been changed to mimic that of `Next::__invoke()`.
+
+
+### Added
+
+- Updated to phly/http 0.9.0.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- `Next::__invoke()` now calls its `$done` instance using the same arguments and same order
+  in which it received its own.
+- `FinalHandler::__invoke()` now implements the same signature as
+  `Next::__invoke()`.
+
 ## 0.11.0 - 2015-01-26
 
 This release makes several backwards-incompatible changes.
