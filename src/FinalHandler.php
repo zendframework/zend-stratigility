@@ -31,12 +31,12 @@ class FinalHandler
      *
      * Otherwise, a 404 status is created.
      *
-     * @param mixed $err
      * @param Http\Request $request Request instance.
      * @param Http\Response $response Response instance.
+     * @param mixed $err
      * @return Http\Response
      */
-    public function __invoke($err, Http\Request $request, Http\Response $response)
+    public function __invoke(Http\Request $request, Http\Response $response, $err = null)
     {
         if ($err) {
             return $this->handleError($err, $request, $response);
