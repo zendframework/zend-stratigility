@@ -65,5 +65,6 @@ class RequestTest extends TestCase
         $this->assertEquals('1.1', $request->getProtocolVersion());
         $this->assertSame($stream, $request->getBody());
         $this->assertSame($psrRequest->getHeaders(), $request->getHeaders());
+        $this->assertEquals($psrRequest->getRequestTarget(), $request->getRequestTarget());
     }
 }

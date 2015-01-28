@@ -1,10 +1,9 @@
 <?php
 namespace Phly\Conduit\Http;
 
-use ArrayObject;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamableInterface;
-use Psr\Http\Message\UriTargetInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * Decorator for PSR ServerRequestInterface
@@ -66,6 +65,16 @@ class Request implements ServerRequestInterface
     }
 
     /**
+     * Proxy to ServerRequestInterface::getRequestTarget()
+     * 
+     * @return string Request's request-target
+     */
+    public function getRequestTarget()
+    {
+        return $this->psrRequest->getRequestTarget();
+    }
+
+    /**
      * Proxy to ServerRequestInterface::getProtocolVersion()
      *
      * @return string HTTP protocol version.
@@ -73,6 +82,19 @@ class Request implements ServerRequestInterface
     public function getProtocolVersion()
     {
         return $this->psrRequest->getProtocolVersion();
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::withRequestTarget()
+     * 
+     * @param string $requestTarget 
+     * @return self
+     * @throws \InvalidArgumentException
+     */
+    public function withRequestTarget($requestTarget)
+    {
+        $new = $this->psrRequest->withRequestTarget($requestTarget);
+        return new self($new, $this->originalRequest);
     }
 
     /**
@@ -218,7 +240,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getUri()
      *
-     * @return UriTargetInterface Returns a UriTargetInterface instance
+     * @return UriInterface Returns a UriInterface instance
      * @link http://tools.ietf.org/html/rfc3986#section-4.3
      */
     public function getUri()
@@ -230,11 +252,11 @@ class Request implements ServerRequestInterface
      * Allow mutating the URI
      *
      * @link http://tools.ietf.org/html/rfc3986#section-4.3
-     * @param UriTargetInterface $uri Request URI.
+     * @param UriInterface $uri Request URI.
      * @return self
      * @throws \InvalidArgumentException If the URI is invalid.
      */
-    public function withUri(UriTargetInterface $uri)
+    public function withUri(UriInterface $uri)
     {
         $new = $this->psrRequest->withUri($uri);
         return new self($new, $this->originalRequest);
