@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.13.0 - 2015-01-28
+
+This release updates its dependencies to use psr/http-message >= 0.8.0 and
+phly/http >= 0.10.0. The primary changes that affect Conduit regard changes to
+`Psr\Http\Message\RequestInterface` and the renaming of
+`Psr\Http\Message\UriTargetInterface` to `Psr\Http\Message\UriInterface`, which
+required changes in `Phly\Conduit\Http\Request`.
+
+### Added
+
+- `Phly\Conduit\Http\Request::getRequestTarget()`, to fetch the request-target.
+- `Phly\Conduit\Http\Request::withRequestTarget()`, to allow creating a new
+  instance with the specified request-target, allowing developers to set a
+  non-origin-form request-target.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- `Phly\Conduit\Http\Request` now typehints against
+  `Psr\Http\Message\UriInterface` for methods dealing with the URI.
+
 ## 0.12.0 - 2015-01-27
 
 This release makes one backwards-incompatible change: Due to the changes in
