@@ -327,25 +327,25 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::getBodyParams()
+     * Proxy to ServerRequestInterface::getParsedBody()
      *
      *
      * @return array The deserialized body parameters, if any.
      */
-    public function getBodyParams()
+    public function getParsedBody()
     {
-        return $this->psrRequest->getBodyParams();
+        return $this->psrRequest->getParsedBody();
     }
 
     /**
-     * Proxy to ServerRequestInterface::withBodyParams()
+     * Proxy to ServerRequestInterface::withParsedBody()
      *
-     * @param array $params The deserialized body parameters.
+     * @param null|array|object $params The deserialized body parameters.
      * @return self
      */
-    public function withBodyParams(array $params)
+    public function withParsedBody($params)
     {
-        $new = $this->psrRequest->withBodyParams($params);
+        $new = $this->psrRequest->withParsedBody($params);
         return new self($new, $this->originalRequest);
     }
 
