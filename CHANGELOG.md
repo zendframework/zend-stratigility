@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.14.0 - TBD
+
+This release updates its dependencies to use psr/http-message >= 0.9.0 and
+phly/http >= 0.11.0. The primary changes that affect Conduit regard changes to
+`Psr\Http\Message\ServerRequestInterface`, which required method name and
+signature changes in `Phly\Conduit\Http\Request`.
+
+### Added
+
+- `Phly\Conduit\Http\Request::getParsedBody()` (replaces `getBodyParams()`).
+- `Phly\Conduit\Http\Request::withParsedBody()` (replaces `withBodyParams()`).
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- `Phly\Conduit\Http\Request::getBodyParams()` (replaced by `getParsedBody()`).
+- `Phly\Conduit\Http\Request::withBodyParams()` (replaced by `withParsedBody()`).
+
+### Fixed
+
+- Nothing.
+
 ## 0.13.0 - 2015-01-28
 
 This release updates its dependencies to use psr/http-message >= 0.8.0 and
