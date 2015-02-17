@@ -27,6 +27,8 @@ signature changes in `Phly\Conduit\Http\Request`.
 
 - [#34](https://github.com/phly/conduit/pull/34) Remove unused variable from
   test bootstrap.
+- [#35](https://github.com/phly/conduit/pull/35) Rename `phpunit.xml` to
+  `phpunit.xml.dist`.
 
 ## 0.13.0 - 2015-01-28
 
