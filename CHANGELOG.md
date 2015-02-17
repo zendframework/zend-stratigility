@@ -25,7 +25,8 @@ signature changes in `Phly\Conduit\Http\Request`.
 
 ### Fixed
 
-- Nothing.
+- [#34](https://github.com/phly/conduit/pull/34) Remove unused variable from
+  test bootstrap.
 
 ## 0.13.0 - 2015-01-28
 
