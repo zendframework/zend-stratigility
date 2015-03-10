@@ -13,7 +13,7 @@ Installation and Requirements
 Install this library using composer:
 
 ```console
-$ composer require "psr/http-message:~0.8.0@dev" "phly/http:~1.0-dev@dev" "phly/conduit:~1.0-dev@dev"
+$ composer require phly/conduit
 ```
 
 Conduit has the following dependencies (which are managed by Composer):
@@ -274,7 +274,7 @@ stack is exhausted. The callable should use the same signature as `Next()`:
 ```php
 function (
     Psr\Http\Message\ServerRequestInterface $request,
-    Psr\Http\Message\ResponseInterface $response, 
+    Psr\Http\Message\ResponseInterface $response,
     $err = null
 ) {
 }
@@ -293,7 +293,7 @@ class Next
 {
     public function __invoke(
         Psr\Http\Message\ServerRequestInterface $request,
-        Psr\Http\Message\ResponseInterface $response, 
+        Psr\Http\Message\ResponseInterface $response,
         $err = null
     );
 }
