@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.14.1 - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- [#37](https://github.com/phly/conduit/pull/37) Improved install instructions.
+
 ## 0.14.0 - 2015-02-17
 
 This release updates its dependencies to use psr/http-message >= 0.9.0 and
