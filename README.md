@@ -76,8 +76,8 @@ $server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES)
 
 // Landing page
 $app->pipe('/', function ($req, $res, $next) {
-    if (parse_url($req->getUrl(), PHP_URL_PATH) !== '/') {
-        return $next();
+    if (parse_url($req->getUri(), PHP_URL_PATH) !== '/') {
+        return $next($req, $res);
     }
     return $res->end('Hello world!');
 });
@@ -140,12 +140,12 @@ As an example, consider the following middleware which will use an external rout
 
 ```php
 function ($req, $res, $next) use ($router) {
-    $path = parse_url($req->getUrl(), PHP_URL_PATH);
+    $path = parse_url($req->getUri(), PHP_URL_PATH);
 
     // Route the path
     $route = $router->route($path);
     if (! $route) {
-        return $next();
+        return $next($req, $res);
     }
 
     $handler = $route->getHandler();
