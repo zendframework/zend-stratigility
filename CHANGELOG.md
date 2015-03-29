@@ -19,6 +19,10 @@ All notable changes to this project will be documented in this file, in reverse 
 ### Fixed
 
 - [#37](https://github.com/phly/conduit/pull/37) Improved install instructions.
+- [#38](https://github.com/phly/conduit/pull/38) Fixed URI path extraction
+  examples.
+- [#38](https://github.com/phly/conduit/pull/38) Added more tests to ensure pipe
+  path is trimmed from URI.
 
 ## 0.14.0 - 2015-02-17
 
