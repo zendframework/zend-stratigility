@@ -291,4 +291,39 @@ class MiddlewarePipeTest extends TestCase
         $this->assertInstanceOf('Phly\Conduit\Http\Response', $result);
         $this->assertSame($this->response, $result->getOriginalResponse());
     }
+
+    public function testMiddlewareRequestPathMustBeTrimmedOffWithPipeRoutePath()
+    {
+        $request  = new Request([], [], 'http://local.example.com/foo/bar', 'GET', 'php://memory');
+
+        $phpunit  = $this;
+        $executed = false;
+
+        $this->middleware->pipe('/foo', function ($req, $res, $next) use ($phpunit, &$executed) {
+            $phpunit->assertEquals('/bar', $req->getUri()->getPath());
+            $executed = true;
+        });
+
+        $this->middleware->__invoke($request, $this->response);
+        $this->assertTrue($executed);
+    }
+
+    public function testMiddlewareRequestPathMustBeTrimmedOffWithPipeRoutePathFromNestedPipes()
+    {
+        $request  = new Request([], [], 'http://local.example.com/foo/bar', 'GET', 'php://memory');
+
+        $phpunit  = $this;
+        $executed = false;
+
+        $nestedMiddleware = new MiddlewarePipe();
+        $nestedMiddleware->pipe('/bar', function ($req, $res, $next) use ($phpunit, &$executed) {
+            $phpunit->assertEquals('/', $req->getUri()->getPath());
+            $executed = true;
+        });
+
+        $this->middleware->pipe('/foo', $nestedMiddleware);
+
+        $this->middleware->__invoke($request, $this->response);
+        $this->assertTrue($executed);
+    }
 }
