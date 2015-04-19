@@ -85,7 +85,7 @@ class ResponseTest extends TestCase
     {
         $this->assertEquals('1.1', $this->response->getProtocolVersion());
 
-        $stream = $this->getMock('Psr\Http\Message\StreamableInterface');
+        $stream = $this->getMock('Psr\Http\Message\StreamInterface');
         $response = $this->response->withBody($stream);
         $this->assertNotSame($this->response, $response);
         $this->assertSame($stream, $response->getBody());
@@ -95,7 +95,7 @@ class ResponseTest extends TestCase
         $response = $this->response->withHeader('Accept', 'application/xml');
         $this->assertNotSame($this->response, $response);
         $this->assertTrue($response->hasHeader('Accept'));
-        $this->assertEquals('application/xml', $response->getHeader('Accept'));
+        $this->assertEquals('application/xml', $response->getHeaderLine('Accept'));
 
         $response = $this->response->withAddedHeader('X-URL', 'http://example.com/foo');
         $this->assertNotSame($this->response, $response);
