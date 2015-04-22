@@ -2,7 +2,7 @@
 namespace Phly\Conduit\Http;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamableInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -66,8 +66,8 @@ class Request implements ServerRequestInterface
 
     /**
      * Proxy to ServerRequestInterface::getRequestTarget()
-     * 
-     * @return string Request's request-target
+     *
+     * {@inheritdoc}
      */
     public function getRequestTarget()
     {
@@ -77,7 +77,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getProtocolVersion()
      *
-     * @return string HTTP protocol version.
+     * {@inheritdoc}
      */
     public function getProtocolVersion()
     {
@@ -86,10 +86,8 @@ class Request implements ServerRequestInterface
 
     /**
      * Proxy to ServerRequestInterface::withRequestTarget()
-     * 
-     * @param string $requestTarget 
-     * @return self
-     * @throws \InvalidArgumentException
+     *
+     * {@inheritdoc}
      */
     public function withRequestTarget($requestTarget)
     {
@@ -100,8 +98,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::withProtocolVersion()
      *
-     * @param string $version HTTP protocol version.
-     * @return self
+     * {@inheritdoc}
      */
     public function withProtocolVersion($version)
     {
@@ -112,7 +109,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getBody()
      *
-     * @return StreamableInterface Returns the body stream.
+     * {@inheritdoc}
      */
     public function getBody()
     {
@@ -122,11 +119,9 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::withBody()
      *
-     * @param StreamableInterface $body Body.
-     * @return self
-     * @throws \InvalidArgumentException When the body is not valid.
+     * {@inheritdoc}
      */
-    public function withBody(StreamableInterface $body)
+    public function withBody(StreamInterface $body)
     {
         $new = $this->psrRequest->withBody($body);
         return new self($new, $this->originalRequest);
@@ -135,7 +130,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getHeaders()
      *
-     * @return array Returns an associative array of the message's headers.
+     * {@inheritdoc}
      */
     public function getHeaders()
     {
@@ -145,10 +140,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::hasHeader()
      *
-     * @param string $header Case-insensitive header name.
-     * @return bool Returns true if any header names match the given header
-     *     name using a case-insensitive string comparison. Returns false if
-     *     no matching header name is found in the message.
+     * {@inheritdoc}
      */
     public function hasHeader($header)
     {
@@ -158,8 +150,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getHeader()
      *
-     * @param string $header Case-insensitive header name.
-     * @return string
+     * {@inheritdoc}
      */
     public function getHeader($header)
     {
@@ -167,22 +158,19 @@ class Request implements ServerRequestInterface
     }
 
     /**
-     * Proxy to ServerRequestInterface::getHeaderLines()
+     * Proxy to ServerRequestInterface::getHeaderLine()
      *
-     * @param string $header Case-insensitive header name.
-     * @return string[]
+     * {@inheritdoc}
      */
-    public function getHeaderLines($header)
+    public function getHeaderLine($header)
     {
-        return $this->psrRequest->getHeaderLines($header);
+        return $this->psrRequest->getHeaderLine($header);
     }
 
     /**
      * Proxy to ServerRequestInterface::withHeader()
      *
-     * @param string $header Header name
-     * @param string|string[] $value  Header value(s)
-     * @return self
+     * {@inheritdoc}
      */
     public function withHeader($header, $value)
     {
@@ -193,9 +181,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::addHeader()
      *
-     * @param string $header Header name to add or append
-     * @param string|string[] $value Value(s) to add or merge into the header
-     * @return self
+     * {@inheritdoc}
      */
     public function withAddedHeader($header, $value)
     {
@@ -206,8 +192,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::removeHeader()
      *
-     * @param string $header HTTP header to remove
-     * @return self
+     * {@inheritdoc}
      */
     public function withoutHeader($header)
     {
@@ -218,7 +203,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getMethod()
      *
-     * @return string Returns the request method.
+     * {@inheritdoc}
      */
     public function getMethod()
     {
@@ -228,8 +213,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::withMethod()
      *
-     * @param string $method The request method.
-     * @return self
+     * {@inheritdoc}
      */
     public function withMethod($method)
     {
@@ -240,8 +224,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getUri()
      *
-     * @return UriInterface Returns a UriInterface instance
-     * @link http://tools.ietf.org/html/rfc3986#section-4.3
+     * {@inheritdoc}
      */
     public function getUri()
     {
@@ -251,21 +234,18 @@ class Request implements ServerRequestInterface
     /**
      * Allow mutating the URI
      *
-     * @link http://tools.ietf.org/html/rfc3986#section-4.3
-     * @param UriInterface $uri Request URI.
-     * @return self
-     * @throws \InvalidArgumentException If the URI is invalid.
+     * {@inheritdoc}
      */
-    public function withUri(UriInterface $uri)
+    public function withUri(UriInterface $uri, $preserveHost = false)
     {
-        $new = $this->psrRequest->withUri($uri);
+        $new = $this->psrRequest->withUri($uri, $preserveHost);
         return new self($new, $this->originalRequest);
     }
 
     /**
      * Proxy to ServerRequestInterface::getServerParams()
      *
-     * @return array
+     * {@inheritdoc}
      */
     public function getServerParams()
     {
@@ -275,7 +255,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getCookieParams()
      *
-     * @return array
+     * {@inheritdoc}
      */
     public function getCookieParams()
     {
@@ -285,8 +265,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::withCookieParams()
      *
-     * @param array $cookies
-     * @return self
+     * {@inheritdoc}
      */
     public function withCookieParams(array $cookies)
     {
@@ -297,7 +276,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getQueryParams()
      *
-     * @return array
+     * {@inheritdoc}
      */
     public function getQueryParams()
     {
@@ -307,8 +286,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::withQueryParams()
      *
-     * @param array $query
-     * @return self
+     * {@inheritdoc}
      */
     public function withQueryParams(array $query)
     {
@@ -319,18 +297,27 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getFileParams()
      *
-     * @return array Upload file(s) metadata, if any.
+     * {@inheritdoc}
      */
-    public function getFileParams()
+    public function getUploadedFiles()
     {
-        return $this->psrRequest->getFileParams();
+        return $this->psrRequest->getUploadedFiles();
+    }
+
+    /**
+     * Proxy to ServerRequestInterface::getFileParams()
+     *
+     * {@inheritdoc}
+     */
+    public function withUploadedFiles(array $uploadedFiles)
+    {
+        return $this->psrRequest->withUploadedFiles($uploadedFiles);
     }
 
     /**
      * Proxy to ServerRequestInterface::getParsedBody()
      *
-     *
-     * @return array The deserialized body parameters, if any.
+     * {@inheritdoc}
      */
     public function getParsedBody()
     {
@@ -340,8 +327,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::withParsedBody()
      *
-     * @param null|array|object $params The deserialized body parameters.
-     * @return self
+     * {@inheritdoc}
      */
     public function withParsedBody($params)
     {
@@ -352,7 +338,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getAttributes()
      *
-     * @return array Attributes derived from the request
+     * {@inheritdoc}
      */
     public function getAttributes()
     {
@@ -362,9 +348,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::getAttribute()
      *
-     * @param string $attribute
-     * @param mixed $default
-     * @return mixed
+     * {@inheritdoc}
      */
     public function getAttribute($attribute, $default = null)
     {
@@ -374,9 +358,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::withAttribute()
      *
-     * @param string $attribute
-     * @param mixed $value
-     * @return self
+     * {@inheritdoc}
      */
     public function withAttribute($attribute, $value)
     {
@@ -387,8 +369,7 @@ class Request implements ServerRequestInterface
     /**
      * Proxy to ServerRequestInterface::withoutAttribute()
      *
-     * @param string $attribute
-     * @return self
+     * {@inheritdoc}
      */
     public function withoutAttribute($attribute)
     {

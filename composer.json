@@ -27,8 +27,8 @@
   },
   "require": {
     "php": ">=5.4.8",
-    "phly/http": "^0.11",
-    "psr/http-message": "^0.9",
+    "phly/http": "^0.12",
+    "psr/http-message": "^0.10",
     "zendframework/zend-escaper": "~2.3@stable"
   },
   "require-dev": {

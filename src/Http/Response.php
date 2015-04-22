@@ -2,7 +2,7 @@
 namespace Phly\Conduit\Http;
 
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
-use Psr\Http\Message\StreamableInterface;
+use Psr\Http\Message\StreamInterface;
 
 /**
  * Response decorator
@@ -100,7 +100,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::getProtocolVersion()
      *
-     * @return string HTTP protocol version.
+     * {@inheritdoc}
      */
     public function getProtocolVersion()
     {
@@ -110,8 +110,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::withProtocolVersion()
      *
-     * @param string $version
-     * @return Response
+     * {@inheritdoc}
      */
     public function withProtocolVersion($version)
     {
@@ -122,7 +121,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::getBody()
      *
-     * @return StreamableInterface|null Returns the body, or null if not set.
+     * {@inheritdoc}
      */
     public function getBody()
     {
@@ -132,11 +131,9 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::withBody()
      *
-     * @param StreamableInterface $body Body.
-     * @return Response
-     * @throws \InvalidArgumentException When the body is not valid.
+     * {@inheritdoc}
      */
-    public function withBody(StreamableInterface $body)
+    public function withBody(StreamInterface $body)
     {
         if ($this->complete) {
             return $this;
@@ -149,7 +146,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::getHeaders()
      *
-     * @return array Returns an associative array of the message's headers.
+     * {@inheritdoc}
      */
     public function getHeaders()
     {
@@ -159,10 +156,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::hasHeader()
      *
-     * @param string $header Case-insensitive header name.
-     * @return bool Returns true if any header names match the given header
-     *     name using a case-insensitive string comparison. Returns false if
-     *     no matching header name is found in the message.
+     * {@inheritdoc}
      */
     public function hasHeader($header)
     {
@@ -172,8 +166,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::getHeader()
      *
-     * @param string $header Case-insensitive header name.
-     * @return string
+     * {@inheritdoc}
      */
     public function getHeader($header)
     {
@@ -181,22 +174,19 @@ class Response implements
     }
 
     /**
-     * Proxy to PsrResponseInterface::getHeaderAsArray()
+     * Proxy to PsrResponseInterface::getHeaderLine()
      *
-     * @param string $header Case-insensitive header name.
-     * @return string[]
+     * {@inheritdoc}
      */
-    public function getHeaderLines($header)
+    public function getHeaderLine($header)
     {
-        return $this->psrResponse->getHeaderLines($header);
+        return $this->psrResponse->getHeaderLine($header);
     }
 
     /**
      * Proxy to PsrResponseInterface::withHeader()
      *
-     * @param string $header Header name
-     * @param string|string[] $value  Header value(s)
-     * @return Response
+     * {@inheritdoc}
      */
     public function withHeader($header, $value)
     {
@@ -211,9 +201,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::withAddedHeader()
      *
-     * @param string $header Header name to add or append
-     * @param string|string[] $value Value(s) to add or merge into the header
-     * @return Response
+     * {@inheritdoc}
      */
     public function withAddedHeader($header, $value)
     {
@@ -228,8 +216,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::withoutHeader()
      *
-     * @param string $header HTTP header to remove
-     * @return Response
+     * {@inheritdoc}
      */
     public function withoutHeader($header)
     {
@@ -244,7 +231,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::getStatusCode()
      *
-     * @return integer Status code.
+     * {@inheritdoc}
      */
     public function getStatusCode()
     {
@@ -254,9 +241,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::withStatus()
      *
-     * @param integer $code The 3-digit integer result code to set.
-     * @param null|string $reasonPhrase The reason phrase to use with the status, if any.
-     * @return Response
+     * {@inheritdoc}
      */
     public function withStatus($code, $reasonPhrase = null)
     {
@@ -271,7 +256,7 @@ class Response implements
     /**
      * Proxy to PsrResponseInterface::getReasonPhrase()
      *
-     * @return string|null Reason phrase, or null if unknown.
+     * {@inheritdoc}
      */
     public function getReasonPhrase()
     {

@@ -4,23 +4,29 @@ php:
   - 5.4
   - 5.5
   - 5.6
+  - 7
   - hhvm
 
 matrix:
+  fast_finish: true
   allow_failures:
+    - php: 7
     - php: hhvm
 
 before_script:
   - composer self-update
-  - composer install --dev --prefer-source
+  - composer install --prefer-source
 
 script:
-  - ./vendor/bin/phpunit --coverage-clover=coverage.clover
-  - ./vendor/bin/phpcs --standard=PSR2 --ignore=test/Bootstrap.php src test
+  # Only run code coverage and CS checks on 5.6
+  - if [[ $TRAVIS_PHP_VERSION != '5.6' ]]; then ./vendor/bin/phpunit ; fi
+  - if [[ $TRAVIS_PHP_VERSION = '5.6' ]]; then ./vendor/bin/phpunit --coverage-clover=coverage.clover ; fi
+  - if [[ $TRAVIS_PHP_VERSION = '5.6' ]]; then ./vendor/bin/phpcs --standard=PSR2 --ignore=test/Bootstrap.php src test ; fi
 
 after_script:
-  - wget https://scrutinizer-ci.com/ocular.phar
-  - php ocular.phar code-coverage:upload --format=php-clover ./test/coverage.clover
+  # Only upload code coverage to scrutinizer for 5.6
+  - if [[ $TRAVIS_PHP_VERSION = '5.6' ]]; then wget https://scrutinizer-ci.com/ocular.phar ; fi
+  - if [[ $TRAVIS_PHP_VERSION = '5.6' ]]; then php ocular.phar code-coverage:upload --format=php-clover ./test/coverage.clover ; fi
 
 notifications:
   email: true
