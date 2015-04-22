@@ -128,6 +128,11 @@ class MiddlewarePipe implements MiddlewareInterface
             $path = '/' . $path;
         }
 
+        // Trim trailing slash if present
+        if (strlen($path) > 1 && '/' === substr($path, -1)) {
+            $path = rtrim($path, '/');
+        }
+
         return $path;
     }
 
