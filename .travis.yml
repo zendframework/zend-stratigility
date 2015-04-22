@@ -26,7 +26,7 @@ script:
 after_script:
   # Only upload code coverage to scrutinizer for 5.6
   - if [[ $TRAVIS_PHP_VERSION = '5.6' ]]; then wget https://scrutinizer-ci.com/ocular.phar ; fi
-  - if [[ $TRAVIS_PHP_VERSION = '5.6' ]]; php ocular.phar code-coverage:upload --format=php-clover ./test/coverage.clover ; fi
+  - if [[ $TRAVIS_PHP_VERSION = '5.6' ]]; then php ocular.phar code-coverage:upload --format=php-clover ./test/coverage.clover ; fi
 
 notifications:
   email: true
