@@ -326,4 +326,115 @@ class MiddlewarePipeTest extends TestCase
         $this->middleware->__invoke($request, $this->response);
         $this->assertTrue($executed);
     }
+
+    public function rootPaths()
+    {
+        return [
+            'empty' => [''],
+            'root'  => ['/'],
+        ];
+    }
+
+    /**
+     * @group matching
+     * @dataProvider rootPaths
+     */
+    public function testMiddlewareTreatsBothSlashAndEmptyPathAsTheRootPath($path)
+    {
+        $middleware = $this->middleware;
+        $middleware->pipe($path, function ($req, $res) {
+            return $res->withHeader('X-Found', 'true');
+        });
+        $uri     = (new Uri())->withPath($path);
+        $request = (new Request)->withUri($uri);
+
+        $response = $middleware($request, $this->response);
+        $this->assertTrue($response->hasHeader('x-found'));
+    }
+
+    public function nestedPaths()
+    {
+        return [
+            'empty-bare-bare'        => ['',      'foo',   '/foo'],
+            'empty-bare-tail'        => ['',      'foo',   '/foo/'],
+            'empty-tail-bare'        => ['',      'foo/',  '/foo'],
+            'empty-tail-tail'        => ['',      'foo/',  '/foo/'],
+            'empty-prefix-bare'      => ['',      '/foo',  '/foo'],
+            'empty-prefix-tail'      => ['',      '/foo',  '/foo/'],
+            'empty-surround-bare'    => ['',      '/foo/', '/foo'],
+            'empty-surround-tail'    => ['',      '/foo/', '/foo/'],
+            'root-bare-bare'         => ['/',     'foo',   '/foo'],
+            'root-bare-tail'         => ['/',     'foo',   '/foo/'],
+            'root-tail-bare'         => ['/',     'foo/',  '/foo'],
+            'root-tail-tail'         => ['/',     'foo/',  '/foo/'],
+            'root-prefix-bare'       => ['/',     '/foo',  '/foo'],
+            'root-prefix-tail'       => ['/',     '/foo',  '/foo/'],
+            'root-surround-bare'     => ['/',     '/foo/', '/foo'],
+            'root-surround-tail'     => ['/',     '/foo/', '/foo/'],
+            'bare-bare-bare'         => ['foo',   'bar',   '/foo/bar'],
+            'bare-bare-tail'         => ['foo',   'bar',   '/foo/bar/'],
+            'bare-tail-bare'         => ['foo',   'bar/',  '/foo/bar'],
+            'bare-tail-tail'         => ['foo',   'bar/',  '/foo/bar/'],
+            'bare-prefix-bare'       => ['foo',   '/bar',  '/foo/bar'],
+            'bare-prefix-tail'       => ['foo',   '/bar',  '/foo/bar/'],
+            'bare-surround-bare'     => ['foo',   '/bar/', '/foo/bar'],
+            'bare-surround-tail'     => ['foo',   '/bar/', '/foo/bar/'],
+            'tail-bare-bare'         => ['foo/',  'bar',   '/foo/bar'],
+            'tail-bare-tail'         => ['foo/',  'bar',   '/foo/bar/'],
+            'tail-tail-bare'         => ['foo/',  'bar/',  '/foo/bar'],
+            'tail-tail-tail'         => ['foo/',  'bar/',  '/foo/bar/'],
+            'tail-prefix-bare'       => ['foo/',  '/bar',  '/foo/bar'],
+            'tail-prefix-tail'       => ['foo/',  '/bar',  '/foo/bar/'],
+            'tail-surround-bare'     => ['foo/',  '/bar/', '/foo/bar'],
+            'tail-surround-tail'     => ['foo/',  '/bar/', '/foo/bar/'],
+            'prefix-bare-bare'       => ['/foo',  'bar',   '/foo/bar'],
+            'prefix-bare-tail'       => ['/foo',  'bar',   '/foo/bar/'],
+            'prefix-tail-bare'       => ['/foo',  'bar/',  '/foo/bar'],
+            'prefix-tail-tail'       => ['/foo',  'bar/',  '/foo/bar/'],
+            'prefix-prefix-bare'     => ['/foo',  '/bar',  '/foo/bar'],
+            'prefix-prefix-tail'     => ['/foo',  '/bar',  '/foo/bar/'],
+            'prefix-surround-bare'   => ['/foo',  '/bar/', '/foo/bar'],
+            'prefix-surround-tail'   => ['/foo',  '/bar/', '/foo/bar/'],
+            'surround-bare-bare'     => ['/foo/', 'bar',   '/foo/bar'],
+            'surround-bare-tail'     => ['/foo/', 'bar',   '/foo/bar/'],
+            'surround-tail-bare'     => ['/foo/', 'bar/',  '/foo/bar'],
+            'surround-tail-tail'     => ['/foo/', 'bar/',  '/foo/bar/'],
+            'surround-prefix-bare'   => ['/foo/', '/bar',  '/foo/bar'],
+            'surround-prefix-tail'   => ['/foo/', '/bar',  '/foo/bar/'],
+            'surround-surround-bare' => ['/foo/', '/bar/', '/foo/bar'],
+            'surround-surround-tail' => ['/foo/', '/bar/', '/foo/bar/'],
+        ];
+    }
+
+    /**
+     * @group matching
+     * @group nesting
+     * @dataProvider nestedPaths
+     */
+    public function testNestedMiddlewareMatchesOnlyAtPathBoundaries($topPath, $nestedPath, $match)
+    {
+        $middleware = $this->middleware;
+
+        $nest = new MiddlewarePipe();
+        $nest->pipe($nestedPath, function ($req, $res) use ($nestedPath) {
+            return $res->withHeader('X-Found', 'true');
+        });
+        $middleware->pipe($topPath, function ($req, $res, $next = null) use ($topPath, $nest) {
+            $result = $nest($req, $res, $next);
+            return $result;
+        });
+
+        $uri      = (new Uri())->withPath($match);
+        $request  = (new Request)->withUri($uri);
+        $response = $middleware($request, $this->response);
+        $this->assertTrue(
+            $response->hasHeader('X-Found'),
+            sprintf(
+                "Failed matching %s against top path '%s' and nested path '%s'\n",
+                $match,
+                $topPath,
+                $nestedPath
+            )
+        );
+    }
 }
