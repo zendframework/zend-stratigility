@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.15.1 - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- [#41](https://github.com/phly/conduit/pull/41) Simplified logic when
+  determining "final" handler to execute.
+
 ## 0.15.0 - 2015-04-22
 
 This release updates Conduit to use phly/http 0.12, containing updates to the
