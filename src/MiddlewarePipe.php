@@ -63,7 +63,7 @@ class MiddlewarePipe implements MiddlewareInterface
         $request  = $this->decorateRequest($request);
         $response = $this->decorateResponse($response);
 
-        $done   = is_callable($out) ? $out : new FinalHandler();
+        $done   = $out ?: new FinalHandler();
         $next   = new Next($this->pipeline, $done);
         $result = $next($request, $response);
 
