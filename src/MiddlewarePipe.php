@@ -1,11 +1,19 @@
 <?php
-namespace Phly\Conduit;
+/**
+ * Zend Framework (http://framework.zend.com/)
+ *
+ * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @copyright Copyright (c) 2015 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ */
+
+namespace Zend\Stratigility;
 
 use InvalidArgumentException;
-use Phly\Http\Uri;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use SplQueue;
+use Zend\Diactoros\Uri;
 
 /**
  * Pipe middleware like unix pipes.
@@ -13,7 +21,7 @@ use SplQueue;
  * This class implements a pipe-line of middleware, which can be attached using
  * the `pipe()` method, and is itself middleware.
  *
- * The request and response objects are decorated using the Phly\Conduit\Http
+ * The request and response objects are decorated using the Zend\Stratigility\Http
  * variants in this package, ensuring that the request may store arbitrary
  * properties, and the response exposes the convenience `write()`, `end()`, and
  * `isComplete()` methods.

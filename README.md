@@ -1,11 +1,13 @@
-Conduit
-=======
+zend-stratigility
+=================
 
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/phly/conduit/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/phly/conduit/?branch=master)
-[![Code Coverage](https://scrutinizer-ci.com/g/phly/conduit/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/phly/conduit/?branch=master)
-[![Scrutinizer Build Status](https://scrutinizer-ci.com/g/phly/conduit/badges/build.png?b=master)](https://scrutinizer-ci.com/g/phly/conduit/build-status/master)
+[![Build Status](https://secure.travis-ci.org/zendframework/zend-stratigility.svg?branch=master)](https://secure.travis-ci.org/zendframework/zend-stratigility)
 
-Conduit is a port of [Sencha Connect](https://github.com/senchalabs/connect) to PHP. It allows you to build applications out of _middleware_.
+> From "Strata," Latin for "layer", and "agility.
+
+This package supercedes and replaces [phly/conduit](https://github.com/phly/conduit).
+
+Stratigility is a port of [Sencha Connect](https://github.com/senchalabs/connect) to PHP. It allows you to build applications out of _middleware_.
 
 Installation and Requirements
 -----------------------------
@@ -13,12 +15,12 @@ Installation and Requirements
 Install this library using composer:
 
 ```console
-$ composer require phly/http phly/conduit
+$ composer require zendframework/zend-diactoros zendframework/zend-stratigility
 ```
 
-Conduit has the following dependencies (which are managed by Composer):
+Stratigility has the following dependencies (which are managed by Composer):
 
-- `psr/http-message`, which provides the interfaces specified in [PSR-7](http://www.php-fig.org/psr/psr-7), and type-hinted against in this package. In order to use Conduit, you will need an implementation of PSR-7; one such package is [phly/http](https://github.com/phly/http) (and hence the reference to it in the install line above).
+- `psr/http-message`, which provides the interfaces specified in [PSR-7](http://www.php-fig.org/psr/psr-7), and type-hinted against in this package. In order to use Stratigility, you will need an implementation of PSR-7; one such package is [zendframework/zend-diactoros](https://github.com/zendframework/zend-diactoros) (and hence the reference to it in the install line above).
 - `zendframework/zend-escaper`, used by the `FinalHandler` for escaping error messages prior to passing them to the response.
 
 You can provide your own request and response implementations if desired as long as they implement the PSR HTTP message interfaces.
@@ -33,8 +35,8 @@ Creating an application consists of 3 steps:
 - Instruct the server to listen for a request
 
 ```php
-use Phly\Conduit\MiddlewarePipe;
-use Phly\Http\Server;
+use Zend\Stratigility\MiddlewarePipe;
+use Zend\Diactoros\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -59,8 +61,8 @@ What is middleware?
 Middleware is code that exists between the request and response, and which can take the incoming request, perform actions based on it, and either complete the response or pass delegation on to the next middleware in the queue.
 
 ```php
-use Phly\Conduit\MiddlewarePipe;
-use Phly\Http\Server;
+use Zend\Stratigility\MiddlewarePipe;
+use Zend\Diactoros\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -104,10 +106,10 @@ $app->pipe('/files', $filesMiddleware);
 
 The handlers in each middleware attached this way will see a URI with that path segment stripped -- allowing them to be developed separately and re-used under any path you wish.
 
-Within Conduit, middleware can be:
+Within Stratigility, middleware can be:
 
-- Any PHP callable that accepts, minimally, a [PSR-7](https://github.com/php-fig/fig-standards/blob/master/proposed/http-message.md) request and a response (in that order), and, optionally, a callable (for invoking the next middleware in the queue, if any).
-- An object implementing `Phly\Conduit\MiddlewareInterface`. `Phly\Conduit\MiddlewarePipe` implements this interface.
+- Any PHP callable that accepts, minimally, a [PSR-7](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-7-http-message.md) request and a response (in that order), and, optionally, a callable (for invoking the next middleware in the queue, if any).
+- An object implementing `Zend\Stratigility\MiddlewareInterface`. `Zend\Stratigility\MiddlewarePipe` implements this interface.
 
 Error Handlers
 --------------
@@ -118,7 +120,7 @@ To handle errors, you can write middleware that accepts **exactly** four argumen
 function ($error, $request, $response, $next) { }
 ```
 
-Alternately, you can implement `Phly\Conduit\ErrorMiddlewareInterface`.
+Alternately, you can implement `Zend\Stratigility\ErrorMiddlewareInterface`.
 
 When using `MiddlewarePipe`, as the queue is executed, if `$next()` is called with an argument, or if an exception is thrown, middleware will iterate through the queue until the first such error handler is found. That error handler can either complete the request, or itself call `$next()`. **Error handlers that call `$next()` SHOULD call it with the error it received itself, or with another error.**
 
@@ -153,7 +155,7 @@ Middleware written in this way can be any of the following:
 - Static class methods
 - PHP array callbacks (e.g., `[ $dispatcher, 'dispatch' ]`, where `$dispatcher` is a class instance)
 - Invokable PHP objects (i.e., instances of classes implementing `__invoke()`)
-- Objects implementing `Phly\Conduit\MiddlewareInterface` (including `Phly\Conduit\MiddlewarePipe`)
+- Objects implementing `Zend\Stratigility\MiddlewareInterface` (including `Zend\Stratigility\MiddlewarePipe`)
 
 In all cases, if you wish to implement typehinting, the signature is:
 
@@ -166,7 +168,7 @@ function (
 }
 ```
 
-The implementation Conduit offers also allows you to write specialized error handler middleware. The signature is the same as for normal middleware, except that it expects an additional argument prepended to the signature, `$error`.  (Alternately, you can implement `Phly\Conduit\ErrorMiddlewareInterface`.) The signature is:
+The implementation Stratigility offers also allows you to write specialized error handler middleware. The signature is the same as for normal middleware, except that it expects an additional argument prepended to the signature, `$error`.  (Alternately, you can implement `Zend\Stratigility\ErrorMiddlewareInterface`.) The signature is:
 
 ```php
 function (
@@ -181,7 +183,7 @@ function (
 Executing and composing middleware
 ----------------------------------
 
-The easiest way to execute middleware is to write closures and attach them to a `Phly\Conduit\MiddlewarePipe` instance. You can nest `MiddlewarePipe` instances to create groups of related middleware, and attach them using a base path so they only execute if that path is matched.
+The easiest way to execute middleware is to write closures and attach them to a `Zend\Stratigility\MiddlewarePipe` instance. You can nest `MiddlewarePipe` instances to create groups of related middleware, and attach them using a base path so they only execute if that path is matched.
 
 ```php
 $api = new MiddlewarePipe();  // API middleware collection
@@ -192,10 +194,10 @@ $app->pipe('/api', $api);     // API middleware attached to the path "/api"
 ```
 
 
-Another approach is to extend the `Phly\Conduit\MiddlewarePipe` class itself -- particularly if you want to allow attaching other middleware to your own middleware. In such a case, you will generally override the `__invoke()` method to perform any additional logic you have, and then call on the parent in order to iterate through your stack of middleware:
+Another approach is to extend the `Zend\Stratigility\MiddlewarePipe` class itself -- particularly if you want to allow attaching other middleware to your own middleware. In such a case, you will generally override the `__invoke()` method to perform any additional logic you have, and then call on the parent in order to iterate through your stack of middleware:
 
 ```php
-use Phly\Conduit\MiddlewarePipe;
+use Zend\Stratigility\MiddlewarePipe;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
@@ -216,7 +218,7 @@ class CustomMiddleware extends MiddlewarePipe
 Another approach using this method would be to override the constructor to add in specific middleware, perhaps using configuration provided. In this case, make sure to also call `parent::__construct()` to ensure the middleware queue is initialized; I recommend doing this as the first action of the method.
 
 ```php
-use Phly\Conduit\MiddlewarePipe;
+use Zend\Stratigility\MiddlewarePipe;
 
 class CustomMiddleware extends MiddlewarePipe
 {
@@ -238,11 +240,11 @@ These approaches are particularly suited for cases where you may want to impleme
 API
 ---
 
-The following make up the primary API of Conduit.
+The following make up the primary API of Stratigility.
 
 ### Middleware
 
-`Phly\Conduit\MiddlewarePipe` is the primary application interface, and has been discussed previously. Its API is:
+`Zend\Stratigility\MiddlewarePipe` is the primary application interface, and has been discussed previously. Its API is:
 
 ```php
 class MiddlewarePipe implements MiddlewareInterface
@@ -261,7 +263,7 @@ class MiddlewarePipe implements MiddlewareInterface
 Middleware is executed in the order in which it is piped to the `MiddlewarePipe` instance.
 
 `__invoke()` is itself middleware. If `$out` is not provided, an instance of
-`Phly\Conduit\FinalHandler` will be created, and used in the event that the pipe
+`Zend\Stratigility\FinalHandler` will be created, and used in the event that the pipe
 stack is exhausted. The callable should use the same signature as `Next()`:
 
 ```php
@@ -273,11 +275,11 @@ function (
 }
 ```
 
-Internally, `MiddlewarePipe` creates an instance of `Phly\Conduit\Next`, feeding it its queue, executes it, and returns a response.
+Internally, `MiddlewarePipe` creates an instance of `Zend\Stratigility\Next`, feeding it its queue, executes it, and returns a response.
 
 ### Next
 
-`Phly\Conduit\Next` is primarily an implementation detail of middleware, and exists to allow delegating to middleware registered later in the stack.
+`Zend\Stratigility\Next` is primarily an implementation detail of middleware, and exists to allow delegating to middleware registered later in the stack.
 
 Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to your Request and/or Response instances, you will have new instances, and will need to make these known to the next middleware in the chain. `Next` expects these arguments for every invocation. Additionally, if an error condition has occurred, you may pass an optional third argument, `$err`, representing the error condition.
 
@@ -390,7 +392,7 @@ function ($request, $response, $next)
 
 ### FinalHandler
 
-`Phly\Conduit\FinalHandler` is a default implementation of middleware to execute when the stack exhausts itself. It expects three arguments when invoked: a request instance, a response instance, and an error condition (or `null` for no error). It returns a response.
+`Zend\Stratigility\FinalHandler` is a default implementation of middleware to execute when the stack exhausts itself. It expects three arguments when invoked: a request instance, a response instance, and an error condition (or `null` for no error). It returns a response.
 
 `FinalHandler` allows an optional argument during instantiation, `$options`, an array of options with which to configure itself. These options currently include:
 
@@ -399,9 +401,9 @@ function ($request, $response, $next)
 
 ### HTTP Messages
 
-#### Phly\Conduit\Http\Request
+#### Zend\Stratigility\Http\Request
 
-`Phly\Conduit\Http\Request` acts as a decorator for a `Psr\Http\Message\ServerRequestInterface` instance. The primary reason is to allow composing middleware such that you always have access to the original request instance.
+`Zend\Stratigility\Http\Request` acts as a decorator for a `Psr\Http\Message\ServerRequestInterface` instance. The primary reason is to allow composing middleware such that you always have access to the original request instance.
 
 As an example, consider the following:
 
@@ -417,7 +419,7 @@ $server = Server::createServer($app2 /* ... */);
 
 In the above, if the URI of the original incoming request is `/root/foo`, what `$fooCallback` will receive is a URI with a past consisting of only `/foo`. This practice ensures that middleware can be nested safely and resolve regardless of the nesting level.
 
-If you want access to the full URI — for instance, to construct a fully qualified URI to your current middleware — `Phly\Conduit\Http\Request` contains a method, `getOriginalRequest()`, which will always return the original request provided to the application:
+If you want access to the full URI — for instance, to construct a fully qualified URI to your current middleware — `Zend\Stratigility\Http\Request` contains a method, `getOriginalRequest()`, which will always return the original request provided to the application:
 
 ```php
 function ($request, $response, $next)
@@ -429,9 +431,9 @@ function ($request, $response, $next)
 }
 ```
 
-#### Phly\Conduit\Http\Response
+#### Zend\Stratigility\Http\Response
 
-`Phly\Conduit\Http\Response` acts as a decorator for a `Psr\Http\Message\ResponseInterface` instance, and also implements `Phly\Conduit\Http\ResponseInterface`, which provides the following convenience methods:
+`Zend\Stratigility\Http\Response` acts as a decorator for a `Psr\Http\Message\ResponseInterface` instance, and also implements `Zend\Stratigility\Http\ResponseInterface`, which provides the following convenience methods:
 
 - `write()`, which proxies to the `write()` method of the composed response stream.
 - `end()`, which marks the response as complete; it can take an optional argument, which, when provided, will be passed to the `write()` method. Once `end()` has been called, the response is immutable.

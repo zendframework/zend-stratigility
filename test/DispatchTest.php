@@ -1,19 +1,27 @@
 <?php
-namespace PhlyTest\Conduit;
+/**
+ * Zend Framework (http://framework.zend.com/)
+ *
+ * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @copyright Copyright (c) 2015 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ */
 
-use Phly\Conduit\Dispatch;
-use Phly\Conduit\Route;
+namespace ZendTest\Stratigility;
+
 use PHPUnit_Framework_TestCase as TestCase;
 use RuntimeException;
+use Zend\Stratigility\Dispatch;
+use Zend\Stratigility\Route;
 
 class DispatchTest extends TestCase
 {
     public function setUp()
     {
-        $this->request  = $this->getMockBuilder('Phly\Conduit\Http\Request')
+        $this->request  = $this->getMockBuilder('Zend\Stratigility\Http\Request')
             ->disableOriginalConstructor()
             ->getMock();
-        $this->response = $this->getMockBuilder('Phly\Conduit\Http\Response')
+        $this->response = $this->getMockBuilder('Zend\Stratigility\Http\Response')
             ->disableOriginalConstructor()
             ->getMock();
     }

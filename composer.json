@@ -1,23 +1,17 @@
 {
-  "name": "phly/conduit",
+  "name": "zendframework/zend-stratigility",
   "description": "Middleware for PHP",
   "type": "library",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "keywords": [
     "http",
+    "psr-7",
     "middleware"
   ],
-  "homepage": "https://github.com/phly/conduit",
-  "authors": [
-    {
-      "name": "Matthew Weier O'Phinney",
-      "email": "matthew@weierophinney.net",
-      "homepage": "http://mwop.net"
-    }
-  ],
+  "homepage": "https://github.com/zendframework/zend-stratigility",
   "support": {
-    "issues": "https://github.com/phly/conduit/issues",
-    "source": "https://github.com/phly/conduit"
+    "issues": "https://github.com/zendframework/zend-stratigility/issues",
+    "source": "https://github.com/zendframework/zend-stratigility"
   },
   "extra": {
     "branch-alias": {
@@ -28,24 +22,24 @@
   "require": {
     "php": ">=5.4.8",
     "psr/http-message": "~1.0.0",
-    "zendframework/zend-escaper": "~2.3@stable"
+    "zendframework/zend-escaper": "~2.3"
   },
   "require-dev": {
-    "phly/http": "~0.13",
+    "zendframework/zend-diactoros": "~1.0",
     "phpunit/PHPUnit": "3.7.*",
     "squizlabs/php_codesniffer": "~2.0"
   },
   "suggest": {
-    "psr/http-message-implementation": "Please install a psr/http-message-implementation to consume Conduit; e.g., phly/http"
+    "psr/http-message-implementation": "Please install a psr/http-message-implementation to consume Stratigility; e.g., zendframework/zend-diactoros"
   },
   "autoload": {
     "psr-4": {
-      "Phly\\Conduit\\": "src/"
+      "Zend\\Stratigility\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "PhlyTest\\Conduit\\": "test/"
+      "ZendTest\\Stratigility\\": "test/"
     }
   }
 }

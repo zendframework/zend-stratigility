@@ -1,15 +1,23 @@
 <?php
-namespace PhlyTest\Conduit;
+/**
+ * Zend Framework (http://framework.zend.com/)
+ *
+ * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @copyright Copyright (c) 2015 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ */
+
+namespace ZendTest\Stratigility;
 
 use Exception;
-use Phly\Conduit\FinalHandler;
-use Phly\Conduit\Http\Request;
-use Phly\Conduit\Http\Response;
-use Phly\Http\ServerRequest as PsrRequest;
-use Phly\Http\Response as PsrResponse;
-use Phly\Http\Uri;
 use PHPUnit_Framework_TestCase as TestCase;
+use Zend\Diactoros\ServerRequest as PsrRequest;
+use Zend\Diactoros\Response as PsrResponse;
+use Zend\Diactoros\Uri;
 use Zend\Escaper\Escaper;
+use Zend\Stratigility\FinalHandler;
+use Zend\Stratigility\Http\Request;
+use Zend\Stratigility\Http\Response;
 
 class FinalHandlerTest extends TestCase
 {

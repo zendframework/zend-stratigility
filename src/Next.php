@@ -1,12 +1,20 @@
 <?php
-namespace Phly\Conduit;
+/**
+ * Zend Framework (http://framework.zend.com/)
+ *
+ * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @copyright Copyright (c) 2015 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ */
 
-use Phly\Http\Uri;
+namespace Zend\Stratigility;
+
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use SplQueue;
+use Zend\Diactoros\Uri;
 
 /**
  * Iterate a queue of middlewares and execute them.

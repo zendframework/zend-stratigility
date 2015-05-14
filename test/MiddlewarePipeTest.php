@@ -1,15 +1,23 @@
 <?php
-namespace PhlyTest\Conduit;
+/**
+ * Zend Framework (http://framework.zend.com/)
+ *
+ * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @copyright Copyright (c) 2015 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ */
 
-use Phly\Conduit\Http\Request as RequestDecorator;
-use Phly\Conduit\Http\Response as ResponseDecorator;
-use Phly\Conduit\MiddlewarePipe;
-use Phly\Conduit\Utils;
-use Phly\Http\ServerRequest as Request;
-use Phly\Http\Response;
-use Phly\Http\Uri;
+namespace ZendTest\Stratigility;
+
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
+use Zend\Diactoros\ServerRequest as Request;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\Uri;
+use Zend\Stratigility\Http\Request as RequestDecorator;
+use Zend\Stratigility\Http\Response as ResponseDecorator;
+use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\Utils;
 
 class MiddlewarePipeTest extends TestCase
 {
@@ -126,7 +134,7 @@ class MiddlewarePipeTest extends TestCase
         $r->setAccessible(true);
         $queue = $r->getValue($this->middleware);
         $route = $queue[$queue->count() - 1];
-        $this->assertInstanceOf('Phly\Conduit\Route', $route);
+        $this->assertInstanceOf('Zend\Stratigility\Route', $route);
         $handler = $route->handler;
         $this->assertInstanceOf('Closure', $handler);
         $this->assertEquals(4, Utils::getArity($handler));
@@ -254,7 +262,7 @@ class MiddlewarePipeTest extends TestCase
         $request = new Request([], [], 'http://local.example.com/test', 'GET', 'php://memory');
         $result  = $this->middleware->__invoke($request, $this->response);
         $this->assertTrue($triggered);
-        $this->assertInstanceOf('Phly\Conduit\Http\Response', $result);
+        $this->assertInstanceOf('Zend\Stratigility\Http\Response', $result);
         $this->assertSame($this->response, $result->getOriginalResponse());
     }
 
