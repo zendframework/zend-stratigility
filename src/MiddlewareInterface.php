@@ -6,10 +6,10 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 /**
  * Middleware.
- * 
+ *
  * Middleware accepts a request and a response, and optionally a
  * callback `$out` (called if the middleware wants to allow further
- * middleware to process the incoming request, or to delegate output to another 
+ * middleware to process the incoming request, or to delegate output to another
  * process).
  *
  * Middleware that does not need or desire further processing should not
@@ -31,19 +31,19 @@ interface MiddlewareInterface
      * interfere with the work done in the middleware, or if the middleware
      * wants to delegate to another process, it can use the `$out` callable
      * if present.
-     * 
-     * If the middleware does not return a value, execution of the current 
-     * request is considered complete, and the response instance provided will 
+     *
+     * If the middleware does not return a value, execution of the current
+     * request is considered complete, and the response instance provided will
      * be considered the response to return.
      *
      * Alternately, the middleware may return a response instance.
      *
      * Often, middleware will `return $out();`, with the assumption that a
      * later middleware will return a response.
-     * 
-     * @param Request $request 
-     * @param Response $response 
-     * @param null|callable $out 
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param null|callable $out
      * @return null|Response
      */
     public function __invoke(Request $request, Response $response, callable $out = null);
