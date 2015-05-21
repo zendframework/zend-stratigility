@@ -27,13 +27,16 @@
   },
   "require": {
     "php": ">=5.4.8",
-    "phly/http": "^0.12",
-    "psr/http-message": "^0.10",
+    "psr/http-message": "~1.0.0",
     "zendframework/zend-escaper": "~2.3@stable"
   },
   "require-dev": {
+    "phly/http": "~0.13",
     "phpunit/PHPUnit": "3.7.*",
-    "squizlabs/php_codesniffer": "1.5.*"
+    "squizlabs/php_codesniffer": "~2.0"
+  },
+  "suggest": {
+    "psr/http-message-implementation": "Please install a psr/http-message-implementation to consume Conduit; e.g., phly/http"
   },
   "autoload": {
     "psr-4": {

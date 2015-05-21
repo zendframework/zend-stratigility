@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release..
 
+## 0.15.2 - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Modified `composer.json` to *require* only `psr/http-message`, *suggest*
+  `psr/http-message-implementation`, and, in *development*, require `phly/http`;
+  this allows substitution of PSR-7 implementations.
+
 ## 0.15.1 - 2015-05-14
 
 ### Added
