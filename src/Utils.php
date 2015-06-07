@@ -41,6 +41,12 @@ abstract class Utils
             return 0;
         }
 
+        if (is_array($callable)) {
+            list($class, $method) = $callable;
+            $r = new ReflectionMethod($class, $method);
+            return $r->getNumberOfRequiredParameters();
+        }
+
         $r = new ReflectionFunction($callable);
         return $r->getNumberOfRequiredParameters();
     }
