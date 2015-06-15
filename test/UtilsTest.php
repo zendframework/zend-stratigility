@@ -13,17 +13,22 @@ use PHPUnit_Framework_TestCase as TestCase;
 use Zend\Stratigility\Dispatch;
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\Utils;
+use ZendTest\Stratigility\TestAsset\NormalHandler;
+use ZendTest\Stratigility\TestAsset\StaticHandler;
 
 class UtilsTest extends TestCase
 {
     public function callablesWithVaryingArity()
     {
         return [
-            'function' => ['strlen', 1],
-            'closure' => [function ($x, $y) {
+            'function'       => ['strlen', 1],
+            'closure'        => [function ($x, $y) {
             }, 2],
-            'invokable' => [new Dispatch(), 5],
-            'interface' => [new MiddlewarePipe(), 2], // 2 REQUIRED arguments!
+            'invokable'      => [new Dispatch(), 5],
+            'interface'      => [new MiddlewarePipe(), 2], // 2 REQUIRED arguments!
+            'callable'       => [[new NormalHandler(), 'handle'], 3],
+            'static-method'  => [[__NAMESPACE__ . '\TestAsset\StaticHandler', 'handle'], 3],
+            'static-access'  => [__NAMESPACE__ . '\TestAsset\StaticHandler::handle', 3],
         ];
     }
 
