@@ -6,7 +6,29 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 1.0.0 - TBD
+## 1.0.1 - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- [#7](https://github.com/zendframework/zend-stratigility/pull/7) ensures taht
+  arity checks on PHP callables in array format (`[$instance, $method]`,
+  `['ClassName', 'method']`) work, as well as on static methods using the string
+  syntax (`'ClassName::method'`). This allows them to be used without issue as
+  middleware handlers.
+
+## 1.0.0 - 2015-05-14
 
 First stable release, and first relase as `zend-stratigility`.
 
