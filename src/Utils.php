@@ -41,6 +41,20 @@ abstract class Utils
             return 0;
         }
 
+        // Handle static methods passed in Class::method format by re-casting
+        // as an array callable.
+        if (is_string($callable)
+            && preg_match('/^(?P<class>[^:]+)::(?P<method>.*)$/', $callable, $matches)
+        ) {
+            $callable = [$matches['class'], $matches['method']];
+        }
+
+        if (is_array($callable)) {
+            list($class, $method) = $callable;
+            $r = new ReflectionMethod($class, $method);
+            return $r->getNumberOfRequiredParameters();
+        }
+
         $r = new ReflectionFunction($callable);
         return $r->getNumberOfRequiredParameters();
     }
