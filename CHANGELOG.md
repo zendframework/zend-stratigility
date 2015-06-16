@@ -6,11 +6,13 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 1.0.1 - TBD
+## 1.0.1 - 2015-06-16
 
 ### Added
 
-- Nothing.
+- [#8](https://github.com/zendframework/zend-stratigility/pull/8) adds a
+  `phpcs.xml` PHPCS configuration file, allowing execution of each of `phpcs`
+  and `phpcbf` without arguments.
 
 ### Deprecated
 
@@ -22,7 +24,7 @@ details.
 
 ### Fixed
 
-- [#7](https://github.com/zendframework/zend-stratigility/pull/7) ensures taht
+- [#7](https://github.com/zendframework/zend-stratigility/pull/7) ensures that
   arity checks on PHP callables in array format (`[$instance, $method]`,
   `['ClassName', 'method']`) work, as well as on static methods using the string
   syntax (`'ClassName::method'`). This allows them to be used without issue as

@@ -76,14 +76,14 @@ standards checks, and provides configuration for our selected checks.
 To run checks only:
 
 ```console
-$ ./vendor/bin/phpcs --standard=PSR2 src test
+$ ./vendor/bin/phpcs
 ```
 
 `phpcs` also installs a tool named `phpcbf` which can attempt to fix problems
 for you:
 
 ```console
-$ ./vendor/bin/phpcbf --standard=PSR2 src test
+$ ./vendor/bin/phpcbf
 ```
 
 If you allow phpcbf to fix CS issues, please re-run the tests to ensure

@@ -27,7 +27,7 @@
   "require-dev": {
     "zendframework/zend-diactoros": "~1.0",
     "phpunit/PHPUnit": "3.7.*",
-    "squizlabs/php_codesniffer": "~2.0"
+    "squizlabs/php_codesniffer": "^2.3.1"
   },
   "suggest": {
     "psr/http-message-implementation": "Please install a psr/http-message-implementation to consume Stratigility; e.g., zendframework/zend-diactoros"
