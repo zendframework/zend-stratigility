@@ -32,7 +32,7 @@ abstract class Utils
                 }
 
                 $r = new ReflectionMethod($callable, $method);
-                return $r->getNumberOfRequiredParameters();
+                return $r->getNumberOfParameters();
             }
             return 0;
         }
