@@ -10,6 +10,7 @@
 namespace Zend\Stratigility;
 
 use Exception;
+use Psr\Http\Message\ResponseInterface;
 use ReflectionFunction;
 use ReflectionMethod;
 
@@ -70,10 +71,10 @@ abstract class Utils
      * less than 400 or greater than 599, returns 500; otherwise, returns it.
      *
      * @param mixed $error
-     * @param Http\Response $response
+     * @param ResponseInterface $response
      * @return int
      */
-    public static function getStatusCode($error, Http\Response $response)
+    public static function getStatusCode($error, ResponseInterface $response)
     {
         if ($error instanceof Exception
             && ($error->getCode() >= 400 && $error->getCode() < 600)
