@@ -27,7 +27,7 @@ class FinalHandler
     /**
      * Original response provided to the middleware.
      *
-     * @var null|Http\Response
+     * @var null|ResponseInterface
      */
     private $response;
 
