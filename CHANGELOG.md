@@ -10,7 +10,11 @@ details.
 
 ### Added
 
-- Nothing.
+- [#13](https://github.com/zendframework/zend-stratigility/pull/13) adds
+  `Utils::getStatusCode($error, ResponseInterface $response)`; this static
+  method will attempt to use an exception code as an HTTP status code, if it
+  falls in a valid HTTP error status range. If the error is not an exception, it
+  ensures that the status code is an error status.
 
 ### Deprecated
 

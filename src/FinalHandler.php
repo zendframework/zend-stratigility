@@ -66,7 +66,7 @@ class FinalHandler
     private function handleError($error, Http\Request $request, Http\Response $response)
     {
         $response = $response->withStatus(
-            $this->getStatusCode($error, $response)
+            Utils::getStatusCode($error, $response)
         );
 
         $message = $response->getReasonPhrase() ?: 'Unknown Error';
@@ -102,34 +102,6 @@ class FinalHandler
             $escaper->escapeHtml((string) $uri)
         );
         return $response->end($message);
-    }
-
-    /**
-     * Determine status code
-     *
-     * If the error is an exception with a code between 400 and 599, returns
-     * the exception code.
-     *
-     * Otherwise, retrieves the code from the response; if not present, or
-     * less than 400 or greater than 599, returns 500; otherwise, returns it.
-     *
-     * @param mixed $error
-     * @param Http\Response $response
-     * @return int
-     */
-    private function getStatusCode($error, Http\Response $response)
-    {
-        if ($error instanceof Exception
-            && ($error->getCode() >= 400 && $error->getCode() < 600)
-        ) {
-            return $error->getCode();
-        }
-
-        $status = $response->getStatusCode();
-        if (! $status || $status < 400 || $status >= 600) {
-            $status = 500;
-        }
-        return $status;
     }
 
     private function createDevelopmentErrorMessage($error)
