@@ -28,11 +28,12 @@ details.
 
 - Nothing.
 
-## 1.0.2 - TBD
+## 1.0.2 - 2015-06-24
 
 ### Added
 
-- Nothing.
+- [#14](https://github.com/zendframework/zend-stratigility/pull/14) adds
+  [bookdown](http://bookdown.io) documentation.
 
 ### Deprecated
 
