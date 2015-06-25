@@ -122,6 +122,9 @@ class FinalHandlerTest extends TestCase
         $this->assertContains($originalUrl, (string) $response->getBody());
     }
 
+    /**
+     * @group 12
+     */
     public function testReturnsResponseIfItDoesNotMatchResponsePassedToConstructor()
     {
         $psrResponse = new PsrResponse();
@@ -131,5 +134,20 @@ class FinalHandlerTest extends TestCase
         $passedResponse = new Response($psrResponse);
         $result = $final(new Request(new PsrRequest()), $passedResponse);
         $this->assertSame($passedResponse, $result);
+    }
+
+    /**
+     * @group 12
+     */
+    public function testReturnsResponseIfBodyLengthHasChanged()
+    {
+        $psrResponse = new PsrResponse();
+        $response    = new Response($psrResponse);
+        $final       = new FinalHandler([], $response);
+
+        $response->write('return this response');
+
+        $result = $final(new Request(new PsrRequest()), $response);
+        $this->assertSame($response, $result);
     }
 }

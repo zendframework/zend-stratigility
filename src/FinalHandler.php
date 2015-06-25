@@ -20,6 +20,13 @@ use Zend\Escaper\Escaper;
 class FinalHandler
 {
     /**
+     * Original response body size.
+     *
+     * @var int
+     */
+    private $bodySize = 0;
+
+    /**
      * @var array
      */
     private $options;
@@ -39,6 +46,10 @@ class FinalHandler
     {
         $this->options  = $options;
         $this->response = $response;
+
+        if ($response) {
+            $this->bodySize = $response->getBody()->getSize();
+        }
     }
 
     /**
@@ -70,6 +81,16 @@ class FinalHandler
         // instantiation; this is an indication of calling `$next` in the fina
         // registered middleware and providing a new response instance.
         if ($this->response && $this->response !== $response) {
+            return $response;
+        }
+
+        // If the response passed is the same as the one at instantiation,
+        // check to see if the body size has changed; if it has, return
+        // the response, as the message body has been written to.
+        if ($this->response
+            && $this->response === $response
+            && $this->bodySize !== $response->getBody()->getSize()
+        ) {
             return $response;
         }
 
