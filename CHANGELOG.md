@@ -6,11 +6,15 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 1.0.3 - TBD
+## 1.1.0 - 2015-06-25
 
 ### Added
 
-- Nothing.
+- [#13](https://github.com/zendframework/zend-stratigility/pull/13) adds
+  `Utils::getStatusCode($error, ResponseInterface $response)`; this static
+  method will attempt to use an exception code as an HTTP status code, if it
+  falls in a valid HTTP error status range. If the error is not an exception, it
+  ensures that the status code is an error status.
 
 ### Deprecated
 
@@ -22,7 +26,11 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#12](https://github.com/zendframework/zend-stratigility/pull/12) updates
+  `FinalHandler` such that it will return the response provided at invocation
+  if it differs from the response at initialization (i.e., a new response
+  instance, or if the body size has changed). This allows you to safely call
+  `$next()` from all middleware in order to allow post-processing.
 
 ## 1.0.2 - 2015-06-24
 

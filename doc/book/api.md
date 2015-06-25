@@ -27,8 +27,11 @@ executed for that path and any subpaths.
 Middleware is executed in the order in which it is piped to the `MiddlewarePipe` instance.
 
 `__invoke()` is itself middleware. If `$out` is not provided, an instance of
-`Zend\Stratigility\FinalHandler` will be created, and used in the event that the pipe
-stack is exhausted. The callable should use the same signature as `Next()`:
+`Zend\Stratigility\FinalHandler` will be created, and used in the event that the pipe stack is
+exhausted (`MiddlewarePipe` passes the `$response` instance it receives to `FinalHandler` as well,
+so that the latter can determine if the response it receives is new).
+
+The callable should use the same signature as `Next()`:
 
 ```php
 function (
@@ -151,6 +154,10 @@ And, if not calling `$next()`, returning the response instance:
 return $response;
 ```
 
+The `FinalHandler` implementation will check the `$response` instance passed when invoking it
+against the instance passed during instantiation, and, if different, return it. As such, `return
+$next(/* ... */)` is the recommended workflow.
+
 ### Raising an error condition
 
 To raise an error condition, pass a non-null value as the third argument to `$next()`:
@@ -172,13 +179,27 @@ function ($request, $response, $next)
 exhausts itself. It expects three arguments when invoked: a request instance, a response instance,
 and an error condition (or `null` for no error). It returns a response.
 
-`FinalHandler` allows an optional argument during instantiation, `$options`, an array of options
-with which to configure itself. These options currently include:
+`FinalHandler` allows two optional arguments during instantiation
 
-- `env`, the application environment. If set to "production", no stack traces will be provided.
-- `onerror`, a callable to execute if an error is passed when `FinalHandler` is invoked. The
-  callable is invoked with the error (which will be `null` in the absence of an error), the request,
-  and the response, in that order.
+- `$options`, an array of options with which to configure itself. These options currently include:
+  - `env`, the application environment. If set to "production", no stack traces will be provided.
+  - `onerror`, a callable to execute if an error is passed when `FinalHandler` is invoked. The
+    callable is invoked with the error (which will be `null` in the absence of an error), the request,
+    and the response, in that order.
+- `Psr\Http\Message\ResponseInterface $response`; if passed, it will compare the response passed
+  during invocation against this instance; if they are different, it will return the response from
+  the invocation, as this indicates that one or more middleware provided a new response instance.
+
+Internally, `FinalHandler` does the following on invocation:
+
+- If `$error` is non-`null`, it creates an error response from the response provided at invocation,
+  ensuring a 400 or 500 series response is returned.
+- If the response at invocation matches the response provided at instantiation, it returns it
+  without further changes. This is an indication that some middleware at some point in the execution
+  chain called `$next()` with a new response instance.
+- If the response at invocation does not match the response provided at instantiation, or if no
+  response was provided at instantiation, it creates a 404 response, as the assumption is that no
+  middleware was capable of handling the request.
 
 ## HTTP Messages
 
