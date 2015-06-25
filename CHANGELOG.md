@@ -26,7 +26,11 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#12](https://github.com/zendframework/zend-stratigility/pull/12) updates
+  `FinalHandler` such that it will return the response provided at invocation
+  if it differs from the response at initialization (i.e., a new response
+  instance, or if the body size has changed). This allows you to safely call
+  `$next()` from all middleware in order to allow post-processing.
 
 ## 1.0.3 - TBD
 

@@ -441,4 +441,36 @@ class MiddlewarePipeTest extends TestCase
             )
         );
     }
+
+    /**
+     * Test that FinalHandler is passed the original response.
+     *
+     * Tests that MiddlewarePipe passes the original response passed to it when
+     * creating the FinalHandler instance, and that FinalHandler compares the
+     * response passed to it on invocation to its original response.
+     *
+     * If the two differ, the response passed during invocation should be
+     * returned unmodified; this is an indication that a middleware has provided
+     * a response, and is simply passing further up the chain to allow further
+     * processing (e.g., to allow an application-wide logger at the end of the
+     * request).
+     *
+     * @group nextChaining
+     */
+    public function testPassesOriginalResponseToFinalHandler()
+    {
+        $request  = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
+        $response = new Response();
+        $test     = new Response();
+
+        $pipeline = new MiddlewarePipe();
+        $pipeline->pipe(function ($req, $res, $next) use ($test) {
+            return $next($req, $test);
+        });
+
+        // Pipeline MUST return response passed to $next if it differs from the
+        // original.
+        $result = $pipeline($request, $response);
+        $this->assertSame($test, $result);
+    }
 }

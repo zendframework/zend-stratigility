@@ -121,4 +121,33 @@ class FinalHandlerTest extends TestCase
         $response = call_user_func($final, $request, $this->response, null);
         $this->assertContains($originalUrl, (string) $response->getBody());
     }
+
+    /**
+     * @group 12
+     */
+    public function testReturnsResponseIfItDoesNotMatchResponsePassedToConstructor()
+    {
+        $psrResponse = new PsrResponse();
+        $originalResponse = new Response($psrResponse);
+        $final = new FinalHandler([], $originalResponse);
+
+        $passedResponse = new Response($psrResponse);
+        $result = $final(new Request(new PsrRequest()), $passedResponse);
+        $this->assertSame($passedResponse, $result);
+    }
+
+    /**
+     * @group 12
+     */
+    public function testReturnsResponseIfBodyLengthHasChanged()
+    {
+        $psrResponse = new PsrResponse();
+        $response    = new Response($psrResponse);
+        $final       = new FinalHandler([], $response);
+
+        $response->write('return this response');
+
+        $result = $final(new Request(new PsrRequest()), $response);
+        $this->assertSame($response, $result);
+    }
 }
