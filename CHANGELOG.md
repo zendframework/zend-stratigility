@@ -6,7 +6,43 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 1.1.0 - TBD
+## 1.2.0 - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
+## 1.1.1 - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
+## 1.1.0 - 2015-06-25
 
 ### Added
 
@@ -31,24 +67,6 @@ details.
   if it differs from the response at initialization (i.e., a new response
   instance, or if the body size has changed). This allows you to safely call
   `$next()` from all middleware in order to allow post-processing.
-
-## 1.0.3 - TBD
-
-### Added
-
-- Nothing.
-
-### Deprecated
-
-- Nothing.
-
-### Removed
-
-- Nothing.
-
-### Fixed
-
-- Nothing.
 
 ## 1.0.2 - 2015-06-24
 
