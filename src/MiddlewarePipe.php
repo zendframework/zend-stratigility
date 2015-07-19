@@ -13,7 +13,6 @@ use InvalidArgumentException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use SplQueue;
-use Zend\Diactoros\Uri;
 
 /**
  * Pipe middleware like unix pipes.
