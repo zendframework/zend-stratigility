@@ -116,10 +116,10 @@ class Next
     /**
      * Reset the path, if a segment was previously stripped
      *
-     * @param Http\Request $request
-     * @return Http\Request
+     * @param ServerRequestInterface $request
+     * @return ServerRequestInterface
      */
-    private function resetPath(Http\Request $request)
+    private function resetPath(ServerRequestInterface $request)
     {
         if (! $this->removed) {
             return $request;
@@ -169,11 +169,11 @@ class Next
     /**
      * Strip the route from the request path
      *
-     * @param Http\Request $request
+     * @param ServerRequestInterface $request
      * @param string $route
-     * @return Http\Request
+     * @return ServerRequestInterface
      */
-    private function stripRouteFromPath(Http\Request $request, $route)
+    private function stripRouteFromPath(ServerRequestInterface $request, $route)
     {
         $this->removed = $route;
 
