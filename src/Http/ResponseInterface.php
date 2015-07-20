@@ -12,7 +12,7 @@ namespace Zend\Stratigility\Http;
 /**
  * Response convenience methods
  *
- * Defines the following respones capabilities:
+ * Defines the following responses capabilities:
  *
  * - Write to the content
  * - End the response (mark it complete)
