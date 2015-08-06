@@ -9,12 +9,10 @@
 
 namespace Zend\Stratigility;
 
-use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use SplQueue;
-use Zend\Diactoros\Uri;
 
 /**
  * Iterate a queue of middlewares and execute them.
