@@ -38,7 +38,8 @@ class Request implements ServerRequestInterface
     private $psrRequest;
 
     /**
-     * @param ServerRequestInterface $request
+     * @param ServerRequestInterface $decoratedRequest
+     * @param null|ServerRequestInterface $originalRequest
      */
     public function __construct(
         ServerRequestInterface $decoratedRequest,
