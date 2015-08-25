@@ -40,7 +40,10 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#25](https://github.com/zendframework/zend-stratigility/pull/25) modifies the
+  constructor of `Next` to clone the incoming `SplQueue` instance, ensuring the
+  original can be re-used for subsequent invocations (e.g., within an async
+  listener environment such as React).
 
 ## 1.1.0 - 2015-06-25
 
