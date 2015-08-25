@@ -40,12 +40,16 @@ class Next
     private $removed = '';
 
     /**
+     * Constructor.
+     *
+     * Clones the queue provided to allow re-use.
+     *
      * @param SplQueue $queue
      * @param callable $done
      */
     public function __construct(SplQueue $queue, callable $done)
     {
-        $this->queue    = $queue;
+        $this->queue    = clone $queue;
         $this->done     = $done;
 
         $this->dispatch = new Dispatch();

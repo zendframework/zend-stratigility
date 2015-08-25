@@ -10,6 +10,7 @@
 namespace ZendTest\Stratigility;
 
 use PHPUnit_Framework_TestCase as TestCase;
+use ReflectionProperty;
 use SplQueue;
 use Zend\Diactoros\ServerRequest as PsrRequest;
 use Zend\Diactoros\Response as PsrResponse;
@@ -305,5 +306,24 @@ class NextTest extends TestCase
         $next    = new Next($this->queue, $done);
         $result  = $next($request, $this->response);
         $this->assertSame($this->response, $result);
+    }
+
+    /**
+     * @group 25
+     */
+    public function testNextShouldCloneQueueOnInstantiation()
+    {
+        $phpunit = $this;
+        $done = function ($req, $res, $err) use ($phpunit) {
+            $phpunit->fail('Should not hit final handler');
+        };
+        $next = new Next($this->queue, $done);
+
+        $r = new ReflectionProperty($next, 'queue');
+        $r->setAccessible(true);
+        $queue = $r->getValue($next);
+
+        $this->assertNotSame($this->queue, $queue);
+        $this->assertEquals($this->queue, $queue);
     }
 }
