@@ -78,7 +78,7 @@ class FinalHandler
         }
 
         // Return provided response if it does not match the one provided at
-        // instantiation; this is an indication of calling `$next` in the fina
+        // instantiation; this is an indication of calling `$next` in the final
         // registered middleware and providing a new response instance.
         if ($this->response && $this->response !== $response) {
             return $response;
