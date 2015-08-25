@@ -24,7 +24,7 @@ details.
 
 - Nothing.
 
-## 1.1.1 - TBD
+## 1.1.1 - 2015-08-25
 
 ### Added
 
