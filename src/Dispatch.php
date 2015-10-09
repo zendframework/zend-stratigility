@@ -10,6 +10,8 @@
 namespace Zend\Stratigility;
 
 use Exception;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Dispatch middleware
@@ -42,15 +44,15 @@ class Dispatch
      *
      * @param Route $route
      * @param mixed $err
-     * @param Http\Request $request
-     * @param Http\Response $response
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
      * @param callable $next
      */
     public function __invoke(
         Route $route,
         $err,
-        Http\Request $request,
-        Http\Response $response,
+        ServerRequestInterface $request,
+        ResponseInterface $response,
         callable $next
     ) {
         $handler  = $route->handler;
