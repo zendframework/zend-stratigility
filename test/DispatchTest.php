@@ -10,6 +10,8 @@
 namespace ZendTest\Stratigility;
 
 use PHPUnit_Framework_TestCase as TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use Zend\Stratigility\Dispatch;
 use Zend\Stratigility\Route;
@@ -174,5 +176,27 @@ class DispatchTest extends TestCase
         $err = (object) ['error' => true];
         $result = $dispatch($route, $err, $this->request, $this->response, $next);
         $this->assertSame($this->response, $result);
+    }
+
+    /**
+     * @group 28
+     */
+    public function testShouldAllowDispatchingPsr7Instances()
+    {
+        $phpunit = $this;
+        $handler = function ($req, $res, $next) {
+            return $res;
+        };
+        $next = function ($req, $res, $err) use ($phpunit) {
+            $phpunit->fail('Next was called; it should not have been');
+        };
+
+        $request  = $this->prophesize('Psr\Http\Message\ServerRequestInterface');
+        $response = $this->prophesize('Psr\Http\Message\ResponseInterface');
+        $dispatch = new Dispatch();
+        $route    = new Route('/foo', $handler);
+        $err      = null;
+        $result = $dispatch($route, $err, $request->reveal(), $response->reveal(), $next);
+        $this->assertSame($response->reveal(), $result);
     }
 }
