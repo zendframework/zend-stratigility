@@ -6,7 +6,7 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 1.1.2 - TBD
+## 1.1.2 - 2015-10-09
 
 ### Added
 
@@ -22,7 +22,11 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#32](https://github.com/zendframework/zend-stratigility/pull/32) updates the
+  request and response typehints in `Zend\Stratigility\Dispatch` to use the
+  corresponding PSR-7 interfaces, instead of the Stratigility-specific
+  decorators. This fixes issues when calling `$next()` with non-Stratigility
+  instances of either.
 
 ## 1.1.1 - 2015-08-25
 
