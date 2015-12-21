@@ -108,7 +108,7 @@ class MiddlewarePipe implements MiddlewareInterface
 
         // Ensure we have a valid handler
         if (! is_callable($middleware)) {
-            throw InvalidMiddlewareException($middleware);
+            throw InvalidMiddlewareException::fromValue($middleware);
         }
 
         $this->pipeline->enqueue(new Route(
