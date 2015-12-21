@@ -108,7 +108,7 @@ class MiddlewarePipe implements MiddlewareInterface
 
         // Ensure we have a valid handler
         if (! is_callable($middleware)) {
-            throw new InvalidArgumentException('Middleware must be callable');
+            throw InvalidMiddlewareException($middleware);
         }
 
         $this->pipeline->enqueue(new Route(
