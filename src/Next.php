@@ -164,8 +164,8 @@ class Next
         if ($route === '/') {
             return '/';
         }
-
-        return (strlen($path) > strlen($route)) ? $path[strlen($route)] : '';
+        $routeLength = strlen($route);
+        return (strlen($path) > $routeLength) ? $path[$routeLength] : '';
     }
 
     /**
