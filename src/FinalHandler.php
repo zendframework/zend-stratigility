@@ -44,12 +44,9 @@ class FinalHandler
      */
     public function __construct(array $options = [], ResponseInterface $response = null)
     {
-        $this->options  = $options;
-        $this->response = $response;
+        $this->options = $options;
 
-        if ($response) {
-            $this->bodySize = $response->getBody()->getSize();
-        }
+        $this->setOriginalResponse($response);
     }
 
     /**
@@ -95,6 +92,20 @@ class FinalHandler
         }
 
         return $this->create404($request, $response);
+    }
+
+    /**
+     * Set the original response and response body size for comparison.
+     *
+     * @param ResponseInterface $response
+     */
+    public function setOriginalResponse(ResponseInterface $response = null)
+    {
+        $this->response = $response;
+
+        if ($response) {
+            $this->bodySize = $response->getBody()->getSize();
+        }
     }
 
     /**

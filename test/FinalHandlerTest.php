@@ -176,4 +176,19 @@ class FinalHandlerTest extends TestCase
         $result = $final(new Request(new PsrRequest()), $response);
         $this->assertSame($response, $result);
     }
+
+    public function testCanReplaceOriginalResponseAndBodySizeAfterConstruction()
+    {
+        $psrResponse = new PsrResponse();
+        $originalResponse = new Response(new PsrResponse());
+        $originalResponse->write('foo');
+
+        $final = new FinalHandler([], $psrResponse);
+        $final->setOriginalResponse($originalResponse);
+
+        /** @var Response $actualResponse */
+        $actualResponse = self::readAttribute($final, 'response');
+        $this->assertSame($originalResponse, $actualResponse);
+        $this->assertSame(3, $actualResponse->getBody()->getSize());
+    }
 }
