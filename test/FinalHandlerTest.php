@@ -54,6 +54,7 @@ class FinalHandlerTest extends TestCase
     public function testInvokingWithErrorInNonProductionModeSetsResponseBodyToError()
     {
         $error    = 'error';
+        $this->final = new FinalHandler(['env' => 'not-production']);
         $response = call_user_func($this->final, $this->request, $this->response, $error);
         $this->assertEquals($error, (string) $response->getBody());
     }
@@ -61,6 +62,7 @@ class FinalHandlerTest extends TestCase
     public function testInvokingWithExceptionInNonProductionModeIncludesExceptionMessageInResponseBody()
     {
         $error    = new Exception('foo', 400);
+        $this->final = new FinalHandler(['env' => 'not-production']);
         $response = call_user_func($this->final, $this->request, $this->response, $error);
         $expected = $this->escaper->escapeHtml($error->getMessage());
         $this->assertContains($expected, (string) $response->getBody());
@@ -69,9 +71,33 @@ class FinalHandlerTest extends TestCase
     public function testInvokingWithExceptionInNonProductionModeIncludesTraceInResponseBody()
     {
         $error    = new Exception('foo', 400);
+        $this->final = new FinalHandler(['env' => 'not-production']);
         $response = call_user_func($this->final, $this->request, $this->response, $error);
         $expected = $this->escaper->escapeHtml($error->getTraceAsString());
         $this->assertContains($expected, (string) $response->getBody());
+    }
+
+    public function testInvokingWithErrorAndNoEnvironmentModeSetDoesNotSetResponseBodyToError()
+    {
+        $error    = 'error';
+        $response = call_user_func($this->final, $this->request, $this->response, $error);
+        $this->assertNotEquals($error, (string) $response->getBody());
+    }
+
+    public function testInvokingWithExceptionAndNoEnvironmentModeSetDoesNotIncludeExceptionMessageInResponseBody()
+    {
+        $error    = new Exception('foo', 400);
+        $response = call_user_func($this->final, $this->request, $this->response, $error);
+        $expected = $this->escaper->escapeHtml($error->getMessage());
+        $this->assertNotContains($expected, (string) $response->getBody());
+    }
+
+    public function testInvokingWithExceptionAndNoEnvironmentModeSetDoesNotIncludeTraceInResponseBody()
+    {
+        $error    = new Exception('foo', 400);
+        $response = call_user_func($this->final, $this->request, $this->response, $error);
+        $expected = $this->escaper->escapeHtml($error->getTraceAsString());
+        $this->assertNotContains($expected, (string) $response->getBody());
     }
 
     public function testInvokingWithErrorInProductionSetsResponseToReasonPhrase()

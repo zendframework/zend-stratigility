@@ -114,9 +114,7 @@ class FinalHandler
         );
 
         $message = $response->getReasonPhrase() ?: 'Unknown Error';
-        if (! isset($this->options['env'])
-            || $this->options['env'] !== 'production'
-        ) {
+        if (isset($this->options['env']) && $this->options['env'] !== 'production') {
             $message = $this->createDevelopmentErrorMessage($error);
         }
 
