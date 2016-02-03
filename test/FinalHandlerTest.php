@@ -136,6 +136,13 @@ class FinalHandlerTest extends TestCase
         $this->assertEquals(404, $response->getStatusCode());
     }
 
+    public function testErrorResponsePreservesOriginalReasonPhraseIfSet()
+    {
+        $this->response = $this->response->withStatus(500, 'It broke!');
+        $response = call_user_func($this->final, $this->request, $this->response, new \Exception('foo'));
+        $this->assertSame($this->response->getReasonPhrase(), $response->getReasonPhrase());
+    }
+
     public function test404ResponseIncludesOriginalRequestUri()
     {
         $originalUrl = 'http://local.example.com/bar/foo';

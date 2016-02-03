@@ -121,7 +121,8 @@ class FinalHandler
     private function handleError($error, RequestInterface $request, ResponseInterface $response)
     {
         $response = $response->withStatus(
-            Utils::getStatusCode($error, $response)
+            Utils::getStatusCode($error, $response),
+            $response->getReasonPhrase()
         );
 
         $message = $response->getReasonPhrase() ?: 'Unknown Error';
