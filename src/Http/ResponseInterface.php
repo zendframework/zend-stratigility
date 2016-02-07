@@ -50,4 +50,18 @@ interface ResponseInterface
      * @return bool
      */
     public function isComplete();
+
+    /**
+     * Write data to the response body with JSON encode and
+     * prepare to return an HTTP JSON response to the client.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @param  mixed  $data   The data
+     * @param  int    $status The HTTP status code.
+     * @param  int    $encodingOptions Json encoding options
+     *
+     * @return self
+     */
+    public function writeJson($data, $status = null, $encodingOptions = 0);
 }
