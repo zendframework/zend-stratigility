@@ -11,6 +11,7 @@ namespace Zend\Stratigility\Http;
 
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use InvalidArgumentException;
 
 /**
  * Response decorator
@@ -56,6 +57,7 @@ class Response implements
      * Proxies to the underlying stream and writes the provided data to it.
      *
      * @param string $data
+     * @return self
      */
     public function write($data)
     {
@@ -77,6 +79,7 @@ class Response implements
      * prior to marking the response as complete.
      *
      * @param string $data
+     * @return self
      */
     public function end($data = null)
     {
@@ -269,5 +272,62 @@ class Response implements
     public function getReasonPhrase()
     {
         return $this->psrResponse->getReasonPhrase();
+    }
+
+    /**
+     * Write data to the response body with JSON encode and
+     * prepare to return an HTTP JSON response to the client.
+     *
+     * Note: This method is not part of the PSR-7 standard.
+     *
+     * @param  mixed  $data   The data
+     * @param  int    $status The HTTP status code.
+     * @param  int    $encodingOptions Json encoding options
+     *
+     * @return self
+     */
+    public function writeJson($data, $status = null, $encodingOptions = 0)
+    {
+        $body = $this->getBody();
+        $body->rewind();
+        $body->write($json = $this->jsonEncode($data, $encodingOptions));
+
+        $responseWithJson = $this->withHeader('Content-Type', 'application/json;charset=utf-8');
+
+        if (isset($status)) {
+            return $responseWithJson->withStatus($status);
+        }
+
+        return $responseWithJson;
+    }
+
+    /**
+     * Encode the provided data to JSON.
+     *
+     * @param mixed $data
+     * @param int $encodingOptions
+     * @return string
+     * @throws InvalidArgumentException if unable to encode the $data to JSON.
+     */
+    private function jsonEncode($data, $encodingOptions)
+    {
+        if (is_resource($data)) {
+            throw new InvalidArgumentException('Cannot JSON encode resources');
+        }
+
+        // Clear json_last_error()
+        json_encode(null);
+
+        $json = json_encode($data, $encodingOptions);
+
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            throw new InvalidArgumentException(sprintf(
+                'Unable to encode data to JSON in %s: %s',
+                __CLASS__,
+                json_last_error_msg()
+            ));
+        }
+
+        return $json;
     }
 }
