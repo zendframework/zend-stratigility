@@ -81,10 +81,10 @@ class Dispatch
             if (! $hasError && $arity < 4) {
                 return call_user_func($handler, $request, $response, $next);
             }
-        } catch (Throwable $t) {
-            $err = $t;
-        } catch (Exception $e) {
-            $err = $e;
+        } catch (Throwable $throwable) {
+            return $next($request, $response, $throwable);
+        } catch (Exception $exception) {
+            return $next($request, $response, $exception);
         }
 
         return $next($request, $response, $err);
