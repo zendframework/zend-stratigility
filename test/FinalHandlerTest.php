@@ -81,7 +81,8 @@ class FinalHandlerTest extends TestCase
     {
         $prev     = new \Exception('boobar', 500);
         $error    = new Exception('foo', 400, $prev);
-        $response = call_user_func($this->final, $this->request, $this->response, $error);
+        $final    = new FinalHandler(['env' => 'development'], $this->response);
+        $response = call_user_func($final, $this->request, $this->response, $error);
         $expected = $this->escaper->escapeHtml($error->getTraceAsString());
         $body = (string) $response->getBody();
         $this->assertContains($expected, $body);
