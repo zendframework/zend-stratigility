@@ -8,6 +8,11 @@ details.
 
 ## 1.2.0 - TBD
 
+This release contains one potential backwards compatibility break. In versions
+prior to 1.2.0, after `Zend\Stratigility\Http\Response::end()` was called,
+`with*()` operations were performed as no-ops, which led to hard-to-detect
+errors. Starting with 1.2.0, they now raise a `RuntimeException`.
+
 ### Added
 
 - Nothing.
@@ -22,7 +27,9 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#30](https://github.com/zendframework/zend-stratigility/pull/30) updates the
+  `Response` implementation to raise exceptions from `with*()` methods if they
+  are called after `end()`.
 
 ## 1.1.3 - TBD
 
