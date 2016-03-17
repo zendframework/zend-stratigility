@@ -74,6 +74,18 @@ class FinalHandlerTest extends TestCase
         $this->assertContains($expected, (string) $response->getBody());
     }
 
+    public function testInvokingWithExceptionInNonProductionModeIncludesPrevTraceInResponseBody()
+    {
+        $prev     = new \Exception('boobar', 500);
+        $error    = new Exception('foo', 400, $prev);
+        $response = call_user_func($this->final, $this->request, $this->response, $error);
+        $expected = $this->escaper->escapeHtml($error->getTraceAsString());
+        $body = (string) $response->getBody();
+        $this->assertContains($expected, $body);
+        $this->assertContains('boobar', $body);
+        $this->assertContains('foo', $body);
+    }
+
     public function testInvokingWithErrorInProductionSetsResponseToReasonPhrase()
     {
         $final = new FinalHandler([
