@@ -63,7 +63,7 @@ class ResponseTest extends TestCase
             ['withHeader', ['X-Foo', 'Foo']],
             ['withAddedHeader', ['X-Foo', 'Foo']],
             ['withoutHeader', ['X-Foo']],
-            ['withBody', [$this->prophesize(StreamInterface::class)->reveal()]],
+            ['withBody', [$this->prophesize('Psr\Http\Message\StreamInterface')->reveal()]],
             ['write', ['MOAR!']],
         ];
     }

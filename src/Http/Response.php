@@ -283,8 +283,7 @@ class Response implements
     private function responseIsAlreadyCompleted($detectedInMethod)
     {
         return new RuntimeException(sprintf(
-            'Calling %s::%s is not possible. Response is already completed',
-            __CLASS__,
+            'Calling %s is not possible, as the response is already marked as completed.',
             $detectedInMethod
         ));
     }
