@@ -8,10 +8,17 @@ details.
 
 ## 1.2.0 - TBD
 
-This release contains one potential backwards compatibility break. In versions
-prior to 1.2.0, after `Zend\Stratigility\Http\Response::end()` was called,
-`with*()` operations were performed as no-ops, which led to hard-to-detect
-errors. Starting with 1.2.0, they now raise a `RuntimeException`.
+This release contains two potential backwards compatibility breaks:
+
+- In versions prior to 1.2.0, after `Zend\Stratigility\Http\Response::end()` was
+  called, `with*()` operations were performed as no-ops, which led to
+  hard-to-detect errors. Starting with 1.2.0, they now raise a
+  `RuntimeException`.
+
+- In versions prior to 1.2.0, `Zend\Stratigility\FinalHandler` always provided
+  exception details in the response payload for errors. Starting with 1.2.0, it
+  only does so if not in a production environment (which is the default
+  environment).
 
 ### Added
 
@@ -20,6 +27,9 @@ errors. Starting with 1.2.0, they now raise a `RuntimeException`.
   provides an exception message detailing the invalid type. `MiddlewarePipe` now
   throws this exception from the `pipe()` method when a non-callable value is
   provided.
+- [#46](https://github.com/zendframework/zend-stratigility/pull/46) adds
+  `FinalHandler::setOriginalResponse()`, allowing you to alter the response used
+  for comparisons when the `FinalHandler` is invoked.
 
 ### Deprecated
 
@@ -34,6 +44,10 @@ errors. Starting with 1.2.0, they now raise a `RuntimeException`.
 - [#30](https://github.com/zendframework/zend-stratigility/pull/30) updates the
   `Response` implementation to raise exceptions from `with*()` methods if they
   are called after `end()`.
+- [#46](https://github.com/zendframework/zend-stratigility/pull/46) fixes the
+  behavior of `FinalHandler::handleError()` to only display exception details
+  when not in production environments, and changes the default environment to
+  production.
 
 ## 1.1.3 - TBD
 
