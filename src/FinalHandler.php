@@ -44,12 +44,9 @@ class FinalHandler
      */
     public function __construct(array $options = [], ResponseInterface $response = null)
     {
-        $this->options  = $options;
-        $this->response = $response;
+        $this->options = $options;
 
-        if ($response) {
-            $this->bodySize = $response->getBody()->getSize();
-        }
+        $this->setOriginalResponse($response);
     }
 
     /**
@@ -98,6 +95,20 @@ class FinalHandler
     }
 
     /**
+     * Set the original response and response body size for comparison.
+     *
+     * @param ResponseInterface $response
+     */
+    public function setOriginalResponse(ResponseInterface $response = null)
+    {
+        $this->response = $response;
+
+        if ($response) {
+            $this->bodySize = $response->getBody()->getSize();
+        }
+    }
+
+    /**
      * Handle an error condition
      *
      * Use the $error to create details for the response.
@@ -110,13 +121,12 @@ class FinalHandler
     private function handleError($error, RequestInterface $request, ResponseInterface $response)
     {
         $response = $response->withStatus(
-            Utils::getStatusCode($error, $response)
+            Utils::getStatusCode($error, $response),
+            $response->getReasonPhrase()
         );
 
         $message = $response->getReasonPhrase() ?: 'Unknown Error';
-        if (! isset($this->options['env'])
-            || $this->options['env'] !== 'production'
-        ) {
+        if (isset($this->options['env']) && $this->options['env'] !== 'production') {
             $message = $this->createDevelopmentErrorMessage($error);
         }
 

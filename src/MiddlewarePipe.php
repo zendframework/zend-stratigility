@@ -9,7 +9,7 @@
 
 namespace Zend\Stratigility;
 
-use InvalidArgumentException;
+use Zend\Stratigility\Exception\InvalidMiddlewareException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use SplQueue;
@@ -108,7 +108,7 @@ class MiddlewarePipe implements MiddlewareInterface
 
         // Ensure we have a valid handler
         if (! is_callable($middleware)) {
-            throw new InvalidArgumentException('Middleware must be callable');
+            throw InvalidMiddlewareException::fromValue($middleware);
         }
 
         $this->pipeline->enqueue(new Route(

@@ -54,6 +54,7 @@ class FinalHandlerTest extends TestCase
     public function testInvokingWithErrorInNonProductionModeSetsResponseBodyToError()
     {
         $error    = 'error';
+        $this->final = new FinalHandler(['env' => 'not-production']);
         $response = call_user_func($this->final, $this->request, $this->response, $error);
         $this->assertEquals($error, (string) $response->getBody());
     }
@@ -61,6 +62,7 @@ class FinalHandlerTest extends TestCase
     public function testInvokingWithExceptionInNonProductionModeIncludesExceptionMessageInResponseBody()
     {
         $error    = new Exception('foo', 400);
+        $this->final = new FinalHandler(['env' => 'not-production']);
         $response = call_user_func($this->final, $this->request, $this->response, $error);
         $expected = $this->escaper->escapeHtml($error->getMessage());
         $this->assertContains($expected, (string) $response->getBody());
@@ -69,6 +71,7 @@ class FinalHandlerTest extends TestCase
     public function testInvokingWithExceptionInNonProductionModeIncludesTraceInResponseBody()
     {
         $error    = new Exception('foo', 400);
+        $this->final = new FinalHandler(['env' => 'not-production']);
         $response = call_user_func($this->final, $this->request, $this->response, $error);
         $expected = $this->escaper->escapeHtml($error->getTraceAsString());
         $this->assertContains($expected, (string) $response->getBody());
@@ -78,12 +81,36 @@ class FinalHandlerTest extends TestCase
     {
         $prev     = new \Exception('boobar', 500);
         $error    = new Exception('foo', 400, $prev);
-        $response = call_user_func($this->final, $this->request, $this->response, $error);
+        $final    = new FinalHandler(['env' => 'development'], $this->response);
+        $response = call_user_func($final, $this->request, $this->response, $error);
         $expected = $this->escaper->escapeHtml($error->getTraceAsString());
         $body = (string) $response->getBody();
         $this->assertContains($expected, $body);
         $this->assertContains('boobar', $body);
         $this->assertContains('foo', $body);
+    }
+
+    public function testInvokingWithErrorAndNoEnvironmentModeSetDoesNotSetResponseBodyToError()
+    {
+        $error    = 'error';
+        $response = call_user_func($this->final, $this->request, $this->response, $error);
+        $this->assertNotEquals($error, (string) $response->getBody());
+    }
+
+    public function testInvokingWithExceptionAndNoEnvironmentModeSetDoesNotIncludeExceptionMessageInResponseBody()
+    {
+        $error    = new Exception('foo', 400);
+        $response = call_user_func($this->final, $this->request, $this->response, $error);
+        $expected = $this->escaper->escapeHtml($error->getMessage());
+        $this->assertNotContains($expected, (string) $response->getBody());
+    }
+
+    public function testInvokingWithExceptionAndNoEnvironmentModeSetDoesNotIncludeTraceInResponseBody()
+    {
+        $error    = new Exception('foo', 400);
+        $response = call_user_func($this->final, $this->request, $this->response, $error);
+        $expected = $this->escaper->escapeHtml($error->getTraceAsString());
+        $this->assertNotContains($expected, (string) $response->getBody());
     }
 
     public function testInvokingWithErrorInProductionSetsResponseToReasonPhrase()
@@ -120,6 +147,13 @@ class FinalHandlerTest extends TestCase
     {
         $response = call_user_func($this->final, $this->request, $this->response, null);
         $this->assertEquals(404, $response->getStatusCode());
+    }
+
+    public function testErrorResponsePreservesOriginalReasonPhraseIfSet()
+    {
+        $this->response = $this->response->withStatus(500, 'It broke!');
+        $response = call_user_func($this->final, $this->request, $this->response, new \Exception('foo'));
+        $this->assertSame($this->response->getReasonPhrase(), $response->getReasonPhrase());
     }
 
     public function test404ResponseIncludesOriginalRequestUri()
@@ -161,5 +195,20 @@ class FinalHandlerTest extends TestCase
 
         $result = $final(new Request(new PsrRequest()), $response);
         $this->assertSame($response, $result);
+    }
+
+    public function testCanReplaceOriginalResponseAndBodySizeAfterConstruction()
+    {
+        $psrResponse = new PsrResponse();
+        $originalResponse = new Response(new PsrResponse());
+        $originalResponse->write('foo');
+
+        $final = new FinalHandler([], $psrResponse);
+        $final->setOriginalResponse($originalResponse);
+
+        /** @var Response $actualResponse */
+        $actualResponse = self::readAttribute($final, 'response');
+        $this->assertSame($originalResponse, $actualResponse);
+        $this->assertSame(3, $actualResponse->getBody()->getSize());
     }
 }

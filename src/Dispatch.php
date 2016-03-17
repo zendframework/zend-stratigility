@@ -10,6 +10,7 @@
 namespace Zend\Stratigility;
 
 use Exception;
+use Throwable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -80,8 +81,10 @@ class Dispatch
             if (! $hasError && $arity < 4) {
                 return $handler($request, $response, $next);
             }
-        } catch (Exception $e) {
-            $err = $e;
+        } catch (Throwable $throwable) {
+            return $next($request, $response, $throwable);
+        } catch (Exception $exception) {
+            return $next($request, $response, $exception);
         }
 
         return $next($request, $response, $err);
