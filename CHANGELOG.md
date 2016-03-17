@@ -35,7 +35,11 @@ errors. Starting with 1.2.0, they now raise a `RuntimeException`.
 
 ### Added
 
-- Nothing.
+- [#36](https://github.com/zendframework/zend-stratigility/pull/36) adds a new
+  `InvalidMiddlewareException`, with the static factory `fromValue()` that
+  provides an exception message detailing the invalid type. `MiddlewarePipe` now
+  throws this exception from the `pipe()` method when a non-callable value is
+  provided.
 
 ### Deprecated
 
