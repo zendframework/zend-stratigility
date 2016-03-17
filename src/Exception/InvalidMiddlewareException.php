@@ -13,6 +13,12 @@ use InvalidArgumentException;
 
 class InvalidMiddlewareException extends InvalidArgumentException
 {
+    /**
+     * Create and return an InvalidArgumentException detailing the invalid middleware type.
+     *
+     * @param mixed $value
+     * @return InvalidArgumentException
+     */
     public static function fromValue($value)
     {
         $received = gettype($value);
