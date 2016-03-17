@@ -52,7 +52,7 @@ This release contains two potential backwards compatibility breaks:
   when not in production environments, and changes the default environment to
   production.
 
-## 1.1.3 - TBD
+## 1.1.3 - 2016-03-17
 
 ### Added
 
