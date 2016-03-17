@@ -13,6 +13,8 @@ use PHPUnit_Framework_TestCase as TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
+use stdClass;
+use TypeError;
 use Zend\Stratigility\Dispatch;
 use Zend\Stratigility\Route;
 
@@ -216,7 +218,7 @@ class DispatchTest extends TestCase
      */
     public function testWillCatchPhp7Throwable()
     {
-        $callableWithHint = function (\stdClass $parameter) {
+        $callableWithHint = function (stdClass $parameter) {
             // will not be executed
         };
 
@@ -231,7 +233,7 @@ class DispatchTest extends TestCase
             ->with(
                 $this->request,
                 $this->response,
-                self::callback(function (\TypeError $throwable) {
+                self::callback(function (TypeError $throwable) {
                     self::assertStringStartsWith(
                         'Argument 1 passed to ZendTest\Stratigility\DispatchTest::ZendTest\Stratigility\{closure}()'
                         . ' must be an instance of stdClass, string given',
