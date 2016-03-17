@@ -30,6 +30,9 @@ This release contains two potential backwards compatibility breaks:
 - [#46](https://github.com/zendframework/zend-stratigility/pull/46) adds
   `FinalHandler::setOriginalResponse()`, allowing you to alter the response used
   for comparisons when the `FinalHandler` is invoked.
+- [#37](https://github.com/zendframework/zend-stratigility/pull/37) and
+  [#49](https://github.com/zendframework/zend-stratigility/pull/49) add
+  support in `Zend\Stratigility\Dispatch` to catch PHP 7 `Throwable`s.
 
 ### Deprecated
 
