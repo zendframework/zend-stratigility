@@ -22,7 +22,9 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#39](https://github.com/zendframework/zend-stratigility/pull/39) updates the
+  FinalHandler to ensure that emitted exception messages include previous
+  exceptions.
 
 ## 1.1.2 - 2015-10-09
 
