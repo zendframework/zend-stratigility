@@ -161,11 +161,11 @@ class Next
      */
     private function getBorder($path, $route)
     {
-        $border = (strlen($path) > strlen($route))
-            ? $path[strlen($route)]
-            : '';
-        $border = ($route === '/') ? '/' : $border;
-        return $border;
+        if ($route === '/') {
+            return '/';
+        }
+        $routeLength = strlen($route);
+        return (strlen($path) > $routeLength) ? $path[$routeLength] : '';
     }
 
     /**
