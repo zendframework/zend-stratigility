@@ -24,6 +24,24 @@ details.
 
 - Nothing.
 
+## 1.2.2 - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
 ## 1.2.1 - 2016-03-24
 
 ### Added
