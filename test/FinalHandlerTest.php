@@ -21,6 +21,26 @@ use Zend\Stratigility\Http\Response;
 
 class FinalHandlerTest extends TestCase
 {
+    /**
+     * @var Escaper
+     */
+    private $escaper;
+
+    /**
+     * @var FinalHandler
+     */
+    private $final;
+
+    /**
+     * @var Request
+     */
+    private $request;
+
+    /**
+     * @var Response
+     */
+    private $response;
+
     public function setUp()
     {
         $psrRequest     = new PsrRequest([], [], 'http://example.com/', 'GET', 'php://memory');
@@ -149,11 +169,17 @@ class FinalHandlerTest extends TestCase
         $this->assertEquals(404, $response->getStatusCode());
     }
 
-    public function testErrorResponsePreservesOriginalReasonPhraseIfSet()
+    public function testErrorResponsePreservesResponseReasonPhraseIfStatusCodeMatchesExceptionCode()
     {
         $this->response = $this->response->withStatus(500, 'It broke!');
-        $response = call_user_func($this->final, $this->request, $this->response, new \Exception('foo'));
+        $response = call_user_func($this->final, $this->request, $this->response, new \Exception('foo', 500));
         $this->assertSame($this->response->getReasonPhrase(), $response->getReasonPhrase());
+    }
+
+    public function testErrorResponseUsesStandardHttpStatusCodeReasonPhraseIfExceptionCodeCausesStatusCodeToChange()
+    {
+        $response = call_user_func($this->final, $this->request, $this->response, new \Exception('foo', 418));
+        $this->assertSame("I'm a teapot", $response->getReasonPhrase());
     }
 
     public function test404ResponseIncludesOriginalRequestUri()
