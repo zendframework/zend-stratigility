@@ -11,6 +11,7 @@ namespace ZendTest\Stratigility;
 
 use Exception;
 use PHPUnit_Framework_TestCase as TestCase;
+use Psr\Http\Message\StreamInterface;
 use Zend\Diactoros\ServerRequest as PsrRequest;
 use Zend\Diactoros\Response as PsrResponse;
 use Zend\Diactoros\Uri;
@@ -236,5 +237,113 @@ class FinalHandlerTest extends TestCase
         $actualResponse = self::readAttribute($final, 'response');
         $this->assertSame($originalResponse, $actualResponse);
         $this->assertSame(3, $actualResponse->getBody()->getSize());
+    }
+
+    /**
+     * @group 53
+     */
+    public function testShouldNotMarkStratigilityResponseAsCompleteWhenHandlingErrors()
+    {
+        $error = new Exception('Exception message', 501);
+
+        $response = $this->prophesize('Zend\Stratigility\Http\Response');
+        $response->getStatusCode()->willReturn(200);
+        $response->withStatus(501, '')->will(function () use ($response) {
+            return $response->reveal();
+        });
+        $response->getReasonPhrase()->willReturn('Not Implemented');
+        $response->write('Not Implemented')->will(function () use ($response) {
+            return $response->reveal();
+        });
+
+        $final = new FinalHandler([], new Response(new PsrResponse()));
+        $this->assertSame($response->reveal(), $final(
+            $this->prophesize('Zend\Stratigility\Http\Request')->reveal(),
+            $response->reveal(),
+            $error
+        ));
+    }
+
+    /**
+     * @group 53
+     */
+    public function testShouldNotDecoratePsrResponseAsStratigilityCompletedResponseWhenHandlingErrors()
+    {
+        $error = new Exception('Exception message', 501);
+
+        $response = (new PsrResponse())
+            ->withStatus(200);
+
+        $final = new FinalHandler([], new Response(new PsrResponse()));
+        $test = $final(
+            $this->prophesize('Zend\Stratigility\Http\Request')->reveal(),
+            $response,
+            $error
+        );
+
+        $this->assertInstanceOf('Zend\Stratigility\Http\Response', $test);
+        $this->assertSame(501, $test->getStatusCode());
+        $this->assertSame('Not Implemented', $test->getReasonPhrase());
+
+        $body = $test->getBody();
+        $body->rewind();
+        $this->assertContains('Not Implemented', $body->getContents());
+    }
+
+    /**
+     * @group 53
+     */
+    public function testShouldNotMarkStratigilityResponseAsCompleteWhenCreating404s()
+    {
+        $body     = $this->prophesize('Psr\Http\Message\StreamInterface');
+        $body->getSize()->willReturn(0)->shouldBeCalledTimes(2);
+
+        $response = $this->prophesize('Zend\Stratigility\Http\Response');
+        $response->getBody()->will(function () use ($body) {
+            return $body->reveal();
+        });
+        $response->withStatus(404)->will(function () use ($response) {
+            return $response->reveal();
+        });
+        $response
+            ->write("Cannot GET /foo\n")
+            ->will(function () use ($response) {
+                return $response->reveal();
+            })
+            ->shouldBeCalled();
+
+        $request = $this->prophesize('Zend\Diactoros\ServerRequest');
+        $request->getUri()->willReturn('/foo');
+        $request->getMethod()->willReturn('GET');
+
+        $final = new FinalHandler([], $response->reveal());
+        $this->assertSame($response->reveal(), $final(
+            $request->reveal(),
+            $response->reveal()
+        ));
+    }
+
+    /**
+     * @group 53
+     */
+    public function testShouldNotDecoratePsrResponseAsStratigilityCompletedResponseWhenCreating404s()
+    {
+        $response = new PsrResponse();
+
+        $request = $this->prophesize('Zend\Diactoros\ServerRequest');
+        $request->getUri()->willReturn('/foo');
+        $request->getMethod()->willReturn('GET');
+
+        $final = new FinalHandler([], $response);
+        $test = $final(
+            $request->reveal(),
+            $response
+        );
+        $this->assertInstanceOf('Zend\Stratigility\Http\Response', $test);
+        $this->assertSame(404, $test->getStatusCode());
+
+        $body = $test->getBody();
+        $body->rewind();
+        $this->assertContains('Cannot GET /foo', $body->getContents());
     }
 }

@@ -251,10 +251,10 @@ class FinalHandler
     private function completeResponse(ResponseInterface $response, $message)
     {
         if ($response instanceof Http\Response) {
-            return $response->end($message);
+            return $response->write($message);
         }
 
         $response = new Http\Response($response);
-        return $response->end($message);
+        return $response->write($message);
     }
 }

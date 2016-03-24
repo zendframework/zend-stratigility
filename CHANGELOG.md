@@ -24,7 +24,7 @@ details.
 
 - Nothing.
 
-## 1.2.1 - TBD
+## 1.2.1 - 2016-03-24
 
 ### Added
 
@@ -43,6 +43,12 @@ details.
 - [#52](https://github.com/zendframework/zend-stratigility/pull/52) fixes the
   behavior of the `FinalHandler` with regards to exception handling, ensuring
   that the reason phrase reported corresponds to the HTTP status code used.
+- [#54](https://github.com/zendframework/zend-stratigility/pull/54) modifies the
+  behavior of the `FinalHandler` when creating an error or 404 response to call
+  `write()` instead of `end()` on the response object. This fixes a lingering
+  issue with emitting the `Content-Length` header from the `SapiEmitter`, as
+  well as prevents the `SapiEmitter` from raising exceptions when doing so
+  (which was happening starting with 1.2.0).
 
 ## 1.2.0 - 2016-03-17
 
