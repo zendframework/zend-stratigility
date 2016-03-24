@@ -120,12 +120,13 @@ class FinalHandler
      */
     private function handleError($error, RequestInterface $request, ResponseInterface $response)
     {
-        $response = $response->withStatus(
-            Utils::getStatusCode($error, $response),
-            $response->getReasonPhrase()
-        );
-
+        $statusCode = Utils::getStatusCode($error, $response);
+        $reasonPhrase = $response->getStatusCode() === $statusCode
+                      ? $response->getReasonPhrase()
+                      : '';
+        $response = $response->withStatus($statusCode, $reasonPhrase);
         $message = $response->getReasonPhrase() ?: 'Unknown Error';
+
         if (isset($this->options['env']) && $this->options['env'] !== 'production') {
             $message = $this->createDevelopmentErrorMessage($error);
         }
