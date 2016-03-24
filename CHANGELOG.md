@@ -40,7 +40,9 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#52](https://github.com/zendframework/zend-stratigility/pull/52) fixes the
+  behavior of the `FinalHandler` with regards to exception handling, ensuring
+  that the reason phrase reported corresponds to the HTTP status code used.
 
 ## 1.2.0 - 2016-03-17
 
