@@ -28,7 +28,9 @@ details.
 
 ### Added
 
-- Nothing.
+- [#58](https://github.com/zendframework/zend-stratigility/pull/58) updates the
+  documentation to use mkdocs for generation, and pushes the documentation to
+  https://zendframework.github.io/zend-stratigility/
 
 ### Deprecated
 

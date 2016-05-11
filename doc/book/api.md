@@ -10,12 +10,12 @@ previously. Its API is:
 ```php
 class MiddlewarePipe implements MiddlewareInterface
 {
-    public function pipe($path, $middleware = null);
+    public function pipe(string|callable $path, callable $middleware = null);
     public function __invoke(
         Psr\Http\Message\ServerRequestInterface $request = null,
         Psr\Http\Message\ResponseInterface $response = null,
         callable $out = null
-    );
+    ) :  Psr\Http\Message\ResponseInterface;
 }
 ```
 
@@ -38,8 +38,7 @@ function (
     Psr\Http\Message\ServerRequestInterface $request,
     Psr\Http\Message\ResponseInterface $response,
     $err = null
-) {
-}
+) : Psr\Http\Message\ResponseInterface
 ```
 
 Internally, `MiddlewarePipe` creates an instance of `Zend\Stratigility\Next`, feeding it its queue,
@@ -63,7 +62,7 @@ class Next
         Psr\Http\Message\ServerRequestInterface $request,
         Psr\Http\Message\ResponseInterface $response,
         $err = null
-    );
+    ) : Psr\Http\Message\ResponseInterface;
 }
 ```
 
@@ -96,10 +95,7 @@ function ($request, $response, $next)
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $next(
-        $request,
-        $updated
-    );
+    return $next($request, $updated);
 }
 ```
 

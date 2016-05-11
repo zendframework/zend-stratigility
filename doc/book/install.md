@@ -11,7 +11,7 @@ Stratigility has the following dependencies (which are managed by Composer):
 - `psr/http-message`, which provides the interfaces specified in [PSR-7](http://www.php-fig.org/psr/psr-7),
   and type-hinted against in this package. In order to use Stratigility, you will need an
   implementation of PSR-7; one such package is
-  [zendframework/zend-diactoros](https://github.com/zendframework/zend-diactoros).
+  [Diactoros](https://zendframework.github.io/zend-diactoros/).
 
 - `zendframework/zend-escaper`, used by the `FinalHandler` for escaping error messages prior to
   passing them to the response.
