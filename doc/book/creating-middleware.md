@@ -42,8 +42,7 @@ function (
     Psr\Http\Message\ServerRequestInterface $request,
     Psr\Http\Message\ResponseInterface $response,
     callable $next = null
-) {
-}
+) : Psr\Http\Message\ResponseInterface
 ```
 
 The implementation Stratigility offers also allows you to write specialized error handler
@@ -57,6 +56,5 @@ function (
     Psr\Http\Message\ServerRequestInterface $request,
     Psr\Http\Message\ResponseInterface $response,
     callable $next
-) {
-}
+) : Psr\Http\Message\ResponseInterface
 ```

@@ -41,5 +41,16 @@
     "psr-4": {
       "ZendTest\\Stratigility\\": "test/"
     }
+  },
+  "scripts": {
+    "check": [
+      "@cs-check",
+      "@test"
+    ],
+    "upload-coverage": "coveralls -v",
+    "cs-check": "phpcs",
+    "cs-fix": "phpcbf",
+    "test": "phpunit",
+    "test-coverage": "phpunit --coverage-clover clover.xml"
   }
 }
