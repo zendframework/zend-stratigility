@@ -266,6 +266,55 @@ class MiddlewarePipeTest extends TestCase
         $this->assertSame($this->response, $result->getOriginalResponse());
     }
 
+    public function testCorrectlyInvokesHostRoutedMiddlewares()
+    {
+
+        $phpunit = $this;
+
+        $this->middleware->pipe(function ($req, $res, $next) {
+            $res->write("Root path on all hosts\n");
+            $next($req, $res);
+        });
+
+        $this->middleware->pipe('/foo', function ($req, $res, $next) {
+            $res->write("/foo path on all hosts\n");
+            $next($req, $res);
+        });
+
+        $this->middleware->pipe('/', 'another.host.test.example.com', function ($req, $res, $next) use ($phpunit) {
+            $phpunit->fail('Called root path middleware that\'s routed to different host');
+            $res->write("Root path on different host - should not be called!\n");
+            $next($req, $res);
+        });
+
+        $this->middleware->pipe('/foo', 'another.host.test.example.com', function ($req, $res, $next) use ($phpunit) {
+            $phpunit->fail('Called /foo path middleware that\'s routed to different host');
+            $res->write("/foo path on another host - should not be called!\n");
+            $next($req, $res);
+        });
+
+        $this->middleware->pipe('/', 'test.example.com', function ($req, $res, $next) use ($phpunit) {
+            $res->write("Root path on test.example.com\n");
+            $next($req, $res);
+        });
+
+        $this->middleware->pipe('/foo', 'test.example.com', function ($req, $res, $next) use ($phpunit) {
+            $res->write("/foo path on test.example.com\n");
+            $next($req, $res);
+        });
+
+        $request = new Request([], [], 'http://test.example.com/foo', 'GET', 'php://memory');
+        $this->middleware->__invoke($request, $this->response);
+        $body = (string) $this->response->getBody();
+
+        $this->assertContains('Root path on all hosts', $body);
+        $this->assertContains('/foo path on all hosts', $body);
+        $this->assertContains('Root path on test.example.com', $body);
+        $this->assertContains('/foo path on test.example.com', $body);
+        $this->assertNotContains('Root path on different host', $body);
+        $this->assertNotContains('/foo path on different host', $body);
+    }
+
     public function testMiddlewareRequestPathMustBeTrimmedOffWithPipeRoutePath()
     {
         $request  = new Request([], [], 'http://local.example.com/foo/bar', 'GET', 'php://memory');

@@ -91,7 +91,11 @@ class Next
 
         $layer           = $this->queue->dequeue();
         $path            = $request->getUri()->getPath() ?: '/';
+        $host            = $request->getUri()->getHost();
+
         $route           = $layer->path;
+        $routeHost       = $layer->host;
+
         $normalizedRoute = (strlen($route) > 1) ? rtrim($route, '/') : $route;
 
         // Skip if layer path does not match current url
@@ -102,6 +106,11 @@ class Next
         // Skip if match is not at a border ('/', '.', or end)
         $border = $this->getBorder($path, $normalizedRoute);
         if ($border && '/' !== $border && '.' !== $border) {
+            return $this($request, $response, $err);
+        }
+
+        // Skip if route host is defined and does not match current url
+        if ($routeHost !== null && $host != $routeHost) {
             return $this($request, $response, $err);
         }
 

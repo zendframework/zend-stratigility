@@ -15,10 +15,11 @@ use OutOfRangeException;
 /**
  * Value object representing route-based middleware
  *
- * Details the subpath on which the middleware is active, and the
+ * Details the subpath, optionally host, on which the middleware is active, and the
  * handler for the middleware itself.
  *
  * @property-read callable $handler Handler for this route
+ * @property-read string $host Host for this route
  * @property-read string $path Path for this route
  */
 class Route
@@ -31,19 +32,31 @@ class Route
     /**
      * @var string
      */
+    protected $host;
+
+    /**
+     * @var string
+     */
     protected $path;
 
     /**
      * @param string $path
+     * @param string|callable $host
      * @param callable $handler
      */
-    public function __construct($path, callable $handler)
+    public function __construct($path, $host, callable $handler = null)
     {
         if (! is_string($path)) {
             throw new InvalidArgumentException('Path must be a string');
         }
 
+        if (is_callable($host)) {
+            $handler = $host;
+            $host = null;
+        }
+
         $this->path    = $path;
+        $this->host    = $host;
         $this->handler = $handler;
     }
 
@@ -55,7 +68,7 @@ class Route
     public function __get($name)
     {
         if (! property_exists($this, $name)) {
-            throw new OutOfRangeException('Only the path and handler may be accessed from a Route instance');
+            throw new OutOfRangeException('Only the path, host and handler may be accessed from a Route instance');
         }
         return $this->{$name};
     }
