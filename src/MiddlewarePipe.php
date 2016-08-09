@@ -84,6 +84,9 @@ class MiddlewarePipe implements MiddlewareInterface
      * path is matched when that middleware is invoked, it will be processed;
      * otherwise it is skipped.
      *
+     * Additionally host can be specified, so the middleware will be invoked
+     * only if host is matched.
+     *
      * No path means it should be executed every request cycle.
      *
      * A handler CAN implement MiddlewareInterface, but MUST be callable.
@@ -96,14 +99,26 @@ class MiddlewarePipe implements MiddlewareInterface
      * @see ErrorMiddlewareInterface
      * @see Next
      * @param string|callable|object $path Either a URI path prefix, or middleware.
+     * @param null|string|callable|object Either URI host, or middleware.
      * @param null|callable|object $middleware Middleware
      * @return self
      */
-    public function pipe($path, $middleware = null)
+    public function pipe($path, $host = null, $middleware = null)
     {
-        if (null === $middleware && is_callable($path)) {
+
+        // One argument invoke
+        if (null === $host
+            && $middleware == null
+            && is_callable($path)
+        ) {
             $middleware = $path;
             $path       = '/';
+        }
+
+        // Two arguments invoke
+        if (null == $middleware && is_callable($host)) {
+            $middleware = $host;
+            $host = null;
         }
 
         // Ensure we have a valid handler
@@ -113,6 +128,7 @@ class MiddlewarePipe implements MiddlewareInterface
 
         $this->pipeline->enqueue(new Route(
             $this->normalizePipePath($path),
+            $host,
             $middleware
         ));
 

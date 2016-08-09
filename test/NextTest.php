@@ -82,6 +82,27 @@ class NextTest extends TestCase
         $this->assertTrue($triggered);
     }
 
+    public function testInvokesItselfWhenRouteDoesNotMatchCurrentHost()
+    {
+        // e.g., handler matches "/foo", but path is "/bar"
+        $phpunit = $this;
+        $route = new Route('/foo', 'different.domain.example.com', function ($req, $res, $next) use ($phpunit) {
+            $phpunit->fail('Route should not be invoked if path does not match');
+        });
+        $this->queue->enqueue($route);
+
+        $triggered = null;
+        $done = function ($req, $res, $err = null) use (&$triggered) {
+            $triggered = true;
+        };
+
+        $this->request->withUri(new Uri('http://local.example.com/foo'));
+
+        $next = new Next($this->queue, $done);
+        $next($this->request, $this->response);
+        $this->assertTrue($triggered);
+    }
+
     public function testInvokesItselfIfRouteDoesNotMatchAtABoundary()
     {
         // e.g., if route is "/foo", but path is "/foobar", no match

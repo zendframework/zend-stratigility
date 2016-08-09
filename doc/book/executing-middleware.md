@@ -9,10 +9,17 @@ matched.
 $api = new MiddlewarePipe();  // API middleware collection
 $api->pipe(/* ... */);        // repeat as necessary
 
+$docs = new MiddlewarePipe(); // Documentation middleware collection
+$docs->pipe(/* ... */);       // Can include auth middleware, routing etc
+
 $app = new MiddlewarePipe();  // Middleware representing the application
 $app->pipe('/api', $api);     // API middleware attached to the path "/api"
+$app->pipe(                   
+    '/',                      // Documentation will be available   
+    'docs.example.com',       // only under docs.example.com   
+    $docs
+);
 ```
-
 
 Another approach is to extend the `Zend\Stratigility\MiddlewarePipe` class itself, particularly if
 you want to allow attaching other middleware to your own middleware. In such a case, you will

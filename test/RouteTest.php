@@ -19,9 +19,12 @@ class RouteTest extends TestCase
         $path = '/foo';
         $handler = function () {
         };
-        $route = new Route($path, $handler);
+        $host = 'foo.example';
+
+        $route = new Route($path, $host, $handler);
         $this->assertSame($path, $route->path);
         $this->assertSame($handler, $route->handler);
+        $this->assertSame($host, $route->host);
     }
 
     public function nonStringPaths()
@@ -53,5 +56,18 @@ class RouteTest extends TestCase
 
         $this->setExpectedException('OutOfRangeException');
         $foo = $route->foo;
+    }
+
+    public function testTwoArgumentsInvocation()
+    {
+
+        $path = '/foo';
+        $handler = function () {
+        };
+
+        $route = new Route($path, $handler);
+
+        $this->assertSame($path, $route->path);
+        $this->assertSame($handler, $route->handler);
     }
 }
