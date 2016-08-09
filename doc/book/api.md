@@ -10,7 +10,11 @@ previously. Its API is:
 ```php
 class MiddlewarePipe implements MiddlewareInterface
 {
-    public function pipe(string|callable $path, callable $middleware = null);
+    public function pipe(
+        string|callable $path, 
+        string|callable $host = null, 
+        callable $middleware = null
+    );
     public function __invoke(
         Psr\Http\Message\ServerRequestInterface $request = null,
         Psr\Http\Message\ResponseInterface $response = null,
@@ -19,10 +23,14 @@ class MiddlewarePipe implements MiddlewareInterface
 }
 ```
 
-`pipe()` takes up to two arguments. If only one argument is provided, `$middleware` will be assigned
-that value, and `$path` will be re-assigned to the value `/`; this is an indication that the
-`$middleware` should be invoked for any path. If `$path` is provided, the `$middleware` will only be
-executed for that path and any subpaths.
+`pipe()` takes up to three arguments.  
+If only one argument is provided, `$middleware` will be assigned
+that value, `$path` will be re-assigned to the value `/` and `$host` to `null`; this is an indication that the
+`$middleware` should be invoked for any path on any host.  
+If two arguments are provided, `$middleware` will be assigned to the second parameter, while `$host` will be re-assigned
+ to null. `$middleware` will be executed for the path given in first argument and it's subpaths.  
+If three arguments are provided, `$middleware` will be executed on the provided path and it's subpaths only when 
+`$host` matches the host part of the request's URL.
 
 Middleware is executed in the order in which it is piped to the `MiddlewarePipe` instance.
 
