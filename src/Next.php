@@ -91,7 +91,6 @@ class Next
 
         $layer           = $this->queue->dequeue();
         $path            = $request->getUri()->getPath() ?: '/';
-        $host            = $request->getUri()->getHost();
 
         $route           = $layer->path;
         $routeHost       = $layer->host;
@@ -110,7 +109,7 @@ class Next
         }
 
         // Skip if route host is defined and does not match current url
-        if ($routeHost !== null && $host != $routeHost) {
+        if ($routeHost !== null && $request->getUri()->getHost() != $routeHost) {
             return $this($request, $response, $err);
         }
 
