@@ -63,7 +63,7 @@ class RequestTest extends TestCase
 
     public function testDecoratorProxiesToAllMethods()
     {
-        $stream = $this->getMock('Psr\Http\Message\StreamInterface');
+        $stream = $this->getMockBuilder('Psr\Http\Message\StreamInterface')->getMock();
         $psrRequest = new PsrRequest([], [], 'http://example.com', 'POST', $stream, [
             'Accept' => 'application/xml',
             'X-URL' => 'http://example.com/foo',
