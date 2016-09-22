@@ -226,7 +226,9 @@ class DispatchTest extends TestCase
             $callableWithHint('not an stdClass');
         };
 
-        $errorHandler = $this->getMock('stdClass', ['__invoke']);
+        $errorHandler = $this->getMockBuilder('stdClass')
+            ->setMethods(['__invoke'])
+            ->getMock();
         $errorHandler
             ->expects(self::once())
             ->method('__invoke')
