@@ -1,5 +1,8 @@
 # Error Handlers
 
+- Deprecated starting in 1.3.0, to be removed in 2.0.0. Please see the
+  [migration guide](migration/to-v2.md#error-handling) for more details.
+
 To handle errors, you can write middleware that accepts **exactly** four arguments:
 
 ```php
