@@ -11,11 +11,11 @@ changes will still require changes to your code following the 2.0 release.
 ## Error handling
 
 Prior to version 1.3, the recommended way to handle errors was via
-[error middleware](../error-handlers.md), special middleware that accepts
-an additional initial argument representing an error. On top of this, we provide
-the concept of a "final handler", pseudo-middleware that is executed by the
-`Next` implementation when the middleware stack is exhausted, but no response
-has been returned.
+[error middleware](../error-handlers.md#legacy-error-middleware), special
+middleware that accepts an additional initial argument representing an error. On
+top of this, we provide the concept of a "final handler", pseudo-middleware that
+is executed by the `Next` implementation when the middleware stack is exhausted,
+but no response has been returned.
 
 These approaches, however, have several shortcomings:
 
@@ -31,79 +31,21 @@ Starting in 1.3, we are promoting using standard middleware layers as error
 handlers, instead of using the existing error middleware/final handler system.
 
 To achieve this, we have provided some new functionality, as well as augmented
-existing functionality.
+existing functionality:
 
-### Error handling middleware
+- [NotFoundHandler middleware](../error-handlers.md#handling-404-conditions)
+- [ErrorHandler middleware](../error-handlers.md#handling-php-errors-and-exceptions)
+- `Zend\Stratigility\NoopFinalHandler` (see next section)
 
-We broke the existing `FinalHandler` into two separate pieces, one for handling
-404 cases (i.e., no middleware was able to handle the request), and one for
-handling errors.
-
-`Zend\Stratigility\Middleware\NotFoundHandler` is a middleware implementation to
-register as the *innermost layer* of your application; when invoked, it
-immediately returns a 404 response.
-
-In order to work, it needs a prototype response instance.
-
-```php
-// setup layers
-$app->pipe(/* ... */);
-$app->pipe(/* ... */);
-$app->pipe(new NotFoundHandler(new Response());
-
-// execute application
-```
-
-`Zend\Stratigility\Middleware\ErrorHandler` is a middleware implementation to
-register as the *outermost layer* of your application (or one of the outermost
-layers). It does the following:
-
-- Creates a PHP error handler that catches any errors in the `error_handling()`
-  mask and throws them as `ErrorException` instances.
-- Wraps the call to `$next()` in a try/catch block:
-  - if no exception is caught, and the result is a response, it returns it.
-  - if no exception is caught, it raises an exception, which will be caught.
-  - any caught exception is transformed into an error response.
-
-The error response will have a 5XX series status code, and the message will be
-derived from the reason phrase, if any is present. You may pass a boolean flag
-to the constructor indicating the application is in development mode; if so, the
-response will have the stack trace included in the body.
-
-In order to work, it needs a prototype response instance, and, optionally, a
-flag indicating the status of development mode (default is production mode):
-
-```php
-// setup error handling
-$app->pipe(new ErrorHandler(new Response(), $isDevelopmentMode);
-
-// setup layers
-$app->pipe(/* ... */);
-$app->pipe(/* ... */);
-```
-
-As a full example, you can combine the two middleware into the same application
-as separate layers:
-
-```php
-// setup error handling
-$app->pipe(new ErrorHandler(new Response(), $isDevelopmentMode);
-
-// setup layers
-$app->pipe(/* ... */);
-$app->pipe(/* ... */);
-
-// setup 404 handling
-$app->pipe(new NotFoundHandler(new Response());
-
-// execute application
-```
+Updating your application to use these features will ensure you are forwards
+compatible with version 2 releases.
 
 ### No-op final handler
 
-When using the above strategy, the `FinalHandler` implementation loses most of
-its meaning, as you are now handling errors and 404 conditions as middleware
-layers.
+When using the `NotFoundHandler` and `ErrorHandler` middleware (or custom
+middleware you drop in place of them), the `FinalHandler` implementation loses
+most of its meaning, as you are now handling errors and 404 conditions as
+middleware layers.
 
 However, you still need to ensure that the pipeline returns a response,
 regardless of how the pipeline is setup, and for that we still need some form of

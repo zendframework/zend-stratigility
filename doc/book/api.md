@@ -14,7 +14,7 @@ class MiddlewarePipe implements MiddlewareInterface
     public function __invoke(
         Psr\Http\Message\ServerRequestInterface $request = null,
         Psr\Http\Message\ResponseInterface $response = null,
-        callable $out = null
+        callable $out
     ) :  Psr\Http\Message\ResponseInterface;
 }
 ```
@@ -31,18 +31,25 @@ Middleware is executed in the order in which it is piped to the `MiddlewarePipe`
 exhausted (`MiddlewarePipe` passes the `$response` instance it receives to `FinalHandler` as well,
 so that the latter can determine if the response it receives is new).
 
+> ### $out is no longer optional
+>
+> Starting in version 1.3.0, we now raise a deprecation notice if no argument is
+> passed for `$out`; starting in version 2.0.0, the argument will be required.
+> Always pass a `Next` instance, a `Zend\Stratigility\NoopFinalHandler`
+> instance, or a custom callback; we no longer recommend the `FinalHandler`
+> implementation.
+
 The callable should use the same signature as `Next()`:
 
 ```php
 function (
     Psr\Http\Message\ServerRequestInterface $request,
-    Psr\Http\Message\ResponseInterface $response,
-    $err = null
+    Psr\Http\Message\ResponseInterface $response
 ) : Psr\Http\Message\ResponseInterface
 ```
 
-Internally, `MiddlewarePipe` creates an instance of `Zend\Stratigility\Next`, feeding it its queue,
-executes it, and returns a response.
+Internally, `MiddlewarePipe` creates an instance of `Zend\Stratigility\Next`,
+feeding it its queue, executes it, and returns a response.
 
 ## Next
 
@@ -60,8 +67,7 @@ class Next
 {
     public function __invoke(
         Psr\Http\Message\ServerRequestInterface $request,
-        Psr\Http\Message\ResponseInterface $response,
-        $err = null
+        Psr\Http\Message\ResponseInterface $response
     ) : Psr\Http\Message\ResponseInterface;
 }
 ```
@@ -69,6 +75,13 @@ class Next
 You should **always** either capture or return the return value of `$next()` when calling it in your
 application. The expected return value is a response instance, but if it is not, you may want to
 return the response provided to you.
+
+> ### $err argument
+>
+> Technically, `Next::__invoke()` accepts a third, optional argument, `$err`.
+> However, as of version 1.3.0, this argument is deprecated, and usage will
+> raise a deprecation notice during runtime. We will be removing the argument
+> entirely starting with version 2.0.0.
 
 As examples:
 
@@ -150,11 +163,11 @@ And, if not calling `$next()`, returning the response instance:
 return $response;
 ```
 
-The `FinalHandler` implementation will check the `$response` instance passed when invoking it
-against the instance passed during instantiation, and, if different, return it. As such, `return
-$next(/* ... */)` is the recommended workflow.
-
 ### Raising an error condition
+
+- Deprecated as of 1.3.0; please use exceptions and a error handling middleware
+  such as the [ErrorHandler](error-handlers.md#handling-php-errors-and-exceptions) 
+  to handle error conditions in your application instead.
 
 To raise an error condition, pass a non-null value as the third argument to `$next()`:
 
@@ -170,6 +183,9 @@ function ($request, $response, $next)
 ```
 
 ## FinalHandler
+
+- Deprecated starting with 1.3.0. Use `Zend\Stratigility\NoopFinalHandler` or a
+  custom handler guaranteed to return a response instead.
 
 `Zend\Stratigility\FinalHandler` is a default implementation of middleware to execute when the stack
 exhausts itself. It expects three arguments when invoked: a request instance, a response instance,
