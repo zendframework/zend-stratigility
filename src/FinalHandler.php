@@ -16,6 +16,11 @@ use Zend\Escaper\Escaper;
 
 /**
  * Handle incomplete requests
+ *
+ * @deprecated since 1.3.0; will be removed with 2.0.0. Please see
+ *     https://docs.zendframework.com/zend-stratigility/migration/to-v2/
+ *     for more information on how to update your code for forwards
+ *     compatibility.
  */
 class FinalHandler
 {
