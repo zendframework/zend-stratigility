@@ -20,6 +20,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * This class is an implementation detail of Next.
  *
  * @internal
+ * @deprecated since 1.3.0; to be removed in 2.0.0.
  */
 class Dispatch
 {
