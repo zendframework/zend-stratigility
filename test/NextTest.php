@@ -46,13 +46,12 @@ class NextTest extends TestCase
     public function testDoneHandlerReceivesRequestAndResponse()
     {
         // e.g., 0 length array, or all handlers call next
-        $phpunit   = $this;
         $request   = $this->request;
         $response  = $this->response;
         $triggered = null;
-        $done = function ($req, $res, $err = null) use ($phpunit, $request, $response, &$triggered) {
-            $phpunit->assertSame($request, $req);
-            $phpunit->assertSame($response, $response);
+        $done = function ($req, $res, $err = null) use ($request, $response, &$triggered) {
+            $this->assertSame($request, $req);
+            $this->assertSame($response, $response);
             $triggered = true;
         };
 
@@ -64,9 +63,8 @@ class NextTest extends TestCase
     public function testInvokesItselfWhenRouteDoesNotMatchCurrentUrl()
     {
         // e.g., handler matches "/foo", but path is "/bar"
-        $phpunit = $this;
-        $route = new Route('/foo', function ($req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Route should not be invoked if path does not match');
+        $route = new Route('/foo', function ($req, $res, $next) {
+            $this->fail('Route should not be invoked if path does not match');
         });
         $this->queue->enqueue($route);
 
@@ -85,9 +83,8 @@ class NextTest extends TestCase
     public function testInvokesItselfIfRouteDoesNotMatchAtABoundary()
     {
         // e.g., if route is "/foo", but path is "/foobar", no match
-        $phpunit = $this;
-        $route = new Route('/foo', function ($req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Route should not be invoked if path does not match');
+        $route = new Route('/foo', function ($req, $res, $next) {
+            $this->fail('Route should not be invoked if path does not match');
         });
         $this->queue->enqueue($route);
 
@@ -112,9 +109,8 @@ class NextTest extends TestCase
         });
         $this->queue->enqueue($route);
 
-        $phpunit = $this;
-        $done = function ($req, $res, $err = null) use ($phpunit) {
-            $phpunit->fail('Should not hit done handler');
+        $done = function ($req, $res, $err = null) {
+            $this->fail('Should not hit done handler');
         };
 
         $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
@@ -134,9 +130,8 @@ class NextTest extends TestCase
         });
         $this->queue->enqueue($route);
 
-        $phpunit = $this;
-        $done = function ($req, $res, $err = null) use ($phpunit) {
-            $phpunit->fail('Should not hit done handler');
+        $done = function ($req, $res, $err = null) {
+            $this->fail('Should not hit done handler');
         };
 
         $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
@@ -163,9 +158,8 @@ class NextTest extends TestCase
         $this->queue->enqueue($route2);
         $this->queue->enqueue($route3);
 
-        $phpunit = $this;
-        $done = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Should not hit final handler');
+        $done = function ($req, $res, $err) {
+            $this->fail('Should not hit final handler');
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
@@ -176,25 +170,24 @@ class NextTest extends TestCase
 
     public function testMiddlewareReturningResponseShortcircuits()
     {
-        $phpunit = $this;
         $route1 = new Route('/foo', function ($req, $res, $next) {
             return $res;
         });
-        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit) {
+        $route2 = new Route('/foo/bar', function ($req, $res, $next) {
             $next($req, $res);
-            $phpunit->fail('Should not hit route2 handler');
+            $this->fail('Should not hit route2 handler');
         });
-        $route3 = new Route('/foo/baz', function ($req, $res, $next) use ($phpunit) {
+        $route3 = new Route('/foo/baz', function ($req, $res, $next) {
             $next($req, $res);
-            $phpunit->fail('Should not hit route3 handler');
+            $this->fail('Should not hit route3 handler');
         });
 
         $this->queue->enqueue($route1);
         $this->queue->enqueue($route2);
         $this->queue->enqueue($route3);
 
-        $done = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Should not hit final handler');
+        $done = function ($req, $res, $err) {
+            $this->fail('Should not hit final handler');
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
@@ -205,23 +198,22 @@ class NextTest extends TestCase
 
     public function testMiddlewareCallingNextWithResponseAsFirstArgumentResetsResponse()
     {
-        $phpunit = $this;
         $cannedResponse = new Response(new PsrResponse());
         $triggered = false;
 
         $route1 = new Route('/foo', function ($req, $res, $next) use ($cannedResponse) {
             return $next($req, $cannedResponse);
         });
-        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit, $cannedResponse, &$triggered) {
-            $phpunit->assertSame($cannedResponse, $res);
+        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($cannedResponse, &$triggered) {
+            $this->assertSame($cannedResponse, $res);
             $triggered = true;
         });
 
         $this->queue->enqueue($route1);
         $this->queue->enqueue($route2);
 
-        $done = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Should not hit final handler');
+        $done = function ($req, $res, $err) {
+            $this->fail('Should not hit final handler');
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
@@ -233,7 +225,6 @@ class NextTest extends TestCase
 
     public function testMiddlewareCallingNextWithRequestPassesRequestToNextMiddleware()
     {
-        $phpunit       = $this;
         $request       = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $cannedRequest = clone $request;
         $cannedRequest = $cannedRequest->withMethod('POST');
@@ -241,16 +232,16 @@ class NextTest extends TestCase
         $route1 = new Route('/foo/bar', function ($req, $res, $next) use ($cannedRequest) {
             return $next($cannedRequest, $res);
         });
-        $route2 = new Route('/foo/bar/baz', function ($req, $res, $next) use ($phpunit, $cannedRequest) {
-            $phpunit->assertEquals($cannedRequest->getMethod(), $req->getMethod());
+        $route2 = new Route('/foo/bar/baz', function ($req, $res, $next) use ($cannedRequest) {
+            $this->assertEquals($cannedRequest->getMethod(), $req->getMethod());
             return $res;
         });
 
         $this->queue->enqueue($route1);
         $this->queue->enqueue($route2);
 
-        $done = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Should not hit final handler');
+        $done = function ($req, $res, $err) {
+            $this->fail('Should not hit final handler');
         };
 
         $next = new Next($this->queue, $done);
@@ -259,22 +250,21 @@ class NextTest extends TestCase
 
     public function testMiddlewareCallingNextWithResponseResetsResponse()
     {
-        $phpunit        = $this;
         $cannedResponse = new Response(new PsrResponse());
 
         $route1 = new Route('/foo', function ($req, $res, $next) use ($cannedResponse) {
             return $next($req, $cannedResponse);
         });
-        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit, $cannedResponse) {
-            $phpunit->assertSame($cannedResponse, $res);
+        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($cannedResponse) {
+            $this->assertSame($cannedResponse, $res);
             return $res;
         });
 
         $this->queue->enqueue($route1);
         $this->queue->enqueue($route2);
 
-        $done = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Should not hit final handler');
+        $done = function ($req, $res, $err) {
+            $this->fail('Should not hit final handler');
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
@@ -284,22 +274,21 @@ class NextTest extends TestCase
 
     public function testNextShouldReturnPassedResponseWhenNoReturnValueProvided()
     {
-        $phpunit        = $this;
         $cannedResponse = new Response(new PsrResponse());
 
         $route1 = new Route('/foo', function ($req, $res, $next) use ($cannedResponse) {
             $next($req, $cannedResponse);
         });
-        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($phpunit, $cannedResponse) {
-            $phpunit->assertSame($cannedResponse, $res);
+        $route2 = new Route('/foo/bar', function ($req, $res, $next) use ($cannedResponse) {
+            $this->assertSame($cannedResponse, $res);
             return $res;
         });
 
         $this->queue->enqueue($route1);
         $this->queue->enqueue($route2);
 
-        $done = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Should not hit final handler');
+        $done = function ($req, $res, $err) {
+            $this->fail('Should not hit final handler');
         };
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
@@ -313,9 +302,8 @@ class NextTest extends TestCase
      */
     public function testNextShouldCloneQueueOnInstantiation()
     {
-        $phpunit = $this;
-        $done = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Should not hit final handler');
+        $done = function ($req, $res, $err) {
+            $this->fail('Should not hit final handler');
         };
         $next = new Next($this->queue, $done);
 
@@ -325,5 +313,29 @@ class NextTest extends TestCase
 
         $this->assertNotSame($this->queue, $queue);
         $this->assertEquals($this->queue, $queue);
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     */
+    public function testNextShouldRaiseDeprecationNoticeWhenInvokedWithErrorArgument()
+    {
+        $route = new Route('/', function ($err, $req, $res, $next) {
+            return $this->response;
+        });
+        $this->queue->enqueue($route);
+
+        $done = function ($req, $res, $err) {
+            $this->fail('Should not hit final handler');
+        };
+        $next = new Next($this->queue, $done);
+
+        set_error_handler(function ($errno, $errmsg) {
+            $this->assertContains('Usage of error middleware is deprecated', $errmsg);
+        }, E_USER_DEPRECATED);
+        $result = $next($this->request, $this->response, 'Error');
+        restore_error_handler();
+
+        $this->assertSame($this->response, $result);
     }
 }

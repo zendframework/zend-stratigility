@@ -72,7 +72,8 @@ class Next
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param null|mixed $err
+     * @param null|mixed $err This argument is deprecated as of 1.3.0, and will
+     *     be removed in 2.0.0.
      * @return ResponseInterface
      */
     public function __invoke(
@@ -80,6 +81,15 @@ class Next
         ResponseInterface $response,
         $err = null
     ) {
+        if (null !== $err) {
+            trigger_error(
+                'Usage of error middleware is deprecated as of 1.3.0, and will be removed in 2.0.0; '
+                . 'please see https://docs.zendframework.com/zend-stratigility/migration/to-v2/ '
+                . 'for details on how to update your application to remove this message.',
+                E_USER_DEPRECATED
+            );
+        }
+
         $dispatch = $this->dispatch;
         $done     = $this->done;
         $request  = $this->resetPath($request);

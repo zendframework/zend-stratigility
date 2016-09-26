@@ -76,6 +76,9 @@ class MiddlewarePipeTest extends TestCase
         $this->assertContains('Third', $body);
     }
 
+    /**
+     * @todo remove for 2.0.0
+     */
     public function testHandleInvokesFirstErrorHandlerOnErrorInChain()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
@@ -95,8 +98,16 @@ class MiddlewarePipeTest extends TestCase
             $phpunit->fail('Should not hit fourth handler!');
         });
 
+        set_error_handler(function ($errno, $errstr) {
+            // no-op; skip handling
+            return true;
+        }, E_USER_DEPRECATED);
+
         $request  = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
         $response = $this->middleware->__invoke($request, $this->response);
+
+        restore_error_handler();
+
         $body     = (string) $response->getBody();
         $this->assertContains('First', $body);
         $this->assertContains('ERROR HANDLER', $body);
