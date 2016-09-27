@@ -20,7 +20,7 @@ class ErrorHandler
     /**
      * @var bool
      */
-    private $isDevelopmentMode;
+    protected $isDevelopmentMode;
 
     /**
      * @var callable[]
@@ -105,23 +105,55 @@ class ErrorHandler
     }
 
     /**
+     * Create/update the response representing the error.
+     *
+     * This method may be overridden in order to allow an extending class to
+     * update and return the response representing the error condition.
+     *
+     * The response provided is the response prototype injected during
+     * instantiation; the error (an exception or throwable) and request are
+     * also provided to allow providing details from each when creating the
+     * error response.
+     *
+     * Classes overriding this method have access to $isDevelopmentMode in
+     * order to vary their response.
+     *
+     * The method MUST return a response!
+     *
+     * @param Throwable|\Exception $e
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
+    protected function createErrorResponse($e, ServerRequestInterface $request, ResponseInterface $response)
+    {
+        $response = $response->withStatus(Utils::getStatusCode($e, $response));
+        $body = $response->getBody();
+
+        if ($this->isDevelopmentMode) {
+             $body->write($this->createDevelopmentErrorMessage($e));
+             return $response;
+        }
+
+        $body->write($response->getReasonPhrase() ?: 'Unknown Error');
+        return $response;
+    }
+
+    /**
+     * Handles all throwables/exceptions, generating and returning a response.
+     *
+     * Passes the error, request, and response prototype to createErrorResponse(),
+     * triggers all listeners with the same arguments (but using the response
+     * returned from createErrorResponse()), and then returns the response.
+     *
      * @param Throwable|\Exception $e
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      */
     private function handleThrowable($e, ServerRequestInterface $request)
     {
-        $response = $this->responsePrototype->withStatus(Utils::getStatusCode($e, $this->responsePrototype));
-        $message = $response->getReasonPhrase() ?: 'Unknown Error';
-
-        if ($this->isDevelopmentMode) {
-            $message = $this->createDevelopmentErrorMessage($e);
-        }
-
-        $response->getBody()->write($message);
-
+        $response = $this->createErrorResponse($e, $request, $this->responsePrototype);
         $this->triggerListeners($e, $request, $response);
-
         return $response;
     }
 

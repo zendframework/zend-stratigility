@@ -107,7 +107,14 @@ $app->pipe(new NotFoundHandler(new Response());
 The `ErrorHandler` provides no templating facilities, and only responds as text
 and/or HTML. If you want to provide a templated response, or a different
 serialization and/or markup format, you will need to write your own
-implementation. As an example:
+implementation, or extend the `ErrorHandler`.
+
+The `ErrorHandler` provides one extension point useful to this:
+`createErrorResponse()`; this method is passed the exception representing the
+error, the request that resulted in the error, and the response prototype; you
+may then use these to generate a response to return.
+
+As an example:
 
 ```php
 use ErrorException;
@@ -115,50 +122,28 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 use Zend\Stratigility\Exception\MissingResponseException;
+use Zend\Stratigility\Middleware\ErrorHandler;
 
-class TemplatedErrorHandler
+class TemplatedErrorHandler extends ErrorHandler
 {
     private $renderer;
-    private $responsePrototype;
 
-    public function __construct(TemplateRendererInterface $renderer, ResponseInterface $responsePrototype)
-    {
+    public function __construct(
+        TemplateRendererInterface $renderer,
+        ResponseInterface $responsePrototype,
+        $isDevelopmentMode = false
+    ) {
+        parent::__construct($responsePrototype, $isDevelopmentMode);
         $this->renderer = $renderer;
-        $this->responsePrototype = $responsePrototype;
     }
 
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
+    protected function createErrorResponse($e, ServerRequestInterface $request, ResponseInterface $response)
     {
-        set_error_handler( function ($errno, $errstr, $errfile, $errline) {
-            if (! (error_reporting() & $errno)) {
-                // error_reporting does not include this error
-                return;
-            }
-
-            throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
-        });
-
-        try {
-            $response = $next($request, $response);
-
-            if (! $response instanceof ResponseInterface) {
-                throw new MissingResponseException('Application did not return a response');
-            }
-        } catch (Throwable $e) {
-            $response = $this->handleThrowable($e, $request);
-        } catch (\Exception $e) {
-            $response = $this->handleThrowable($e, $request);
-        }
-
-        restore_error_handler();
-
-        return $response;
-    }
-
-    private function handleThrowable($e, ServerRequestInterface $request)
-    {
-        $response = $this->responsePrototype->withStatus(500);
-        $response->write($this->renderer->render('error::error');
+        $response = $response->withStatus(500);
+        $response->write($this->renderer->render('error::error', [
+            'exception'        => $e,
+            'development_mode' => $this->isDevelopmentMode,
+        ]);
         return $response;
     }
 }
