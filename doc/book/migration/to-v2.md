@@ -50,8 +50,8 @@ middleware layers.
 However, you still need to ensure that the pipeline returns a response,
 regardless of how the pipeline is setup, and for that we still need some form of
 "final" handler that can do so. (In fact, starting in version 2, the `$out`
-argument will be renamed to either `$next` or `$delegate`, and will be a
-required argument of the `MiddlewareInterface` and, thus, the `MiddlewarePipe`.)
+argument is renamed to `$next`, and is a *required* argument of the
+`MiddlewareInterface` and, thus, the `MiddlewarePipe`.)
 
 Starting in version 1.3, we now offer a `Zend\Stratigility\NoopFinalHandler`
 implementation, which simply returns the response passed to it. You can compose
@@ -95,3 +95,29 @@ The following classes, methods, and arguments are deprecated starting in version
 - The `$err` argument to `Zend\Stratigility\Next`'s `__invoke()` method.
   Starting in 1.3.0, if a non-null value is encountered, this method will now
   emit an `E_USER_DEPRECATED` notice, referencing this documentation.
+
+## Interface/signature changes
+
+The following signature changes were made with the 2.0.0 release:
+
+- `Zend\Stratigility\MiddlewareInterface`:
+    - The `$out` argument was renamed to `$next`.
+    - The `$next` argument is no longer optional/nullable.
+    - Each of the implementations shipped with Stratigility were updated, including:
+        - `Zend\Stratigility\MiddlewarePipe`
+        - `Zend\Stratigility\Middleware\ErrorHandler`
+        - `Zend\Stratigility\Middleware\NotFoundHandler`
+- `Zend\Stratigility\Next`:
+  - The `$done` constructor argument was removed.
+  - The (optional) `$err` argument to `__invoke()` was removed.
+
+## Removed functionality
+
+The following classes, methods, and arguments are removed starting in version
+2.0.0.
+
+- `Zend\Stratigility\Dispatch` (class)
+- `Zend\Stratigility\ErrorMiddlewareInterface` (class)
+- `Zend\Stratigility\FinalHandler` (class)
+- The `$err` argument to `Zend\Stratigility\Next`'s `__invoke()` method. If
+  passed, it will now be ignored.
