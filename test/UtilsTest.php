@@ -10,8 +10,9 @@
 namespace ZendTest\Stratigility;
 
 use PHPUnit_Framework_TestCase as TestCase;
-use Zend\Stratigility\Dispatch;
+use SplQueue;
 use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\Next;
 use Zend\Stratigility\Utils;
 use ZendTest\Stratigility\TestAsset\NormalHandler;
 use ZendTest\Stratigility\TestAsset\StaticHandler;
@@ -24,7 +25,7 @@ class UtilsTest extends TestCase
             'function'       => ['strlen', 1],
             'closure'        => [function ($x, $y) {
             }, 2],
-            'invokable'      => [new Dispatch(), 5],
+            'invokable'      => [new Next(new SplQueue()), 2],
             'interface'      => [new MiddlewarePipe(), 3],
             'callable'       => [[new NormalHandler(), 'handle'], 3],
             'static-method'  => [[__NAMESPACE__ . '\TestAsset\StaticHandler', 'handle'], 3],

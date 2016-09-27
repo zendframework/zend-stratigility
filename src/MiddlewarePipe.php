@@ -71,9 +71,13 @@ class MiddlewarePipe implements MiddlewareInterface
     {
         $request  = $this->decorateRequest($request);
         $response = $this->decorateResponse($response);
-        $next     = new Next($this->pipeline, $next);
+        $layer    = new Next($this->pipeline);
 
-        return $next($request, $response);
+        $result = $layer($request, $response);
+
+        return $result instanceof Response
+            ? $next($request, $result)
+            : $next($request, $response);
     }
 
     /**

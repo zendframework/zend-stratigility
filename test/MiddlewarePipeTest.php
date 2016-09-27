@@ -142,8 +142,8 @@ class MiddlewarePipeTest extends TestCase
             $executed = true;
         });
 
-        $middleware($request, $response, function ($err = null) {
-            $this->fail('Next should not be called');
+        $middleware($request, $response, function ($request, $response) {
+            return $response;
         });
 
         $this->assertTrue($executed);

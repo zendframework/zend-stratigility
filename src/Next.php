@@ -20,16 +20,6 @@ use SplQueue;
 class Next
 {
     /**
-     * @var Dispatch
-     */
-    private $dispatch;
-
-    /**
-     * @var Callable
-     */
-    private $done;
-
-    /**
      * @var SplQueue
      */
     private $queue;
@@ -45,26 +35,17 @@ class Next
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param callable $done
      */
-    public function __construct(SplQueue $queue, callable $done)
+    public function __construct(SplQueue $queue)
     {
-        $this->queue    = clone $queue;
-        $this->done     = $done;
-
-        $this->dispatch = new Dispatch();
+        $this->queue = clone $queue;
     }
 
     /**
      * Call the next Route in the queue.
      *
      * Next requires that a request and response are provided; these will be
-     * passed to any middleware invoked, including the $done callable, if
-     * invoked.
-     *
-     * If the $err value is not null, the invocation is considered to be an
-     * error invocation, and Next will search for the next error middleware
-     * to dispatch, passing it $err along with the request and response.
+     * passed to any middleware invoked.
      *
      * Once dispatch is complete, if the result is a response instance, that
      * value will be returned; otherwise, the currently registered response
@@ -72,31 +53,17 @@ class Next
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param null|mixed $err This argument is deprecated as of 1.3.0, and will
-     *     be removed in 2.0.0.
      * @return ResponseInterface
      */
     public function __invoke(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        $err = null
+        ResponseInterface $response
     ) {
-        if (null !== $err) {
-            trigger_error(
-                'Usage of error middleware is deprecated as of 1.3.0, and will be removed in 2.0.0; '
-                . 'please see https://docs.zendframework.com/zend-stratigility/migration/to-v2/ '
-                . 'for details on how to update your application to remove this message.',
-                E_USER_DEPRECATED
-            );
-        }
-
-        $dispatch = $this->dispatch;
-        $done     = $this->done;
         $request  = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            return $done($request, $response, $err);
+            return $response;
         }
 
         $layer           = $this->queue->dequeue();
@@ -106,13 +73,13 @@ class Next
 
         // Skip if layer path does not match current url
         if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
-            return $this($request, $response, $err);
+            return $this($request, $response);
         }
 
         // Skip if match is not at a border ('/', '.', or end)
         $border = $this->getBorder($path, $normalizedRoute);
         if ($border && '/' !== $border && '.' !== $border) {
-            return $this($request, $response, $err);
+            return $this($request, $response);
         }
 
         // Trim off the part of the url that matches the layer route
@@ -120,9 +87,8 @@ class Next
             $request = $this->stripRouteFromPath($request, $route);
         }
 
-        $result = $dispatch($layer, $err, $request, $response, $this);
-
-        return ($result instanceof ResponseInterface ? $result : $response);
+        $middleware = $layer->handler;
+        return $middleware($request, $response, $this);
     }
 
     /**
