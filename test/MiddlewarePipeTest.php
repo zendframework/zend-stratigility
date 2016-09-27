@@ -105,44 +105,6 @@ class MiddlewarePipeTest extends TestCase
         $this->assertContains('Third', $body);
     }
 
-    /**
-     * @todo remove for 2.0.0
-     */
-    public function testHandleInvokesFirstErrorHandlerOnErrorInChain()
-    {
-        $this->middleware->pipe(function ($req, $res, $next) {
-            $next($req, $res->write("First\n"));
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
-            return $next($req, $res, 'error');
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
-            return $res->write("Third\n");
-        });
-        $this->middleware->pipe(function ($err, $req, $res, $next) {
-            return $res->write("ERROR HANDLER\n");
-        });
-        $phpunit = $this;
-        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Should not hit fourth handler!');
-        });
-
-        set_error_handler(function ($errno, $errstr) {
-            // no-op; skip handling
-            return true;
-        }, E_USER_DEPRECATED);
-
-        $request  = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $response = $this->middleware->__invoke($request, $this->response);
-
-        restore_error_handler();
-
-        $body     = (string) $response->getBody();
-        $this->assertContains('First', $body);
-        $this->assertContains('ERROR HANDLER', $body);
-        $this->assertNotContains('Third', $body);
-    }
-
     public function testHandleInvokesOutHandlerIfQueueIsExhausted()
     {
         $triggered = null;
@@ -185,32 +147,6 @@ class MiddlewarePipeTest extends TestCase
         });
 
         $this->assertTrue($executed);
-    }
-
-    /**
-     * @todo Update invocation to provide a no-op final handler for 2.0
-     */
-    public function testReturnsOrigionalResponseIfQueueDoesNotReturnAResponseAndNoFinalHandlerRegistered()
-    {
-        $this->suppressDeprecationNotice();
-
-        $this->middleware->pipe(function ($req, $res, $next) {
-            $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
-            $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
-            return;
-        });
-        $phpunit = $this;
-        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Should not hit fourth handler!');
-        });
-
-        $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $result  = $this->middleware->__invoke($request, $this->response);
-        $this->assertSame($this->response, $result->getOriginalResponse());
     }
 
     public function testReturnsResponseReturnedByQueue()
@@ -469,64 +405,5 @@ class MiddlewarePipeTest extends TestCase
                 $nestedPath
             )
         );
-    }
-
-    /**
-     * Test that FinalHandler is passed the original response.
-     *
-     * Tests that MiddlewarePipe passes the original response passed to it when
-     * creating the FinalHandler instance, and that FinalHandler compares the
-     * response passed to it on invocation to its original response.
-     *
-     * If the two differ, the response passed during invocation should be
-     * returned unmodified; this is an indication that a middleware has provided
-     * a response, and is simply passing further up the chain to allow further
-     * processing (e.g., to allow an application-wide logger at the end of the
-     * request).
-     *
-     * @group nextChaining
-     */
-    public function testPassesOriginalResponseToFinalHandler()
-    {
-        $this->suppressDeprecationNotice();
-        $request  = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $response = new Response();
-        $test     = new Response();
-
-        $pipeline = new MiddlewarePipe();
-        $pipeline->pipe(function ($req, $res, $next) use ($test) {
-            return $next($req, $test);
-        });
-
-        // Pipeline MUST return response passed to $next if it differs from the
-        // original.
-        $result = $pipeline($request, $response);
-        $this->assertSame($test, $result);
-    }
-
-    public function testOmittingFinalHandlerDuringInvocationRaisesDeprecationNotice()
-    {
-        $request   = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $response  = new Response();
-        $triggered = false;
-
-        $this->deprecationsSuppressed = set_error_handler(function ($errno, $errstr) use (&$triggered) {
-            $this->assertContains(MiddlewarePipe::class . '()', $errstr);
-            $triggered = true;
-            return true;
-        }, E_USER_DEPRECATED);
-
-        $pipeline = new MiddlewarePipe();
-        $pipeline->pipe(function ($req, $res, $next) {
-            $res->write('Some content');
-            return $res->withStatus(201);
-        });
-
-        $result = $pipeline($request, $response);
-
-        $this->assertNotSame($response, $result);
-        $this->assertEquals(201, $result->getStatusCode());
-        $this->assertEquals('Some content', (string) $result->getBody());
-        $this->assertTrue($triggered, 'Error handler was not triggered');
     }
 }

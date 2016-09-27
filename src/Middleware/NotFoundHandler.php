@@ -32,10 +32,10 @@ class NotFoundHandler implements MiddlewareInterface
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response Ignored.
-     * @param null|callable $next Ignored.
+     * @param callable $next Ignored.
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
         $response = $this->responsePrototype
             ->withStatus(404);

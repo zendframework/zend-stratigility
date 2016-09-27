@@ -32,7 +32,12 @@ class NotFoundHandlerTest extends TestCase
 
         $this->assertSame(
             $response->reveal(),
-            $middleware($request->reveal(), $this->prophesize(ResponseInterface::class)->reveal())
+            $middleware(
+                $request->reveal(),
+                $this->prophesize(ResponseInterface::class)->reveal(),
+                function () {
+                }
+            )
         );
     }
 }

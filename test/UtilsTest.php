@@ -25,7 +25,7 @@ class UtilsTest extends TestCase
             'closure'        => [function ($x, $y) {
             }, 2],
             'invokable'      => [new Dispatch(), 5],
-            'interface'      => [new MiddlewarePipe(), 2], // 2 REQUIRED arguments!
+            'interface'      => [new MiddlewarePipe(), 3],
             'callable'       => [[new NormalHandler(), 'handle'], 3],
             'static-method'  => [[__NAMESPACE__ . '\TestAsset\StaticHandler', 'handle'], 3],
             'static-access'  => [__NAMESPACE__ . '\TestAsset\StaticHandler::handle', 3],

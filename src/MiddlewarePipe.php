@@ -67,26 +67,13 @@ class MiddlewarePipe implements MiddlewareInterface
      * @param callable $out
      * @return Response
      */
-    public function __invoke(Request $request, Response $response, callable $out = null)
+    public function __invoke(Request $request, Response $response, callable $next)
     {
         $request  = $this->decorateRequest($request);
         $response = $this->decorateResponse($response);
+        $next     = new Next($this->pipeline, $next);
 
-        if (null === $out) {
-            trigger_error(sprintf(
-                'The third argument to %s() ($out) will be required starting with '
-                . 'Stratigility version 2; please see '
-                . 'https://docs.zendframework.com/zend-stratigility/migration/to-v2/ for '
-                . 'more details on how to update your application to remove this message.',
-                __CLASS__
-            ), E_USER_DEPRECATED);
-        }
-
-        $done   = $out ?: new FinalHandler([], $response);
-        $next   = new Next($this->pipeline, $done);
-        $result = $next($request, $response);
-
-        return ($result instanceof Response ? $result : $response);
+        return $next($request, $response);
     }
 
     /**
