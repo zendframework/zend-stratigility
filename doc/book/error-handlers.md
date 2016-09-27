@@ -108,7 +108,7 @@ as separate layers:
 
 ```php
 // setup error handling
-$app->pipe(new ErrorHandler(new Response(), new ErrorHandler($isDevelopmentMode));
+$app->pipe(new ErrorHandler(new Response(), new ErrorResponseGenerator($isDevelopmentMode));
 
 // setup layers
 $app->pipe(/* ... */);
