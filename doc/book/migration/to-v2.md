@@ -119,5 +119,7 @@ The following classes, methods, and arguments are removed starting in version
 - `Zend\Stratigility\Dispatch` (class)
 - `Zend\Stratigility\ErrorMiddlewareInterface` (class)
 - `Zend\Stratigility\FinalHandler` (class)
+- `Zend\Stratigility\Utils::getArity()` (static method); no longer used
+  internally.
 - The `$err` argument to `Zend\Stratigility\Next`'s `__invoke()` method. If
   passed, it will now be ignored.
