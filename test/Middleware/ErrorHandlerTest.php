@@ -15,6 +15,7 @@ use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Zend\Escaper\Escaper;
 use Zend\Stratigility\Middleware\ErrorHandler;
+use Zend\Stratigility\Middleware\ErrorResponseGenerator;
 
 class ErrorHandlerTest extends TestCase
 {
@@ -33,7 +34,8 @@ class ErrorHandlerTest extends TestCase
 
     public function createMiddleware($isDevelopmentMode = false)
     {
-        return new ErrorHandler($this->response->reveal(), $isDevelopmentMode);
+        $generator = new ErrorResponseGenerator($isDevelopmentMode);
+        return new ErrorHandler($this->response->reveal(), $generator);
     }
 
     public function testReturnsResponseFromInnerMiddlewareWhenNoProblemsOccur()
@@ -193,6 +195,31 @@ class ErrorHandlerTest extends TestCase
         $middleware->attachListener($listener);
         $middleware->attachListener($listener2);
 
+        $result = $middleware($this->request->reveal(), $this->response->reveal(), $next);
+
+        $this->assertSame($this->response->reveal(), $result);
+    }
+
+    public function testCanProvideAlternateErrorResponseGenerator()
+    {
+        $generator = function ($e, $request, $response) {
+            $response = $response->withStatus(400);
+            $response->getBody()->write('The client messed up');
+            return $response;
+        };
+
+        $innerMiddleware = function () {
+            throw new RuntimeException('Exception raised', 503);
+        };
+
+        $next = new TestAsset\Next;
+        $next->push($innerMiddleware);
+
+        $this->response->withStatus(400)->will([$this->response, 'reveal']);
+        $this->response->getBody()->will([$this->body, 'reveal']);
+        $this->body->write('The client messed up')->shouldBeCalled();
+
+        $middleware = new ErrorHandler($this->response->reveal(), $generator);
         $result = $middleware($this->request->reveal(), $this->response->reveal(), $next);
 
         $this->assertSame($this->response->reveal(), $result);

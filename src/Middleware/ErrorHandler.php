@@ -8,6 +8,7 @@
 namespace Zend\Stratigility\Middleware;
 
 use ErrorException;
+use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
@@ -15,17 +16,63 @@ use Zend\Escaper\Escaper;
 use Zend\Stratigility\Exception\MissingResponseException;
 use Zend\Stratigility\Utils;
 
-class ErrorHandler
+/**
+ * Error handler middleware.
+ *
+ * Use this middleware as the outermost (or close to outermost) middleware
+ * layer, and use it to intercept PHP errors and exceptions.
+ *
+ * The class offers two extension points:
+ *
+ * - Error response generators.
+ * - Listeners.
+ *
+ * Error response generators are callables with the following signature:
+ *
+ * <code>
+ * function (
+ *     Throwable|Exception $e,
+ *     ServerRequestInterface $request,
+ *     ResponseInterface $response
+ * ) : ResponseInterface
+ * </code>
+ *
+ * These are provided the error, and the request responsible; the response
+ * provided is the response prototype provided to the ErrorHandler instance
+ * itself, and can be used as the basis for returning an error response.
+ *
+ * An error response generator must be provided as a constructor argument;
+ * if not provided, an instance of Zend\Stratigility\Middleware\ErrorResponseGenerator
+ * will be used.
+ *
+ * Listeners use the following signature:
+ *
+ * <code>
+ * function (
+ *     Throwable|Exception $e,
+ *     ServerRequestInterface $request,
+ *     ResponseInterface $response
+ * ) : void
+ * </code>
+ *
+ * Listeners are given the error, the request responsible, and the generated
+ * error response, and can then react to them. They are best suited for
+ * logging and monitoring purposes.
+ *
+ * Listeners are attached using the attachListener() method, and triggered
+ * in the order attached.
+ */
+final class ErrorHandler
 {
-    /**
-     * @var bool
-     */
-    protected $isDevelopmentMode;
-
     /**
      * @var callable[]
      */
     private $listeners = [];
+
+    /**
+     * @var callable Routine that will generate the error response.
+     */
+    private $responseGenerator;
 
     /**
      * @var ResponseInterface
@@ -35,12 +82,13 @@ class ErrorHandler
     /**
      * @param ResponseInterface $responsePrototype Empty/prototype response to
      *     update and return when returning an error response.
-     * @param bool $isDevelopmentMode
+     * @param callable $responseGenerator Callback that will generate the final
+     *     error response; if none is provided, ErrorResponseGenerator is used.
      */
-    public function __construct(ResponseInterface $responsePrototype, $isDevelopmentMode = false)
+    public function __construct(ResponseInterface $responsePrototype, callable $responseGenerator = null)
     {
         $this->responsePrototype = $responsePrototype;
-        $this->isDevelopmentMode = (bool) $isDevelopmentMode;
+        $this->responseGenerator = $responseGenerator ?: new ErrorResponseGenerator();
     }
 
     /**
@@ -48,7 +96,7 @@ class ErrorHandler
      *
      * Each listener receives the following three arguments:
      *
-     * - \Throwable|\Exception $error
+     * - Throwable|Exception $error
      * - ServerRequestInterface $request
      * - ResponseInterface $response
      *
@@ -95,47 +143,12 @@ class ErrorHandler
             }
         } catch (Throwable $e) {
             $response = $this->handleThrowable($e, $request);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $response = $this->handleThrowable($e, $request);
         }
 
         restore_error_handler();
 
-        return $response;
-    }
-
-    /**
-     * Create/update the response representing the error.
-     *
-     * This method may be overridden in order to allow an extending class to
-     * update and return the response representing the error condition.
-     *
-     * The response provided is the response prototype injected during
-     * instantiation; the error (an exception or throwable) and request are
-     * also provided to allow providing details from each when creating the
-     * error response.
-     *
-     * Classes overriding this method have access to $isDevelopmentMode in
-     * order to vary their response.
-     *
-     * The method MUST return a response!
-     *
-     * @param Throwable|\Exception $e
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return ResponseInterface
-     */
-    protected function createErrorResponse($e, ServerRequestInterface $request, ResponseInterface $response)
-    {
-        $response = $response->withStatus(Utils::getStatusCode($e, $response));
-        $body = $response->getBody();
-
-        if ($this->isDevelopmentMode) {
-             $body->write($this->createDevelopmentErrorMessage($e));
-             return $response;
-        }
-
-        $body->write($response->getReasonPhrase() ?: 'Unknown Error');
         return $response;
     }
 
@@ -146,13 +159,14 @@ class ErrorHandler
      * triggers all listeners with the same arguments (but using the response
      * returned from createErrorResponse()), and then returns the response.
      *
-     * @param Throwable|\Exception $e
+     * @param Throwable|Exception $e
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      */
     private function handleThrowable($e, ServerRequestInterface $request)
     {
-        $response = $this->createErrorResponse($e, $request, $this->responsePrototype);
+        $generator = $this->responseGenerator;
+        $response = $generator($e, $request, $this->responsePrototype);
         $this->triggerListeners($e, $request, $response);
         return $response;
     }
@@ -187,7 +201,7 @@ class ErrorHandler
     /**
      * Trigger all error listeners.
      *
-     * @param Throwable|\Exception $error
+     * @param Throwable|Exception $error
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return void
@@ -197,20 +211,5 @@ class ErrorHandler
         array_walk($this->listeners, function ($listener) use ($error, $request, $response) {
             $listener($error, $request, $response);
         });
-    }
-
-    /**
-     * Create a complete error message for development purposes.
-     *
-     * Creates an error message with the full exception backtrace, escaped
-     * for use in HTML.
-     *
-     * @param Throwable|\Exception $exception
-     * @return string
-     */
-    private function createDevelopmentErrorMessage($exception)
-    {
-        $escaper = new Escaper();
-        return $escaper->escapeHtml((string) $exception);
     }
 }
