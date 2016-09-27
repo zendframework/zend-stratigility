@@ -70,17 +70,33 @@ layers). It does the following:
   - if no exception is caught, it raises an exception, which will be caught.
   - any caught exception is transformed into an error response.
 
-The error response will have a 5XX series status code, and the message will be
+To generate the error response, we provide the ability to inject a callable with
+the following signature into the `ErrorHandler` during instantiation:
+
+```php
+Psr\Http\Message\ResponseInterface;
+Psr\Http\Message\ServerRequestInterface;
+
+function (
+    Throwable|Exception $e,
+    ServerRequestInterface $request,
+    ResponseInterface $response
+) : ResponseInterface
+```
+
+We provide a default implementation, `Zend\Stratigility\Middleware\ErrorResponseGenerator`,
+which generates an error response with a 5XX series status code and a message
 derived from the reason phrase, if any is present. You may pass a boolean flag
-to the constructor indicating the application is in development mode; if so, the
+to its constructor indicating the application is in development mode; if so, the
 response will have the stack trace included in the body.
 
-In order to work, it needs a prototype response instance, and, optionally, a
-flag indicating the status of development mode (default is production mode):
+In order to work, the `ErrorHandler` needs a prototype response instance, and,
+optionally, an error response generator (if none is provided,
+`ErrorResponseGenerator` is used, in production mode):
 
 ```php
 // setup error handling
-$app->pipe(new ErrorHandler(new Response(), $isDevelopmentMode);
+$app->pipe(new ErrorHandler(new Response(), new ErrorResponseGenerator($isDevelopmentMode));
 
 // setup layers
 $app->pipe(/* ... */);
@@ -92,7 +108,7 @@ as separate layers:
 
 ```php
 // setup error handling
-$app->pipe(new ErrorHandler(new Response(), $isDevelopmentMode);
+$app->pipe(new ErrorHandler(new Response(), new ErrorHandler($isDevelopmentMode));
 
 // setup layers
 $app->pipe(/* ... */);
@@ -104,15 +120,10 @@ $app->pipe(new NotFoundHandler(new Response());
 // execute application
 ```
 
-The `ErrorHandler` provides no templating facilities, and only responds as text
-and/or HTML. If you want to provide a templated response, or a different
-serialization and/or markup format, you will need to write your own
-implementation, or extend the `ErrorHandler`.
-
-The `ErrorHandler` provides one extension point useful to this:
-`createErrorResponse()`; this method is passed the exception representing the
-error, the request that resulted in the error, and the response prototype; you
-may then use these to generate a response to return.
+The `ErrorResponseGenerator` provides no templating facilities, and only
+responds as text/html. If you want to provide a templated response, or a
+different serialization and/or markup format, you will need to write your own
+error response generator.
 
 As an example:
 
@@ -124,20 +135,20 @@ use Throwable;
 use Zend\Stratigility\Exception\MissingResponseException;
 use Zend\Stratigility\Middleware\ErrorHandler;
 
-class TemplatedErrorHandler extends ErrorHandler
+class TemplatedErrorResponseGenerator
 {
+    private $isDevelopmentMode;
     private $renderer;
 
     public function __construct(
         TemplateRendererInterface $renderer,
-        ResponseInterface $responsePrototype,
         $isDevelopmentMode = false
     ) {
-        parent::__construct($responsePrototype, $isDevelopmentMode);
         $this->renderer = $renderer;
+        $this->isDevelopmentMode = $isDevelopmentMode;
     }
 
-    protected function createErrorResponse($e, ServerRequestInterface $request, ResponseInterface $response)
+    public function __invoke($e, ServerRequestInterface $request, ResponseInterface $response)
     {
         $response = $response->withStatus(500);
         $response->write($this->renderer->render('error::error', [
@@ -149,13 +160,35 @@ class TemplatedErrorHandler extends ErrorHandler
 }
 ```
 
+You would then pass this to the `ErrorHandler`:
+
+```php
+$app->pipe(new ErrorHandler(
+    new Response(),
+    new TemplatedErrorResponseGenerator($renderer, $isDevelopmentMode)
+));
+```
+
 ### ErrorHandler Listeners
 
-`Zend\Stratigility\ErrorHandler` provides the ability to attach *listeners*;
-these are triggered when an error or exception is caught, and provided with the
-exception/throwable raised, the original request, and the final response. These
-instances are considered immutable, so listeners are for purposes of
-logging/monitoring only.
+`Zend\Stratigility\Middleware\ErrorHandler` provides the ability to attach
+*listeners*; these are triggered when an error or exception is caught, and
+provided with the exception/throwable raised, the original request, and the
+final response. These instances are considered immutable, so listeners are for
+purposes of logging/monitoring only.
+
+Listeners must implement the following signature:
+
+```php
+Psr\Http\Message\ResponseInterface;
+Psr\Http\Message\ServerRequestInterface;
+
+function (
+    Throwable|Exception $e,
+    ServerRequestInterface $request,
+    ResponseInterface $response
+) : void
+```
 
 Attach listeners using `ErrorHandler::attachListener()`:
 
