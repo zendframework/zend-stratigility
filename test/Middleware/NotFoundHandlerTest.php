@@ -30,6 +30,9 @@ class NotFoundHandlerTest extends TestCase
 
         $middleware = new NotFoundHandler($response->reveal());
 
-        $this->assertSame($response->reveal(), $middleware($request->reveal()));
+        $this->assertSame(
+            $response->reveal(),
+            $middleware($request->reveal(), $this->prophesize(ResponseInterface::class)->reveal())
+        );
     }
 }

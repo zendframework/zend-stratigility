@@ -9,8 +9,9 @@ namespace Zend\Stratigility\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Zend\Stratigility\MiddlewareInterface;
 
-class NotFoundHandler
+class NotFoundHandler implements MiddlewareInterface
 {
     /**
      * @var ResponseInterface
@@ -30,9 +31,11 @@ class NotFoundHandler
      * Creates and returns a 404 response.
      *
      * @param ServerRequestInterface $request
+     * @param ResponseInterface $response Ignored.
+     * @param null|callable $next Ignored.
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {
         $response = $this->responsePrototype
             ->withStatus(404);

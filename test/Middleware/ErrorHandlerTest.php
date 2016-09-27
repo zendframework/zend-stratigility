@@ -14,6 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Zend\Escaper\Escaper;
+use Zend\Stratigility\Exception\MissingDelegateException;
 use Zend\Stratigility\Middleware\ErrorHandler;
 use Zend\Stratigility\Middleware\ErrorResponseGenerator;
 
@@ -223,5 +224,18 @@ class ErrorHandlerTest extends TestCase
         $result = $middleware($this->request->reveal(), $this->response->reveal(), $next);
 
         $this->assertSame($this->response->reveal(), $result);
+    }
+
+    public function testInvokingErrorHandlerWithoutNextArgumentResultsInErrorResponse()
+    {
+        $generator = function ($e, $request, $response) {
+            $this->assertInstanceOf(MissingDelegateException::class, $e);
+            return $response;
+        };
+
+        $middleware = new ErrorHandler($this->response->reveal(), $generator);
+        $response = $middleware($this->request->reveal(), $this->response->reveal());
+
+        $this->assertSame($this->response->reveal(), $response);
     }
 }

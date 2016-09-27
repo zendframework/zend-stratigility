@@ -13,7 +13,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 use Zend\Escaper\Escaper;
+use Zend\Stratigility\Exception\MissingDelegateException;
 use Zend\Stratigility\Exception\MissingResponseException;
+use Zend\Stratigility\MiddlewareInterface;
 use Zend\Stratigility\Utils;
 
 /**
@@ -62,7 +64,7 @@ use Zend\Stratigility\Utils;
  * Listeners are attached using the attachListener() method, and triggered
  * in the order attached.
  */
-final class ErrorHandler
+final class ErrorHandler implements MiddlewareInterface
 {
     /**
      * @var callable[]
@@ -129,13 +131,19 @@ final class ErrorHandler
      * used.
      *
      * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param null|callable $next
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {
         set_error_handler($this->createErrorHandler());
 
         try {
+            if (! $next) {
+                throw new MissingDelegateException('No middleware stack provided.');
+            }
+
             $response = $next($request, $response);
 
             if (! $response instanceof ResponseInterface) {
