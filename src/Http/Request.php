@@ -18,6 +18,9 @@ use Psr\Http\Message\UriInterface;
  *
  * Decorates the PSR incoming request interface to add the ability to
  * manipulate arbitrary instance members.
+ *
+ * @deprecated since 1.3.0; to be removed with 2.0.0. Track the original
+ *     request via a request attribute or via a service instead.
  */
 class Request implements ServerRequestInterface
 {
