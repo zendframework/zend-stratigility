@@ -17,15 +17,44 @@ use Zend\Diactoros\Uri;
 use Zend\Stratigility\Http\Request as RequestDecorator;
 use Zend\Stratigility\Http\Response as ResponseDecorator;
 use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\NoopFinalHandler;
 use Zend\Stratigility\Utils;
 
 class MiddlewarePipeTest extends TestCase
 {
+    public $deprecationsSuppressed = false;
+
     public function setUp()
     {
+        $this->deprecationsSuppressed = false;
         $this->request    = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->response   = new Response();
         $this->middleware = new MiddlewarePipe();
+    }
+
+    public function tearDown()
+    {
+        if (false !== $this->deprecationsSuppressed) {
+            restore_error_handler();
+        }
+    }
+
+    /**
+     * @return NoopFinalHandler
+     */
+    public function createFinalHandler()
+    {
+        return new NoopFinalHandler();
+    }
+
+    public function suppressDeprecationNotice()
+    {
+        $this->deprecationsSuppressed = set_error_handler(function ($errno, $errstr) {
+            if (false === strstr($errstr, 'docs.zendframework.com')) {
+                return false;
+            }
+            return true;
+        }, E_USER_DEPRECATED);
     }
 
     public function invalidHandlers()
@@ -63,19 +92,22 @@ class MiddlewarePipeTest extends TestCase
         $this->middleware->pipe(function ($req, $res, $next) {
             $res->write("Third\n");
         });
-        $phpunit = $this;
-        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Should not hit fourth handler!');
+
+        $this->middleware->pipe(function ($req, $res, $next) {
+            $this->fail('Should not hit fourth handler!');
         });
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $this->middleware->__invoke($request, $this->response);
+        $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
         $body = (string) $this->response->getBody();
         $this->assertContains('First', $body);
         $this->assertContains('Second', $body);
         $this->assertContains('Third', $body);
     }
 
+    /**
+     * @todo remove for 2.0.0
+     */
     public function testHandleInvokesFirstErrorHandlerOnErrorInChain()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
@@ -95,8 +127,16 @@ class MiddlewarePipeTest extends TestCase
             $phpunit->fail('Should not hit fourth handler!');
         });
 
+        set_error_handler(function ($errno, $errstr) {
+            // no-op; skip handling
+            return true;
+        }, E_USER_DEPRECATED);
+
         $request  = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
         $response = $this->middleware->__invoke($request, $this->response);
+
+        restore_error_handler();
+
         $body     = (string) $response->getBody();
         $this->assertContains('First', $body);
         $this->assertContains('ERROR HANDLER', $body);
@@ -125,46 +165,35 @@ class MiddlewarePipeTest extends TestCase
         $this->assertTrue($triggered);
     }
 
-    public function testPipeWillCreateErrorClosureForObjectImplementingHandle()
-    {
-        $this->markTestIncomplete();
-        $handler = new TestAsset\ErrorHandler();
-        $this->middleware->pipe($handler);
-        $r = new ReflectionProperty($this->middleware, 'queue');
-        $r->setAccessible(true);
-        $queue = $r->getValue($this->middleware);
-        $route = $queue[$queue->count() - 1];
-        $this->assertInstanceOf('Zend\Stratigility\Route', $route);
-        $handler = $route->handler;
-        $this->assertInstanceOf('Closure', $handler);
-        $this->assertEquals(4, Utils::getArity($handler));
-    }
-
     public function testCanUseDecoratedRequestAndResponseDirectly()
     {
         $baseRequest = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
 
         $request  = new RequestDecorator($baseRequest);
         $response = new ResponseDecorator($this->response);
-        $phpunit  = $this;
         $executed = false;
 
         $middleware = $this->middleware;
-        $middleware->pipe(function ($req, $res, $next) use ($phpunit, $request, $response, &$executed) {
-            $phpunit->assertSame($request, $req);
-            $phpunit->assertSame($response, $res);
+        $middleware->pipe(function ($req, $res, $next) use ($request, $response, &$executed) {
+            $this->assertSame($request, $req);
+            $this->assertSame($response, $res);
             $executed = true;
         });
 
-        $middleware($request, $response, function ($err = null) use ($phpunit) {
-            $phpunit->fail('Next should not be called');
+        $middleware($request, $response, function ($err = null) {
+            $this->fail('Next should not be called');
         });
 
         $this->assertTrue($executed);
     }
 
-    public function testReturnsOrigionalResponseIfQueueDoesNotReturnAResponse()
+    /**
+     * @todo Update invocation to provide a no-op final handler for 2.0
+     */
+    public function testReturnsOrigionalResponseIfQueueDoesNotReturnAResponseAndNoFinalHandlerRegistered()
     {
+        $this->suppressDeprecationNotice();
+
         $this->middleware->pipe(function ($req, $res, $next) {
             $next($req, $res);
         });
@@ -197,13 +226,13 @@ class MiddlewarePipeTest extends TestCase
         $this->middleware->pipe(function ($req, $res, $next) use ($return) {
             return $return;
         });
-        $phpunit = $this;
-        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Should not hit fourth handler!');
+
+        $this->middleware->pipe(function ($req, $res, $next) {
+            $this->fail('Should not hit fourth handler!');
         });
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $result  = $this->middleware->__invoke($request, $this->response);
+        $result  = $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
         $this->assertSame($return, $result, var_export([
             spl_object_hash($return) => get_class($return),
             spl_object_hash($result) => get_class($result),
@@ -215,12 +244,13 @@ class MiddlewarePipeTest extends TestCase
         $this->middleware->pipe('/admin', function ($req, $res, $next) {
             return $next($req, $res);
         });
-        $phpunit = $this;
-        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
+
+        $this->middleware->pipe(function ($req, $res, $next) {
             return $res->write($req->getUri()->getPath());
         });
+
         $request = new Request([], [], 'http://local.example.com/admin', 'GET', 'php://memory');
-        $result  = $this->middleware->__invoke($request, $this->response);
+        $result  = $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
         $body    = (string) $result->getBody();
         $this->assertSame('/admin', $body);
     }
@@ -230,12 +260,13 @@ class MiddlewarePipeTest extends TestCase
         $this->middleware->pipe('/admin', function ($req, $res, $next) {
             return $next($req, $res);
         });
-        $phpunit = $this;
-        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
+
+        $this->middleware->pipe(function ($req, $res, $next) {
             return $res->write($req->getUri()->getPath());
         });
+
         $request = new Request([], [], 'http://local.example.com/admin/', 'GET', 'php://memory');
-        $result  = $this->middleware->__invoke($request, $this->response);
+        $result  = $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
         $body    = (string) $result->getBody();
         $this->assertSame('/admin/', $body);
     }
@@ -260,7 +291,7 @@ class MiddlewarePipeTest extends TestCase
         });
 
         $request = new Request([], [], 'http://local.example.com/test', 'GET', 'php://memory');
-        $result  = $this->middleware->__invoke($request, $this->response);
+        $result  = $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
         $this->assertTrue($triggered);
         $this->assertInstanceOf('Zend\Stratigility\Http\Response', $result);
         $this->assertSame($this->response, $result->getOriginalResponse());
@@ -269,16 +300,14 @@ class MiddlewarePipeTest extends TestCase
     public function testMiddlewareRequestPathMustBeTrimmedOffWithPipeRoutePath()
     {
         $request  = new Request([], [], 'http://local.example.com/foo/bar', 'GET', 'php://memory');
-
-        $phpunit  = $this;
         $executed = false;
 
-        $this->middleware->pipe('/foo', function ($req, $res, $next) use ($phpunit, &$executed) {
-            $phpunit->assertEquals('/bar', $req->getUri()->getPath());
+        $this->middleware->pipe('/foo', function ($req, $res, $next) use (&$executed) {
+            $this->assertEquals('/bar', $req->getUri()->getPath());
             $executed = true;
         });
 
-        $this->middleware->__invoke($request, $this->response);
+        $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
         $this->assertTrue($executed);
     }
 
@@ -303,7 +332,7 @@ class MiddlewarePipeTest extends TestCase
         $uri     = (new Uri())->withPath($path);
         $request = (new Request)->withUri($uri);
 
-        $response = $middleware($request, $this->response);
+        $response = $middleware($request, $this->response, $this->createFinalHandler());
         $this->assertTrue($response->hasHeader('x-found'));
     }
 
@@ -429,7 +458,7 @@ class MiddlewarePipeTest extends TestCase
 
         $uri      = (new Uri())->withPath($fullPath);
         $request  = (new Request)->withUri($uri);
-        $response = $middleware($request, $this->response);
+        $response = $middleware($request, $this->response, $this->createFinalHandler());
         $this->$assertion(
             $response->hasHeader('X-Found'),
             sprintf(
@@ -459,6 +488,7 @@ class MiddlewarePipeTest extends TestCase
      */
     public function testPassesOriginalResponseToFinalHandler()
     {
+        $this->suppressDeprecationNotice();
         $request  = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
         $response = new Response();
         $test     = new Response();
@@ -472,5 +502,31 @@ class MiddlewarePipeTest extends TestCase
         // original.
         $result = $pipeline($request, $response);
         $this->assertSame($test, $result);
+    }
+
+    public function testOmittingFinalHandlerDuringInvocationRaisesDeprecationNotice()
+    {
+        $request   = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
+        $response  = new Response();
+        $triggered = false;
+
+        $this->deprecationsSuppressed = set_error_handler(function ($errno, $errstr) use (&$triggered) {
+            $this->assertContains(MiddlewarePipe::class . '()', $errstr);
+            $triggered = true;
+            return true;
+        }, E_USER_DEPRECATED);
+
+        $pipeline = new MiddlewarePipe();
+        $pipeline->pipe(function ($req, $res, $next) {
+            $res->write('Some content');
+            return $res->withStatus(201);
+        });
+
+        $result = $pipeline($request, $response);
+
+        $this->assertNotSame($response, $result);
+        $this->assertEquals(201, $result->getStatusCode());
+        $this->assertEquals('Some content', (string) $result->getBody());
+        $this->assertTrue($triggered, 'Error handler was not triggered');
     }
 }

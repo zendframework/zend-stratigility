@@ -10,11 +10,61 @@ details.
 
 ### Added
 
-- Nothing.
+- [#66](https://github.com/zendframework/zend-stratigility/pull/66) adds a new
+  class, `Zend\Stratigility\Middleware\NotFoundHandler`. This class may be piped
+  into an application at an innermost layer; when invoked, it will return a 404
+  plain text response.
+
+- [#66](https://github.com/zendframework/zend-stratigility/pull/66) adds a new
+  class, `Zend\Stratigility\Middleware\ErrorHandler`. This class may be piped
+  into an application, typically at the outermost or one of the outermost
+  layers. When invoked, it does the following:
+
+  - Creates a PHP error handler that will re-throw PHP errors as
+    `ErrorExceptions`.
+  - Dispatches to the next layer.
+  - If the next layer does not return a response, it raises a new
+    `MissingResponseException`.
+  - Catches all exceptions from calling the next layer, and passes them to an
+    error response generator to return an error response.
+
+  A default error response generator is provided, which will return a 5XX series
+  response in plain text. You may provide a callable generator to the
+  constructor in order to customize the response generated; please refer to the
+  documentation for details.
+
+- [#66](https://github.com/zendframework/zend-stratigility/pull/66) adds a new
+  class, `Zend\Stratigility\NoopFinalHandler`. This class may be provided as the
+  `$out` argument to a `MiddlewarePipe`, or as the final handler to
+  `Zend\Diactoros\Server::listen()` (in which case it will be passed to the
+  middleware you invoke as the application). This handler returns the response
+  provided to it verbatim.
 
 ### Deprecated
 
-- Nothing.
+- [#66](https://github.com/zendframework/zend-stratigility/pull/66) deprecates
+  the `Zend\Stratigility\FinalHandler` class. We now recommend using the
+  `NoopFinalHandler`, along with the `ErrorHandler` and `NotFoundHandler`
+  middleware (or equivalents) to provide a more fine-grained, flexible, error
+  handling solution for your applications.
+
+- [#66](https://github.com/zendframework/zend-stratigility/pull/66) deprecates
+  the `Zend\Stratigility\Dispatch` class. This class is used internally by
+  `Next`, and deprecation should not affect the majority of users.
+
+- [#66](https://github.com/zendframework/zend-stratigility/pull/66) deprecates
+  `Zend\Stratigility\ErrorMiddlewareInterface`. We recommend instead using
+  exceptions, along with the `ErrorHandler`, to provide error handling for your
+  application.
+
+- [#66](https://github.com/zendframework/zend-stratigility/pull/66) updates
+  `Zend\Stratigility\MiddlewarePipe::__invoke()` to emit a deprecation notice if
+  no `$out` argument is provided, as version 2 will require it.
+
+- [#66](https://github.com/zendframework/zend-stratigility/pull/66) updates
+  `Zend\Stratigility\Next::__invoke()` to emit a deprecation notice if
+  a non-null `$err` argument is provided; middleware should raise an exception,
+  instead of invoking middleware implementing `ErrorMiddlewareInterface`.
 
 ### Removed
 

@@ -13,8 +13,8 @@ Stratigility has the following dependencies (which are managed by Composer):
   implementation of PSR-7; one such package is
   [Diactoros](https://zendframework.github.io/zend-diactoros/).
 
-- `zendframework/zend-escaper`, used by the `FinalHandler` for escaping error messages prior to
-  passing them to the response.
+- `zendframework/zend-escaper`, used by the `ErrorHandler` middleware and the
+  for escaping error messages prior to passing them to the response.
 
 You can provide your own request and response implementations if desired as long as they implement
 the PSR-7 HTTP message interfaces.

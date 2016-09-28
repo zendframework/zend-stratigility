@@ -60,6 +60,8 @@ class MiddlewarePipe implements MiddlewareInterface
      * $next has exhausted the pipeline; otherwise, a FinalHandler instance
      * is created and passed to $next during initialization.
      *
+     * @todo Make $out required for 2.0.0.
+     * @todo Remove trigger of deprecation notice when preparing for 2.0.0.
      * @param Request $request
      * @param Response $response
      * @param callable $out
@@ -69,6 +71,16 @@ class MiddlewarePipe implements MiddlewareInterface
     {
         $request  = $this->decorateRequest($request);
         $response = $this->decorateResponse($response);
+
+        if (null === $out) {
+            trigger_error(sprintf(
+                'The third argument to %s() ($out) will be required starting with '
+                . 'Stratigility version 2; please see '
+                . 'https://docs.zendframework.com/zend-stratigility/migration/to-v2/ for '
+                . 'more details on how to update your application to remove this message.',
+                __CLASS__
+            ), E_USER_DEPRECATED);
+        }
 
         $done   = $out ?: new FinalHandler([], $response);
         $next   = new Next($this->pipeline, $done);
