@@ -103,7 +103,7 @@ function ($request, $response, $next) use ($bodyParser)
 ```php
 function ($request, $response, $next)
 {
-    $updated = $response->addHeader('Cache-Control', [
+    $updated = $response->withAddedHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
@@ -117,7 +117,7 @@ function ($request, $response, $next)
 ```php
 function ($request, $response, $next) use ($bodyParser)
 {
-    $updated = $response->addHeader('Cache-Control', [
+    $updated = $response->withAddedHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
@@ -139,7 +139,7 @@ up to all callers.
 ```php
 function ($request, $response, $next)
 {
-    $response = $response->addHeader('Cache-Control', [
+    $response = $response->withAddedHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
@@ -166,7 +166,7 @@ return $response;
 ### Raising an error condition
 
 - Deprecated as of 1.3.0; please use exceptions and a error handling middleware
-  such as the [ErrorHandler](error-handlers.md#handling-php-errors-and-exceptions) 
+  such as the [ErrorHandler](error-handlers.md#handling-php-errors-and-exceptions)
   to handle error conditions in your application instead.
 
 To raise an error condition, pass a non-null value as the third argument to `$next()`:
