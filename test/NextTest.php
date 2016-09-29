@@ -12,11 +12,9 @@ namespace ZendTest\Stratigility;
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
 use SplQueue;
-use Zend\Diactoros\ServerRequest as PsrRequest;
-use Zend\Diactoros\Response as PsrResponse;
+use Zend\Diactoros\ServerRequest as Request;
+use Zend\Diactoros\Response;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\Http\Request;
-use Zend\Stratigility\Http\Response;
 use Zend\Stratigility\Next;
 use Zend\Stratigility\Route;
 
@@ -24,10 +22,9 @@ class NextTest extends TestCase
 {
     public function setUp()
     {
-        $psrRequest     = new PsrRequest([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->queue    = new SplQueue();
-        $this->request  = new Request($psrRequest);
-        $this->response = new Response(new PsrResponse());
+        $this->request  = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
+        $this->response = new Response();
     }
 
     public function testReturnsResponseAtInvocationWhenQueueIsExhausted()
@@ -181,7 +178,7 @@ class NextTest extends TestCase
 
     public function testMiddlewareCallingNextWithResponseResetsResponse()
     {
-        $cannedResponse = new Response(new PsrResponse());
+        $cannedResponse = new Response();
 
         $route1 = new Route('/foo', function ($req, $res, $next) use ($cannedResponse) {
             return $next($req, $cannedResponse);
@@ -201,7 +198,7 @@ class NextTest extends TestCase
 
     public function testNextShouldReturnReturnValueOfMiddlewareInvoked()
     {
-        $cannedResponse = new Response(new PsrResponse());
+        $cannedResponse = new Response();
 
         $route1 = new Route('/foo', function ($req, $res, $next) use ($cannedResponse) {
             $next($req, $cannedResponse);
