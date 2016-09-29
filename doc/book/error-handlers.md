@@ -151,10 +151,10 @@ class TemplatedErrorResponseGenerator
     public function __invoke($e, ServerRequestInterface $request, ResponseInterface $response)
     {
         $response = $response->withStatus(500);
-        $response->write($this->renderer->render('error::error', [
+        $response->getBody()->write($this->renderer->render('error::error', [
             'exception'        => $e,
             'development_mode' => $this->isDevelopmentMode,
-        ]);
+        ]));
         return $response;
     }
 }
