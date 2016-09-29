@@ -20,7 +20,8 @@ use Psr\Http\Message\UriInterface;
  * manipulate arbitrary instance members.
  *
  * @deprecated since 1.3.0; to be removed with 2.0.0. Track the original
- *     request via a request attribute or via a service instead.
+ *     request via a request attribute or via a service instead; you can
+ *     use Zend\Stratigility\Middleware\OriginalMessages to do so.
  */
 class Request implements ServerRequestInterface
 {
@@ -53,7 +54,9 @@ class Request implements ServerRequestInterface
         }
 
         $this->originalRequest = $originalRequest;
-        $this->psrRequest      = $decoratedRequest->withAttribute('originalUri', $originalRequest->getUri());
+        $this->psrRequest      = $decoratedRequest
+            ->withAttribute('originalUri', $originalRequest->getUri())
+            ->withAttribute('originalRequest', $originalRequest);
     }
 
     /**

@@ -20,8 +20,9 @@ use Psr\Http\Message\StreamInterface;
  * to provide a common interface for all PSR HTTP implementations.
  *
  * @deprecated since 1.3.0; to be removed with 2.0.0. Track the original
- *     response via a request attribute or via a service instead; use
- *     only the methods defined in PSR-7.
+ *     response via a request attribute or via a service instead; you
+ *     can use Zend\Stratigility\Middleware\OriginalMessages to do so. We
+ *     recommend that you use only the methods defined in PSR-7.
  */
 class Response implements
     PsrResponseInterface,
