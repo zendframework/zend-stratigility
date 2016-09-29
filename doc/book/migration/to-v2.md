@@ -8,6 +8,55 @@ To help you prepare your code for version 2, version 1.3.0 provides several
 forwards compatibility features to assist you in the process. However, some
 changes will still require changes to your code following the 2.0 release.
 
+## Original request, response, and URI
+
+In the original 1.X releases, Stratigility would decorate the request and
+response instances with `Zend\Stratigility\Http\Request` and
+`Zend\Stratigility\Http\Response`, respectively. This was done originally to
+facilitate access to the incoming request in cases of nested layers, where the
+URI path may have been truncated (`Next` truncates matched paths when executing
+a layer if a path was provided when piping the middleware).
+
+Internally, prior to 1.3, only `Zend\Stratigility\FinalHandler` was still using
+this functionality:
+
+- It would query the original request to get the original URI when creating a
+  404 response message.
+- It passes the decorated request and response instances to `onerror` handlers.
+
+Starting with 1.3.0, we now deprecate these message decorators, and recommend
+against their usage.
+
+If you still need access to the original request, response, or URI instance, we
+recommend the following:
+
+- Pipe `Zend\Stratigility\Middleware\OriginalMessages` as the outermost layer of
+  your application. This will inject the following request attributes into
+  layers beneath it:
+    - `originalRequest`, mapping to the request provided to it at invocation.
+    - `originalResponse`, mapping to the response provided to it at invocation.
+    - `originalUri`, mapping to the URI composed by the request provided to it at
+      invocation.
+
+You can then access these values within other middleware:
+
+```php
+$originalRequest = $request->getAttribute('originalRequest');
+$originalResponse = $request->getAttribute('originalResponse');
+$originalUri = $request->getAttribute('originalUri');
+```
+
+Internally, starting with 1.3.0, we have updated the request decorator to add
+the `originalRequest` attribute, and the `FinalHandler` to check for this,
+instead of the decorated instance.
+
+Finally, if you are creating an `onerror` handler for the `FinalHandler`, update
+your typehints to refer to the PSR-7 request and response interfaces instead of
+the Stratigility decorators, if you aren't already.
+
+The `Zend\Stratigility\Http` classes, interfaces, and namespace will be removed
+in version 2.0.0.
+
 ## Error handling
 
 Prior to version 1.3, the recommended way to handle errors was via
@@ -95,3 +144,6 @@ The following classes, methods, and arguments are deprecated starting in version
 - The `$err` argument to `Zend\Stratigility\Next`'s `__invoke()` method.
   Starting in 1.3.0, if a non-null value is encountered, this method will now
   emit an `E_USER_DEPRECATED` notice, referencing this documentation.
+- `Zend\Stratigility\Http\Request` (class)
+- `Zend\Stratigility\Http\ResponseInterface` (interface)
+- `Zend\Stratigility\Http\Response` (class)
