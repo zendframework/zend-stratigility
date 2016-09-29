@@ -53,6 +53,16 @@ class Response implements
      */
     public function getOriginalResponse()
     {
+        trigger_error(sprintf(
+            '%s is now deprecated. Please register %s as your outermost middleware, '
+            . 'and pull the original response via the request "originalResponse" '
+            . 'attribute. %s will no longer be available starting in Stratigility 2.0.0. '
+            . 'Please see https://docs.zendframework.com/migration/to-v2/#original-request-response-and-uri '
+            . 'for full details.',
+            __CLASS__,
+            \Zend\Stratigility\Middleware\OriginalMessages::class,
+            __METHOD__
+        ), E_USER_DEPRECATED);
         return $this->psrResponse;
     }
 
@@ -67,6 +77,15 @@ class Response implements
      */
     public function write($data)
     {
+        trigger_error(sprintf(
+            '%s is now deprecated; use $response->getBody()->write(). '
+            . '%s will no longer be available starting in Stratigility 2.0.0. '
+            . 'Please see https://docs.zendframework.com/migration/to-v2/#deprecated-functionality '
+            . 'for full details.',
+            __CLASS__,
+            __METHOD__
+        ), E_USER_DEPRECATED);
+
         if ($this->complete) {
             throw $this->responseIsAlreadyCompleted(__METHOD__);
         }
@@ -89,6 +108,15 @@ class Response implements
      */
     public function end($data = null)
     {
+        trigger_error(sprintf(
+            '%s is now deprecated; use $response->getBody()->write(). '
+            . '%s will no longer be available starting in Stratigility 2.0.0. '
+            . 'Please see https://docs.zendframework.com/migration/to-v2/#deprecated-functionality '
+            . 'for full details.',
+            __CLASS__,
+            __METHOD__
+        ), E_USER_DEPRECATED);
+
         if ($this->complete) {
             return $this;
         }
@@ -111,6 +139,15 @@ class Response implements
      */
     public function isComplete()
     {
+        trigger_error(sprintf(
+            '%s is now deprecated; use $response->getBody()->write(). '
+            . '%s will no longer be available starting in Stratigility 2.0.0. '
+            . 'Please see https://docs.zendframework.com/migration/to-v2/#deprecated-functionality '
+            . 'for full details.',
+            __CLASS__,
+            __METHOD__
+        ), E_USER_DEPRECATED);
+
         return $this->complete;
     }
 
