@@ -154,7 +154,7 @@ class TemplatedErrorResponseGenerator
         $response->getBody()->write($this->renderer->render('error::error', [
             'exception'        => $e,
             'development_mode' => $this->isDevelopmentMode,
-        ]);
+        ]));
         return $response;
     }
 }
