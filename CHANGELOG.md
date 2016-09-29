@@ -12,13 +12,51 @@ details.
 
 - Nothing.
 
+### Changed
+
+- [#67](https://github.com/zendframework/zend-stratigility/pull/67) renames the
+  `$out` argument of `Zend\Stratigility\MiddlewareInterface()` to `$next`, and
+  now *requires* the argument. Each of the following `MiddlewareInterface`
+  implementations were updated accordingly:
+  - `Zend\Stratigility\MiddlewarePipe`
+  - `Zend\Stratigility\Middleware\ErrorHandler`
+  - `Zend\Stratigility\Middleware\NotFoundHandler`
+- [#67](https://github.com/zendframework/zend-stratigility/pull/67) modifies
+  the internals of `Zend\Stratigility\MiddlewarePipe`'s `__invoke()` method.
+  - When instantiating the `Next` instance, it now captures it in a variable
+    named `$layer`.
+  - If the result of `Next` is not a response instance, the response passed
+    during invocation is promoted as the layer response.
+  - The response is then passed to the `$next` argument provided at invocation,
+    and the result of that returned without verification.
+  In most cases, this should have no impact on your application.
+
 ### Deprecated
 
 - Nothing.
 
 ### Removed
 
-- Nothing.
+- [#67](https://github.com/zendframework/zend-stratigility/pull/67) removes
+  `Zend\Stratigility\FinalHandler`. Use `Zend\Stratigility\NoopFinalHandler`
+  instead, along with `Zend\Stratigility\Middleware\ErrorHandler` and
+  `Zend\Stratigility\Middleware\NotFoundHandler` (or equivalents).
+- [#67](https://github.com/zendframework/zend-stratigility/pull/67) removes
+  `Zend\Stratigility\ErrorMiddlewareInterface`. Register middleware, such as
+  `Zend\Stratigility\Middleware\ErrorHandler`, in outer layers of your
+  application to handle errors.
+- [#67](https://github.com/zendframework/zend-stratigility/pull/67) removes
+  `Zend\Stratigility\Dispatch`. This was an internal detail of the `Next`
+  implementation, and should not affect most applications.
+- [#67](https://github.com/zendframework/zend-stratigility/pull/67) removes
+  `Zend\Stratigility\Utils::getArity()`. This was used only in `Dispatch`;
+  since middleware signatures no longer vary, it is no longer necessary.
+- [#67](https://github.com/zendframework/zend-stratigility/pull/67) removes
+  the final, optional `$err` argument to `Zend\Stratigility\Next()`; raise
+  exceptions instead, and provide error handling middleware such as
+  `Zend\Stratigility\Middleware\ErrorHandler` instead.
+- [#67](https://github.com/zendframework/zend-stratigility/pull/67) removes
+  the `$done` argument to the `Zend\Stratigility\Next` constructor.
 
 ### Fixed
 
