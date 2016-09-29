@@ -82,51 +82,57 @@ function ($request, $response, $next) use ($bodyParser)
 }
 ```
 
-### Providing an altered response:
+### Operating on a returned response
 
 ```php
 function ($request, $response, $next)
 {
-    $updated = $response->withAddedHeader('Cache-Control', [
+    $response = $next($request, $response);
+    return $response->withAddedHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $next($request, $updated);
 }
 ```
 
 > ### Do not pass an altered response
 >
-> Passing an altered response seems like a good idea. However, this means that
-> a deeper layer within the application could return a completely new response,
-> losing any changes you injected.
+> Altering the response and passing the new instance to `$next()` is another
+> approach you can use. However, we recommend against it; a deeper layer within
+> the application could return a completely new response, losing any changes you
+> provided.
 >
-> As such, we recommend operating only on the response returned by invoking
+> As such, we recommend operating only on the response *returned* by invoking
 > `$next()`, or returning a brand new response instance entirely.
 
-### Providing both an altered request and response:
+### Providing an altered request and operating on the returned response:
 
 ```php
+use Psr\Http\Message\ResponseInterface;
+
 function ($request, $response, $next) use ($bodyParser)
 {
-    $updated = $response->withAddedHeader('Cache-Control', [
+    $result = $next(
+        $request->withBodyParams($bodyParser($request)),
+        $response
+    );
+
+    $response = $result instanceof ResponseInterface ? $result : $response;
+
+    return $response->withAddedHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $next(
-        $request->withBodyParams($bodyParser($request)),
-        $updated
-    );
 }
 ```
 
-> ### Do not pass an altered response
+> ### Check the return value of $next
 >
-> As noted in the example immediately above, we recommend only operating
-> on the response returned by `$next()`, or returning a new response
-> instance.
+> Middleware *should* return a `ResponseInterface` instance, but *could*
+> return something else. In such a case, you can either raise an exception,
+> or operate on the original response provided to your middleware.
 
 ### Returning a response to complete the request
 
@@ -137,12 +143,11 @@ your middleware.
 ```php
 function ($request, $response, $next)
 {
-    $response = $response->withAddedHeader('Cache-Control', [
+    return $response->withAddedHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $response;
 }
 ```
 
@@ -160,6 +165,29 @@ And, if not calling `$next()`, returning the response instance:
 ```php
 return $response;
 ```
+
+### Raising an error condition
+
+If your middleware cannot complete &mdash; perhaps a database error occurred, a
+service was unreachable, etc. &mdash; how can you report the error?
+
+Raise an exception!
+
+```php
+function ($request, $response, $next) use ($service)
+{
+    $result = $service->fetchSomething();
+    if (! $result->isSuccess()) {
+        throw new RuntimeException('Error fetching something');
+    }
+
+    /* ... otherwise, complete the request ... */
+}
+```
+
+Use the [ErrorHandler middleware](error-handlers.md#handling-php-errors-and-exceptions)
+to handle exceptions thrown by your middleware and report the error condition to
+your users.
 
 ## HTTP Messages
 
