@@ -132,18 +132,14 @@ final class ErrorHandler implements MiddlewareInterface
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param null|callable $next
+     * @param callable $next
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
         set_error_handler($this->createErrorHandler());
 
         try {
-            if (! $next) {
-                throw new MissingDelegateException('No middleware stack provided.');
-            }
-
             $response = $next($request, $response);
 
             if (! $response instanceof ResponseInterface) {

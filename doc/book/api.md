@@ -12,9 +12,9 @@ class MiddlewarePipe implements MiddlewareInterface
 {
     public function pipe(string|callable $path, callable $middleware = null);
     public function __invoke(
-        Psr\Http\Message\ServerRequestInterface $request = null,
-        Psr\Http\Message\ResponseInterface $response = null,
-        callable $out
+        Psr\Http\Message\ServerRequestInterface $request,
+        Psr\Http\Message\ResponseInterface $response,
+        callable $next
     ) :  Psr\Http\Message\ResponseInterface;
 }
 ```
@@ -26,20 +26,7 @@ executed for that path and any subpaths.
 
 Middleware is executed in the order in which it is piped to the `MiddlewarePipe` instance.
 
-`__invoke()` is itself middleware. If `$out` is not provided, an instance of
-`Zend\Stratigility\FinalHandler` will be created, and used in the event that the pipe stack is
-exhausted (`MiddlewarePipe` passes the `$response` instance it receives to `FinalHandler` as well,
-so that the latter can determine if the response it receives is new).
-
-> ### $out is no longer optional
->
-> Starting in version 1.3.0, we now raise a deprecation notice if no argument is
-> passed for `$out`; starting in version 2.0.0, the argument will be required.
-> Always pass a `Next` instance, a `Zend\Stratigility\NoopFinalHandler`
-> instance, or a custom callback; we no longer recommend the `FinalHandler`
-> implementation.
-
-The callable should use the same signature as `Next()`:
+`__invoke()` is itself middleware. `$next` should have the following signature:
 
 ```php
 function (
@@ -48,8 +35,14 @@ function (
 ) : Psr\Http\Message\ResponseInterface
 ```
 
-Internally, `MiddlewarePipe` creates an instance of `Zend\Stratigility\Next`,
-feeding it its queue, executes it, and returns a response.
+Most often, you can pass an instance of `Zend\Stratigility\NoopFinalHandler` for
+`$next` if invoking a middleware pipeline manually; otherwise, a suitable
+callback will be provided for you (typically an instance of
+`Zend\Stratigility\Next`, which `MiddlewarePipe` creates internally before
+dispatching to the various middleware in its pipeline).
+
+Middleware should either return a response, or the result of `$next()` (which
+should eventually evaluate to a response instance).
 
 ## Next
 
@@ -58,9 +51,7 @@ delegating to middleware registered later in the stack. It is implemented as a f
 
 Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to your Request and/or
 Response instances, you will have new instances, and will need to make these known to the next
-middleware in the chain. `Next` expects these arguments for every invocation. Additionally, if an
-error condition has occurred, you may pass an optional third argument, `$err`, representing the
-error condition.
+middleware in the chain. `Next` expects these arguments for every invocation.
 
 ```php
 class Next
@@ -76,14 +67,7 @@ You should **always** either capture or return the return value of `$next()` whe
 application. The expected return value is a response instance, but if it is not, you may want to
 return the response provided to you.
 
-> ### $err argument
->
-> Technically, `Next::__invoke()` accepts a third, optional argument, `$err`.
-> However, as of version 1.3.0, this argument is deprecated, and usage will
-> raise a deprecation notice during runtime. We will be removing the argument
-> entirely starting with version 2.0.0.
-
-As examples:
+The following are examples demonstrating usage of `Next` within middleware.
 
 ### Providing an altered request:
 
@@ -98,53 +82,72 @@ function ($request, $response, $next) use ($bodyParser)
 }
 ```
 
-### Providing an altered response:
+### Operating on a returned response
 
 ```php
 function ($request, $response, $next)
 {
-    $updated = $response->withAddedHeader('Cache-Control', [
+    $response = $next($request, $response);
+    return $response->withAddedHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $next($request, $updated);
 }
 ```
 
-### Providing both an altered request and response:
+> ### Do not pass an altered response
+>
+> Altering the response and passing the new instance to `$next()` is another
+> approach you can use. However, we recommend against it; a deeper layer within
+> the application could return a completely new response, losing any changes you
+> provided.
+>
+> As such, we recommend operating only on the response *returned* by invoking
+> `$next()`, or returning a brand new response instance entirely.
+
+### Providing an altered request and operating on the returned response:
 
 ```php
+use Psr\Http\Message\ResponseInterface;
+
 function ($request, $response, $next) use ($bodyParser)
 {
-    $updated = $response->withAddedHeader('Cache-Control', [
+    $result = $next(
+        $request->withBodyParams($bodyParser($request)),
+        $response
+    );
+
+    $response = $result instanceof ResponseInterface ? $result : $response;
+
+    return $response->withAddedHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $next(
-        $request->withBodyParams($bodyParser($request)),
-        $updated
-    );
 }
 ```
+
+> ### Check the return value of $next
+>
+> Middleware *should* return a `ResponseInterface` instance, but *could*
+> return something else. In such a case, you can either raise an exception,
+> or operate on the original response provided to your middleware.
 
 ### Returning a response to complete the request
 
-If you have no changes to the response, and do not want further middleware in the pipeline to
-execute, do not call `$next()` and simply return from your middleware. However, it's almost always
-better and more predictable to return the response instance, as this will ensure it propagates back
-up to all callers.
+If you have no changes to the response, and do not want further middleware in
+the pipeline to execute, do not call `$next()` and simply return a response from
+your middleware.
 
 ```php
 function ($request, $response, $next)
 {
-    $response = $response->withAddedHeader('Cache-Control', [
+    return $response->withAddedHeader('Cache-Control', [
         'public',
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $response;
 }
 ```
 
@@ -165,53 +168,26 @@ return $response;
 
 ### Raising an error condition
 
-- Deprecated as of 1.3.0; please use exceptions and a error handling middleware
-  such as the [ErrorHandler](error-handlers.md#handling-php-errors-and-exceptions)
-  to handle error conditions in your application instead.
+If your middleware cannot complete &mdash; perhaps a database error occurred, a
+service was unreachable, etc. &mdash; how can you report the error?
 
-To raise an error condition, pass a non-null value as the third argument to `$next()`:
+Raise an exception!
 
 ```php
-function ($request, $response, $next)
+function ($request, $response, $next) use ($service)
 {
-    try {
-        // try some operation...
-    } catch (Exception $e) {
-        return $next($request, $response, $e); // Next registered error middleware will be invoked
+    $result = $service->fetchSomething();
+    if (! $result->isSuccess()) {
+        throw new RuntimeException('Error fetching something');
     }
+
+    /* ... otherwise, complete the request ... */
 }
 ```
 
-## FinalHandler
-
-- Deprecated starting with 1.3.0. Use `Zend\Stratigility\NoopFinalHandler` or a
-  custom handler guaranteed to return a response instead.
-
-`Zend\Stratigility\FinalHandler` is a default implementation of middleware to execute when the stack
-exhausts itself. It expects three arguments when invoked: a request instance, a response instance,
-and an error condition (or `null` for no error). It returns a response.
-
-`FinalHandler` allows two optional arguments during instantiation
-
-- `$options`, an array of options with which to configure itself. These options currently include:
-  - `env`, the application environment. If set to "production", no stack traces will be provided.
-  - `onerror`, a callable to execute if an error is passed when `FinalHandler` is invoked. The
-    callable is invoked with the error (which will be `null` in the absence of an error), the request,
-    and the response, in that order.
-- `Psr\Http\Message\ResponseInterface $response`; if passed, it will compare the response passed
-  during invocation against this instance; if they are different, it will return the response from
-  the invocation, as this indicates that one or more middleware provided a new response instance.
-
-Internally, `FinalHandler` does the following on invocation:
-
-- If `$error` is non-`null`, it creates an error response from the response provided at invocation,
-  ensuring a 400 or 500 series response is returned.
-- If the response at invocation matches the response provided at instantiation, it returns it
-  without further changes. This is an indication that some middleware at some point in the execution
-  chain called `$next()` with a new response instance.
-- If the response at invocation does not match the response provided at instantiation, or if no
-  response was provided at instantiation, it creates a 404 response, as the assumption is that no
-  middleware was capable of handling the request.
+Use the [ErrorHandler middleware](error-handlers.md#handling-php-errors-and-exceptions)
+to handle exceptions thrown by your middleware and report the error condition to
+your users.
 
 ## HTTP Messages
 

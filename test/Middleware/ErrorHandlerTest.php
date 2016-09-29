@@ -225,17 +225,4 @@ class ErrorHandlerTest extends TestCase
 
         $this->assertSame($this->response->reveal(), $result);
     }
-
-    public function testInvokingErrorHandlerWithoutNextArgumentResultsInErrorResponse()
-    {
-        $generator = function ($e, $request, $response) {
-            $this->assertInstanceOf(MissingDelegateException::class, $e);
-            return $response;
-        };
-
-        $middleware = new ErrorHandler($this->response->reveal(), $generator);
-        $response = $middleware($this->request->reveal(), $this->response->reveal());
-
-        $this->assertSame($this->response->reveal(), $response);
-    }
 }

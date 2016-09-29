@@ -26,8 +26,8 @@ use SplQueue;
  * `isComplete()` methods.
  *
  * It creates an instance of `Next` internally, invoking it with the provided
- * request and response instances; if no `$out` argument is provided, it will
- * create a `FinalHandler` instance and pass that to `Next` as well.
+ * request and response instances, passing the original request and the returned
+ * response to the `$next` argument when complete.
  *
  * Inspired by Sencha Connect.
  *
@@ -67,26 +67,17 @@ class MiddlewarePipe implements MiddlewareInterface
      * @param callable $out
      * @return Response
      */
-    public function __invoke(Request $request, Response $response, callable $out = null)
+    public function __invoke(Request $request, Response $response, callable $next)
     {
         $request  = $this->decorateRequest($request);
         $response = $this->decorateResponse($response);
+        $layer    = new Next($this->pipeline);
 
-        if (null === $out) {
-            trigger_error(sprintf(
-                'The third argument to %s() ($out) will be required starting with '
-                . 'Stratigility version 2; please see '
-                . 'https://docs.zendframework.com/zend-stratigility/migration/to-v2/ for '
-                . 'more details on how to update your application to remove this message.',
-                __CLASS__
-            ), E_USER_DEPRECATED);
-        }
+        $result = $layer($request, $response);
 
-        $done   = $out ?: new FinalHandler([], $response);
-        $next   = new Next($this->pipeline, $done);
-        $result = $next($request, $response);
-
-        return ($result instanceof Response ? $result : $response);
+        return $result instanceof Response
+            ? $next($request, $result)
+            : $next($request, $response);
     }
 
     /**
@@ -100,12 +91,7 @@ class MiddlewarePipe implements MiddlewareInterface
      *
      * A handler CAN implement MiddlewareInterface, but MUST be callable.
      *
-     * Handlers with arity >= 4 or those implementing ErrorMiddlewareInterface
-     * are considered error handlers, and will be executed when a handler calls
-     * $next with an error or raises an exception.
-     *
      * @see MiddlewareInterface
-     * @see ErrorMiddlewareInterface
      * @see Next
      * @param string|callable|object $path Either a URI path prefix, or middleware.
      * @param null|callable|object $middleware Middleware
