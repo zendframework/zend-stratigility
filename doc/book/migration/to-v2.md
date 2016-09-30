@@ -54,7 +54,7 @@ Finally, if you are creating an `onerror` handler for the `FinalHandler`, update
 your typehints to refer to the PSR-7 request and response interfaces instead of
 the Stratigility decorators, if you aren't already.
 
-The `Zend\Stratigility\Http` classes, interfaces, and namespace will be removed
+The `Zend\Stratigility\Http` classes, interfaces, and namespace are removed
 in version 2.0.0.
 
 ## Error handling
@@ -175,3 +175,6 @@ The following classes, methods, and arguments are removed starting in version
   internally.
 - The `$err` argument to `Zend\Stratigility\Next`'s `__invoke()` method. If
   passed, it will now be ignored.
+- `Zend\Stratigility\Http\Request` (class)
+- `Zend\Stratigility\Http\ResponseInterface` (interface)
+- `Zend\Stratigility\Http\Response` (class)

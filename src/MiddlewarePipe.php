@@ -20,11 +20,6 @@ use SplQueue;
  * This class implements a pipe-line of middleware, which can be attached using
  * the `pipe()` method, and is itself middleware.
  *
- * The request and response objects are decorated using the Zend\Stratigility\Http
- * variants in this package, ensuring that the request may store arbitrary
- * properties, and the response exposes the convenience `write()`, `end()`, and
- * `isComplete()` methods.
- *
  * It creates an instance of `Next` internally, invoking it with the provided
  * request and response instances, passing the original request and the returned
  * response to the `$next` argument when complete.
@@ -60,8 +55,6 @@ class MiddlewarePipe implements MiddlewareInterface
      * $next has exhausted the pipeline; otherwise, a FinalHandler instance
      * is created and passed to $next during initialization.
      *
-     * @todo Make $out required for 2.0.0.
-     * @todo Remove trigger of deprecation notice when preparing for 2.0.0.
      * @param Request $request
      * @param Response $response
      * @param callable $out
@@ -69,10 +62,7 @@ class MiddlewarePipe implements MiddlewareInterface
      */
     public function __invoke(Request $request, Response $response, callable $next)
     {
-        $request  = $this->decorateRequest($request);
-        $response = $this->decorateResponse($response);
-        $layer    = new Next($this->pipeline);
-
+        $layer = new Next($this->pipeline);
         $result = $layer($request, $response);
 
         return $result instanceof Response
@@ -139,35 +129,5 @@ class MiddlewarePipe implements MiddlewareInterface
         }
 
         return $path;
-    }
-
-    /**
-     * Decorate the Request instance
-     *
-     * @param Request $request
-     * @return Http\Request
-     */
-    private function decorateRequest(Request $request)
-    {
-        if ($request instanceof Http\Request) {
-            return $request;
-        }
-
-        return new Http\Request($request);
-    }
-
-    /**
-     * Decorate the Response instance
-     *
-     * @param Response $response
-     * @return Http\Response
-     */
-    private function decorateResponse(Response $response)
-    {
-        if ($response instanceof Http\Response) {
-            return $response;
-        }
-
-        return new Http\Response($response);
     }
 }

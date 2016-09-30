@@ -18,18 +18,27 @@ details.
   `$out` argument of `Zend\Stratigility\MiddlewareInterface()` to `$next`, and
   now *requires* the argument. Each of the following `MiddlewareInterface`
   implementations were updated accordingly:
+
   - `Zend\Stratigility\MiddlewarePipe`
   - `Zend\Stratigility\Middleware\ErrorHandler`
   - `Zend\Stratigility\Middleware\NotFoundHandler`
+
 - [#67](https://github.com/zendframework/zend-stratigility/pull/67) modifies
   the internals of `Zend\Stratigility\MiddlewarePipe`'s `__invoke()` method.
+
   - When instantiating the `Next` instance, it now captures it in a variable
     named `$layer`.
   - If the result of `Next` is not a response instance, the response passed
     during invocation is promoted as the layer response.
   - The response is then passed to the `$next` argument provided at invocation,
     and the result of that returned without verification.
+
   In most cases, this should have no impact on your application.
+
+- [#71](https://github.com/zendframework/zend-stratigility/pull/71) modifies
+  `Zend\Stratigility\MiddlewarePipe` such that it no longer decorates the
+  request and response provided at invocation with the
+  `Zend\Stratigility\Http\*` variants, as these have been removed.
 
 ### Deprecated
 
@@ -57,6 +66,12 @@ details.
   `Zend\Stratigility\Middleware\ErrorHandler` instead.
 - [#67](https://github.com/zendframework/zend-stratigility/pull/67) removes
   the `$done` argument to the `Zend\Stratigility\Next` constructor.
+- [#71](https://github.com/zendframework/zend-stratigility/pull/71) removes
+  the `Zend\Stratigility\Http\Request` class.
+- [#71](https://github.com/zendframework/zend-stratigility/pull/71) removes
+  the `Zend\Stratigility\Http\Response` class.
+- [#71](https://github.com/zendframework/zend-stratigility/pull/71) removes
+  `Zend\Stratigility\Http\ResponseInterface`.
 
 ### Fixed
 

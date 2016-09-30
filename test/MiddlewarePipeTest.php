@@ -11,57 +11,22 @@ namespace ZendTest\Stratigility;
 
 use PHPUnit_Framework_TestCase as TestCase;
 use ReflectionProperty;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\Http\Request as RequestDecorator;
-use Zend\Stratigility\Http\Response as ResponseDecorator;
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
 use Zend\Stratigility\Utils;
 
 class MiddlewarePipeTest extends TestCase
 {
-    public $errorHandler;
-
-    public $deprecationsSuppressed = false;
-
     public function setUp()
     {
-        $this->deprecationsSuppressed = false;
-
-        $this->restoreErrorHandler();
-        $this->errorHandler = function ($errno, $errstr) {
-            if (false !== strstr($errstr, RequestDecorator::class . ' is now deprecated')) {
-                return true;
-            }
-            if (false !== strstr($errstr, ResponseDecorator::class . ' is now deprecated')) {
-                return true;
-            }
-
-            return false;
-        };
-        set_error_handler($this->errorHandler, E_USER_DEPRECATED);
-
         $this->request    = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->response   = new Response();
         $this->middleware = new MiddlewarePipe();
-    }
-
-    public function tearDown()
-    {
-        if (false !== $this->deprecationsSuppressed) {
-            restore_error_handler();
-        }
-        $this->restoreErrorHandler();
-    }
-
-    public function restoreErrorHandler()
-    {
-        if ($this->errorHandler) {
-            restore_error_handler();
-            $this->errorHandler = null;
-        }
     }
 
     /**
@@ -70,16 +35,6 @@ class MiddlewarePipeTest extends TestCase
     public function createFinalHandler()
     {
         return new NoopFinalHandler();
-    }
-
-    public function suppressDeprecationNotice()
-    {
-        $this->deprecationsSuppressed = set_error_handler(function ($errno, $errstr) {
-            if (false === strstr($errstr, 'docs.zendframework.com')) {
-                return false;
-            }
-            return true;
-        }, E_USER_DEPRECATED);
     }
 
     public function invalidHandlers()
@@ -107,15 +62,15 @@ class MiddlewarePipeTest extends TestCase
     public function testHandleInvokesUntilFirstHandlerThatDoesNotCallNext()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
-            $res->write("First\n");
+            $res->getBody()->write("First\n");
             $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $res->write("Second\n");
+            $res->getBody()->write("Second\n");
             $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $res->write("Third\n");
+            $res->getBody()->write("Third\n");
         });
 
         $this->middleware->pipe(function ($req, $res, $next) {
@@ -152,28 +107,6 @@ class MiddlewarePipeTest extends TestCase
         $this->assertTrue($triggered);
     }
 
-    public function testCanUseDecoratedRequestAndResponseDirectly()
-    {
-        $baseRequest = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-
-        $request  = new RequestDecorator($baseRequest);
-        $response = new ResponseDecorator($this->response);
-        $executed = false;
-
-        $middleware = $this->middleware;
-        $middleware->pipe(function ($req, $res, $next) use ($request, $response, &$executed) {
-            $this->assertSame($request, $req);
-            $this->assertSame($response, $res);
-            $executed = true;
-        });
-
-        $middleware($request, $response, function ($request, $response) {
-            return $response;
-        });
-
-        $this->assertTrue($executed);
-    }
-
     public function testReturnsResponseReturnedByQueue()
     {
         $return = new Response();
@@ -207,7 +140,7 @@ class MiddlewarePipeTest extends TestCase
         });
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            return $res->write($req->getUri()->getPath());
+            return $res->getBody()->write($req->getUri()->getPath());
         });
 
         $request = new Request([], [], 'http://local.example.com/admin', 'GET', 'php://memory');
@@ -223,7 +156,7 @@ class MiddlewarePipeTest extends TestCase
         });
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            return $res->write($req->getUri()->getPath());
+            return $res->getBody()->write($req->getUri()->getPath());
         });
 
         $request = new Request([], [], 'http://local.example.com/admin/', 'GET', 'php://memory');
@@ -254,8 +187,8 @@ class MiddlewarePipeTest extends TestCase
         $request = new Request([], [], 'http://local.example.com/test', 'GET', 'php://memory');
         $result  = $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
         $this->assertTrue($triggered);
-        $this->assertInstanceOf('Zend\Stratigility\Http\Response', $result);
-        $this->assertSame($this->response, $result->getOriginalResponse());
+        $this->assertInstanceOf(ResponseInterface::class, $result);
+        $this->assertSame($this->response, $result);
     }
 
     public function testMiddlewareRequestPathMustBeTrimmedOffWithPipeRoutePath()
