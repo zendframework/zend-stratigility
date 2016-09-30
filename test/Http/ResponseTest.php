@@ -17,10 +17,31 @@ use Zend\Stratigility\Http\Response;
 
 class ResponseTest extends TestCase
 {
+    public $errorHandler;
+
     public function setUp()
     {
+        $this->restoreErrorHandler();
+        $this->errorHandler = function ($errno, $errstr) {
+            return (false !== strstr($errstr, Response::class . ' is now deprecated'));
+        };
+        set_error_handler($this->errorHandler, E_USER_DEPRECATED);
+
         $this->original = new PsrResponse();
         $this->response = new Response($this->original);
+    }
+
+    public function tearDown()
+    {
+        $this->restoreErrorHandler();
+    }
+
+    public function restoreErrorHandler()
+    {
+        if ($this->errorHandler) {
+            restore_error_handler();
+            $this->errorHandler = null;
+        }
     }
 
     public function testIsNotCompleteByDefault()

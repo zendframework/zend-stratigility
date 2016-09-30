@@ -96,6 +96,27 @@ details.
   middleware you invoke as the application). This handler returns the response
   provided to it verbatim.
 
+- [#70](https://github.com/zendframework/zend-stratigility/pull/70) adds a new
+  class, `Zend\Stratigility\Middleware\OriginalMessages`. Compose this
+  middleware in an outermost layer, and it will inject the following attributes
+  in the request passed to nested layers:
+
+  - `originalRequest`, representing the request provided to it.
+  - `originalResponse`, representing the response provided to it.
+  - `originalUri`, representing URI instance composed in the request provided to it.
+
+### Changed
+
+- [#70](https://github.com/zendframework/zend-stratigility/pull/70) makes the
+  following changes to `Zend\Stratigility\FinalHandler`:
+
+  - It now pulls the original request using the `originalRequest` attribute,
+    instead of `getOriginalRequest()`; see the deprecation of
+    `Zend\Stratigility\Http\Request`, below, for why this works.
+  - It no longer writes to the response using the
+    `Zend\Stratigility\Http\Response`-specific `write()` method, but rather
+    pulls the message body and writes to that.
+
 ### Deprecated
 
 - [#66](https://github.com/zendframework/zend-stratigility/pull/66) deprecates
@@ -121,6 +142,22 @@ details.
   `Zend\Stratigility\Next::__invoke()` to emit a deprecation notice if
   a non-null `$err` argument is provided; middleware should raise an exception,
   instead of invoking middleware implementing `ErrorMiddlewareInterface`.
+
+- [#70](https://github.com/zendframework/zend-stratigility/pull/70) deprecates
+  `Zend\Stratigility\Http\Request`. Additionally:
+
+  - The composed "PSR Request" is now injected with an additional attribute,
+    `originalRequest`, allowing retrieval using standard PSR-7 attribute access.
+  - The methods `getCurrentRequest()` and `getOriginalRequest()` now emit
+    deprecation notices when invoked, urging users to update their code.
+
+- [#70](https://github.com/zendframework/zend-stratigility/pull/70) deprecates
+  `Zend\Stratigility\Http\ResponseInterface`.
+
+- [#70](https://github.com/zendframework/zend-stratigility/pull/70) deprecates
+  `Zend\Stratigility\Http\Response`. Additionally, the methods `write()`,
+  `end()`, `isComplete()`, and `getOriginalResponse()` now emit deprecation
+  notices when invoked, urging users to update their code.
 
 ### Removed
 
