@@ -22,11 +22,27 @@ use Zend\Stratigility\Utils;
 
 class MiddlewarePipeTest extends TestCase
 {
+    public $errorHandler;
+
     public $deprecationsSuppressed = false;
 
     public function setUp()
     {
         $this->deprecationsSuppressed = false;
+
+        $this->restoreErrorHandler();
+        $this->errorHandler = function ($errno, $errstr) {
+            if (false !== strstr($errstr, RequestDecorator::class . ' is now deprecated')) {
+                return true;
+            }
+            if (false !== strstr($errstr, ResponseDecorator::class . ' is now deprecated')) {
+                return true;
+            }
+
+            return false;
+        };
+        set_error_handler($this->errorHandler, E_USER_DEPRECATED);
+
         $this->request    = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->response   = new Response();
         $this->middleware = new MiddlewarePipe();
@@ -36,6 +52,15 @@ class MiddlewarePipeTest extends TestCase
     {
         if (false !== $this->deprecationsSuppressed) {
             restore_error_handler();
+        }
+        $this->restoreErrorHandler();
+    }
+
+    public function restoreErrorHandler()
+    {
+        if ($this->errorHandler) {
+            restore_error_handler();
+            $this->errorHandler = null;
         }
     }
 
@@ -511,6 +536,11 @@ class MiddlewarePipeTest extends TestCase
         $triggered = false;
 
         $this->deprecationsSuppressed = set_error_handler(function ($errno, $errstr) use (&$triggered) {
+            if (false !== strstr($errstr, ResponseDecorator::class)) {
+                // ignore response decorator deprecation message
+                return true;
+            }
+
             $this->assertContains(MiddlewarePipe::class . '()', $errstr);
             $triggered = true;
             return true;

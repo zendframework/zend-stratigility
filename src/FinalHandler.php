@@ -121,7 +121,7 @@ class FinalHandler
      * @param mixed $error
      * @param RequestInterface $request Request instance.
      * @param ResponseInterface $response Response instance.
-     * @return Http\Response
+     * @return ResponseInterface
      */
     private function handleError($error, RequestInterface $request, ResponseInterface $response)
     {
@@ -148,7 +148,7 @@ class FinalHandler
      *
      * @param RequestInterface $request Request instance.
      * @param ResponseInterface $response Response instance.
-     * @return Http\Response
+     * @return ResponseInterface
      */
     private function create404(RequestInterface $request, ResponseInterface $response)
     {
@@ -204,11 +204,14 @@ class FinalHandler
      * If the request is not an Http\Request, casts it to one prior to invoking
      * the error handler.
      *
+     * If the response is not an Http\Response, casts it to one prior to invoking
+     * the error handler.
+     *
      * @param mixed $error
      * @param RequestInterface $request
-     * @param Http\Response $response
+     * @param ResponseInterface $response
      */
-    private function triggerError($error, RequestInterface $request, Http\Response $response)
+    private function triggerError($error, RequestInterface $request, ResponseInterface $response)
     {
         if (! isset($this->options['onerror'])
             || ! is_callable($this->options['onerror'])
@@ -220,7 +223,7 @@ class FinalHandler
         $onError(
             $error,
             ($request instanceof Http\Request) ? $request : new Http\Request($request),
-            $response
+            ($response instanceof Http\Response) ? $response : new Http\Response($response)
         );
     }
 
@@ -235,8 +238,7 @@ class FinalHandler
      */
     private function getUriFromRequest(RequestInterface $request)
     {
-        if ($request instanceof Http\Request) {
-            $original = $request->getOriginalRequest();
+        if (false !== ($original = $request->getAttribute('originalRequest', false))) {
             return $original->getUri();
         }
 
@@ -246,20 +248,13 @@ class FinalHandler
     /**
      * Write the given message to the response and mark it complete.
      *
-     * If the message is an Http\Response decorator, call and return its
-     * `end()` method; otherwise, decorate the response and `end()` it.
-     *
      * @param ResponseInterface $response
      * @param string $message
-     * @return Http\Response
+     * @return ResponseInterface
      */
     private function completeResponse(ResponseInterface $response, $message)
     {
-        if ($response instanceof Http\Response) {
-            return $response->write($message);
-        }
-
-        $response = new Http\Response($response);
-        return $response->write($message);
+        $response->getBody()->write($message);
+        return $response;
     }
 }

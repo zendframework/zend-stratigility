@@ -150,7 +150,7 @@ class NextTest extends TestCase
             $next($req, $res);
         });
         $route3 = new Route('/foo/baz', function ($req, $res, $next) {
-            $res->end('done');
+            $res->getBody()->write('done');
             return $res;
         });
 
