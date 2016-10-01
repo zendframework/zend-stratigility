@@ -12,11 +12,9 @@ use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
-use Zend\Escaper\Escaper;
 use Zend\Stratigility\Exception\MissingDelegateException;
 use Zend\Stratigility\Exception\MissingResponseException;
 use Zend\Stratigility\MiddlewareInterface;
-use Zend\Stratigility\Utils;
 
 /**
  * Error handler middleware.
