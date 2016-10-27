@@ -265,6 +265,7 @@ class Dispatch
             );
         }
 
+        printf("[%s] %s (%d)\n", get_class($throwable), $throwable->getMessage(), $throwable->getCode());
         return $next($request, $this->responsePrototype, $throwable);
     }
 }

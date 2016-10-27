@@ -9,12 +9,20 @@
 
 namespace ZendTest\Stratigility;
 
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
+use PHPUnit_Framework_Assert as Assert;
 use PHPUnit_Framework_TestCase as TestCase;
+use Prophecy\Argument;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use ReflectionProperty;
 use SplQueue;
 use Zend\Diactoros\ServerRequest as PsrRequest;
 use Zend\Diactoros\Response as PsrResponse;
 use Zend\Diactoros\Uri;
+use Zend\Stratigility\Exception;
 use Zend\Stratigility\Http\Request;
 use Zend\Stratigility\Http\Response;
 use Zend\Stratigility\Next;
@@ -337,5 +345,377 @@ class NextTest extends TestCase
         restore_error_handler();
 
         $this->assertSame($this->response, $result);
+    }
+
+    /**
+     * @group http-interop
+     */
+    public function testNextImplementsDelegateInterface()
+    {
+        $next = new Next($this->queue, function () {
+        });
+
+        $this->assertInstanceOf(DelegateInterface::class, $next);
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     * @group http-interop
+     */
+    public function testNextDoesNotComposeResponsePrototypeByDefault()
+    {
+        $next = new Next($this->queue, function () {
+        });
+
+        $this->assertAttributeEmpty('responsePrototype', $next);
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     * @group http-interop
+     */
+    public function testNextCanComposeAResponsePrototype()
+    {
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+        $next = new Next($this->queue, function () {
+        });
+        $next->setResponsePrototype($response);
+
+        $this->assertAttributeSame($response, 'responsePrototype', $next);
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     * @group http-interop
+     */
+    public function testInvocationWillSetResponsePrototypeIfNotAlreadySet()
+    {
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+        $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
+
+        $route = new Route('/foo', function ($req, $res, $next) {
+            return $res;
+        });
+        $this->queue->enqueue($route);
+
+        $next = new Next($this->queue, function () {
+            Assert::fail('Done argument called, when it should not have been');
+        });
+
+        $this->assertSame($response, $next($request, $response));
+
+        $this->assertAttributeSame($response, 'responsePrototype', $next);
+
+        $r = new ReflectionProperty($next, 'dispatch');
+        $r->setAccessible(true);
+        $dispatch = $r->getValue($next);
+        $this->assertAttributeSame($response, 'responsePrototype', $dispatch);
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     * @group http-interop
+     */
+    public function testDoneHandlerIsInvokedWhenQueueIsExhaustedByProcessAndResponsePrototypeIsPresent()
+    {
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        // e.g., 0 length array, or all handlers call next
+        $done = function ($req, $res, $err = null) use ($response) {
+            Assert::assertSame($response, $res);
+            return $response;
+        };
+
+        $next = new Next($this->queue, $done);
+        $next->setResponsePrototype($response);
+
+        $this->assertSame($response, $next->process($this->request));
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     * @group http-interop
+     */
+    public function testProcessRaisesExceptionPriorToCallingDoneHandlerIfNoResponsePrototypePresent()
+    {
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Reached $done handler, and should not have.');
+        };
+
+        $next = new Next($this->queue, $done);
+
+        $this->setExpectedException(Exception\MissingResponsePrototypeException::class);
+        $next->process($this->request);
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     * @group http-interop
+     */
+    public function testProcessRaisesExceptionPriorToCallingDoneHandlerIfNotAServerRequest()
+    {
+        $request = $this->prophesize(RequestInterface::class);
+        $request->getUri()->shouldNotBeCalled();
+
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Reached $done handler, and should not have.');
+        };
+
+        $next = new Next($this->queue, $done);
+        $next->setResponsePrototype($this->prophesize(ResponseInterface::class)->reveal());
+
+        $this->setExpectedException(Exception\InvalidRequestTypeException::class);
+        $next->process($request->reveal());
+    }
+
+    /**
+     * @todo Remove the $done argument during setup for 2.0.0
+     * @group http-interop
+     */
+    public function testProcessReinvokesItselfWhenRouteDoesNotMatchCurrentUrl()
+    {
+        // e.g., handler matches "/foo", but path is "/bar"
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Should not have hit the done handler, but did, with error: ' . var_export($err, true));
+        };
+        $request = $this->request->withUri(new Uri('http://local.example.com/bar'));
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $first = $this->prophesize(ServerMiddlewareInterface::class);
+        $first
+            ->process($request, Argument::type(Next::class))
+            ->will(function () {
+                // This one should be skipped
+                Assert::fail('Route should not be invoked if path does not match');
+            });
+        $this->queue->enqueue(new Route('/foo', $first->reveal()));
+
+        $second = $this->prophesize(ServerMiddlewareInterface::class);
+        $second
+            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
+            ->willReturn($response);
+        $this->queue->enqueue(new Route('/bar', $second->reveal()));
+
+        $next = new Next($this->queue, $done);
+        $next->setResponsePrototype($response);
+
+        $this->assertSame($response, $next->process($request));
+    }
+
+    /**
+     * @todo Remove the $done argument during setup for 2.0.0
+     * @group http-interop
+     */
+    public function testProcessReinvokesItselfIfRouteDoesNotMatchAtABoundary()
+    {
+        // e.g., if route is "/foo", but path is "/foobar", no match
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Should not have hit the done handler, but did');
+        };
+        $request = $this->request->withUri(new Uri('http://local.example.com/foobar'));
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $first = $this->prophesize(ServerMiddlewareInterface::class);
+        $first
+            ->process($request, Argument::type(Next::class))
+            ->will(function () {
+                // This one should be skipped
+                Assert::fail('Route should not be invoked if path does not match');
+            });
+        $this->queue->enqueue(new Route('/foo', $first->reveal()));
+
+        $second = $this->prophesize(ServerMiddlewareInterface::class);
+        $second
+            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
+            ->willReturn($response);
+        $this->queue->enqueue(new Route('/foobar', $second->reveal()));
+
+        $next = new Next($this->queue, $done);
+        $next->setResponsePrototype($response);
+        $this->assertSame($response, $next->process($request));
+    }
+
+    /**
+     * @todo Remove the $done argument during setup for 2.0.0
+     * @group http-interop
+     */
+    public function testProcessDispatchesHandlerWhenMatched()
+    {
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Should not have hit the done handler, but did');
+        };
+        $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $middleware
+            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
+            ->willReturn($response);
+        $this->queue->enqueue(new Route('/foo', $middleware->reveal()));
+
+        $next = new Next($this->queue, $done);
+        $next->setResponsePrototype($response);
+        $this->assertSame($response, $next->process($request));
+    }
+
+    /**
+     * @todo Remove the $done argument during setup for 2.0.0
+     * @group http-interop
+     */
+    public function testRequestUriInHandlerInvokedByProcessDoesNotContainMatchedPortionOfRoute()
+    {
+        // e.g., if route is "/foo", and "/foo/bar" is the original path,
+        // then the URI path in the handler is "/bar"
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Should not have hit the done handler, but did');
+        };
+        $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $middleware
+            ->process(Argument::that(function ($arg) {
+                Assert::assertInstanceOf(RequestInterface::class, $arg);
+                Assert::assertEquals('/bar', $arg->getUri()->getPath());
+                return true;
+            }), Argument::type(Next::class))
+            ->willReturn($response);
+        $this->queue->enqueue(new Route('/foo', $middleware->reveal()));
+
+        $next = new Next($this->queue, $done);
+        $next->setResponsePrototype($response);
+        $this->assertSame($response, $next->process($request));
+    }
+
+    /**
+     * @todo Remove the $done argument during setup for 2.0.0
+     * @group http-interop
+     */
+    public function testSlashAndPathGetResetByProcessBeforeExecutingNextMiddleware()
+    {
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Should not have hit the done handler, but did');
+        };
+        $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route1
+            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
+            ->will(function ($args) {
+                $request = $args[0];
+                $next = $args[1];
+                return $next->process($request);
+            });
+        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
+
+        $route2 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route2
+            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
+            ->shouldNotBeCalled();
+        $this->queue->enqueue(new Route('/foo/bar', $route2->reveal()));
+
+        $route3 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route3
+            ->process(Argument::that(function ($arg) {
+                Assert::assertEquals('/bat', $arg->getUri()->getPath());
+                return true;
+            }), Argument::type(Next::class))
+            ->willReturn($response);
+        $this->queue->enqueue(new Route('/foo/baz', $route3->reveal()));
+
+        $next = new Next($this->queue, $done);
+        $next->setResponsePrototype($response);
+        $this->assertSame($response, $next->process($request));
+    }
+
+    /**
+     * @todo Remove the $done argument during setup for 2.0.0
+     * @group http-interop
+     */
+    public function testMiddlewareReturningResponseShortCircuitsProcess()
+    {
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Should not have hit the done handler, but did');
+        };
+        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route1
+            ->process(Argument::that(function ($arg) {
+                Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
+                return true;
+            }), Argument::type(Next::class))
+            ->willReturn($response);
+        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
+
+        $route2 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route2
+            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
+            ->shouldNotBeCalled();
+        $this->queue->enqueue(new Route('/foo/bar', $route2->reveal()));
+
+        $next = new Next($this->queue, $done);
+        $next->setResponsePrototype($this->response);
+        $this->assertSame($response, $next->process($request));
+    }
+
+    /**
+     * @todo Remove the $done argument during setup for 2.0.0
+     * @group http-interop
+     */
+    public function testProcessReturnsResponsePrototypeIfNoResponseReturnedByMiddleware()
+    {
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Should not have hit the done handler, but did');
+        };
+        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route1
+            ->process(Argument::that(function ($arg) {
+                Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
+                return true;
+            }), Argument::type(Next::class))
+            ->willReturn('foobar');
+        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
+
+        $route2 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route2
+            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
+            ->shouldNotBeCalled();
+        $this->queue->enqueue(new Route('/foo/bar', $route2->reveal()));
+
+        $next = new Next($this->queue, $done);
+        $next->setResponsePrototype($response);
+        $this->assertSame($response, $next->process($request));
+    }
+
+    /**
+     * @todo Remove the $done argument during setup for 2.0.0
+     * @group http-interop
+     */
+    public function testProcessRaisesExceptionIfNoResponseReturnedByMiddlewareAndNoResponsePrototypePresent()
+    {
+        $done = function ($req, $res, $err = null) {
+            Assert::fail('Should not have hit the done handler, but did');
+        };
+        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
+
+        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route1
+            ->process(Argument::that(function ($arg) {
+                Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
+                return true;
+            }, Argument::type(Next::class)))
+            ->willReturn('foobar');
+        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
+
+        $next = new Next($this->queue, $done);
+
+        $this->setExpectedException(Exception\MissingResponsePrototypeException::class);
+        $next->process($request);
     }
 }

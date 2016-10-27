@@ -9,6 +9,8 @@
 
 namespace Zend\Stratigility;
 
+use Interop\Http\Middleware\DelegateInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
@@ -17,7 +19,7 @@ use SplQueue;
 /**
  * Iterate a queue of middlewares and execute them.
  */
-class Next
+class Next implements DelegateInterface
 {
     /**
      * @var Dispatch
@@ -25,6 +27,7 @@ class Next
     private $dispatch;
 
     /**
+     * @deprecated starting in 1.3.0; will be removed in 2.0.0.
      * @var Callable
      */
     private $done;
@@ -40,12 +43,21 @@ class Next
     private $removed = '';
 
     /**
+     * Response prototype to use with the $done handler and/or callable
+     * middleware when the instance is invoked by http-interop middleware.
+     *
+     * @var ResponseInterface
+     */
+    private $responsePrototype;
+
+    /**
      * Constructor.
      *
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param callable $done
+     * @param callable $done Deprecated since 1.3.0; will be removed starting
+     *     in 2.0.0.
      */
     public function __construct(SplQueue $queue, callable $done)
     {
@@ -90,6 +102,10 @@ class Next
             );
         }
 
+        if (! $this->responsePrototype) {
+            $this->setResponsePrototype($response);
+        }
+
         $dispatch = $this->dispatch;
         $done     = $this->done;
         $request  = $this->resetPath($request);
@@ -126,12 +142,71 @@ class Next
     }
 
     /**
+     * @param RequestInterface $request
+     * @return ResponseInterface
+     * @throws Exception\MissingResponsePrototypeException
+     * @throws Exception\InvalidRequestTypeException
+     */
+    public function process(RequestInterface $request)
+    {
+        $dispatch = $this->dispatch;
+        $done     = $this->done;
+        $request  = $this->resetPath($request);
+
+        // No middleware remains; done
+        if ($this->queue->isEmpty()) {
+            $response = $this->getResponsePrototype();
+            $this->validateServerRequest($request);
+            return $done($request, $response, null);
+        }
+
+        $layer           = $this->queue->dequeue();
+        $path            = $request->getUri()->getPath() ?: '/';
+        $route           = $layer->path;
+        $normalizedRoute = (strlen($route) > 1) ? rtrim($route, '/') : $route;
+
+        // Skip if layer path does not match current url
+        if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
+            return $this->process($request);
+        }
+
+        // Skip if match is not at a border ('/', '.', or end)
+        $border = $this->getBorder($path, $normalizedRoute);
+        if ($border && '/' !== $border && '.' !== $border) {
+            return $this->process($request);
+        }
+
+        // Trim off the part of the url that matches the layer route
+        if (! empty($route) && $route !== '/') {
+            $request = $this->stripRouteFromPath($request, $route);
+        }
+
+        $result = $dispatch->process($layer, $request, $this);
+
+        if (! $result instanceof ResponseInterface) {
+            return $this->getResponsePrototype();
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param ResponseInterface $prototype
+     * @return void
+     */
+    public function setResponsePrototype(ResponseInterface $prototype)
+    {
+        $this->responsePrototype = $prototype;
+        $this->dispatch->setResponsePrototype($prototype);
+    }
+
+    /**
      * Reset the path, if a segment was previously stripped
      *
-     * @param ServerRequestInterface $request
-     * @return ServerRequestInterface
+     * @param RequestInterface $request
+     * @return RequestInterface
      */
-    private function resetPath(ServerRequestInterface $request)
+    private function resetPath(RequestInterface $request)
     {
         if (! $this->removed) {
             return $request;
@@ -181,11 +256,11 @@ class Next
     /**
      * Strip the route from the request path
      *
-     * @param ServerRequestInterface $request
+     * @param RequestInterface $request
      * @param string $route
-     * @return ServerRequestInterface
+     * @return RequestInterface
      */
-    private function stripRouteFromPath(ServerRequestInterface $request, $route)
+    private function stripRouteFromPath(RequestInterface $request, $route)
     {
         $this->removed = $route;
 
@@ -231,5 +306,43 @@ class Next
         throw new RuntimeException(
             'Layer and request path have gone out of sync'
         );
+    }
+
+    /**
+     * @return ResponseInterface
+     * @throws Exception\MissingResponsePrototypeException
+     */
+    private function getResponsePrototype()
+    {
+        if ($this->responsePrototype) {
+            return $this->responsePrototype;
+        }
+
+        throw new Exception\MissingResponsePrototypeException(
+            'Invoking callable middleware or final handler following http-interop '
+            . 'middleware, but no response prototype is present; please inject '
+            . 'one in your MiddlewarePipe or ensure Stratigility callable '
+            . 'middleware exists in the outer layer of your application.'
+        );
+    }
+
+    /**
+     * @param RequestInterface $request
+     * @return bool
+     * @throws Exception\InvalidRequestTypeException
+     */
+    private function validateServerRequest(RequestInterface $request)
+    {
+        if ($request instanceof ServerRequestInterface) {
+            return true;
+        }
+
+        throw new Exception\InvalidRequestTypeException(sprintf(
+            'Invoking callable middleware or final handler following http-interop '
+            . 'middleware, but did not receive a %s; please ensure that your '
+            . 'middleware always calls %s::process() using one.',
+            ServerRequestInterface::class,
+            DelegateInterface::class
+        ));
     }
 }
