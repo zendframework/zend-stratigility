@@ -490,4 +490,30 @@ class DispatchTest extends TestCase
             $dispatch($route, null, $request, $this->response->reveal(), $next->reveal())
         );
     }
+
+    /**
+     * @group http-interop
+     */
+    public function testInvokingMemoizesResponseIfNonePreviouslyPresent()
+    {
+        $next = $this->prophesize(Next::class);
+
+        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $middleware = function ($req, $res, $next) use ($response) {
+            return $response;
+        };
+
+        $route = new Route('/foo', $middleware);
+
+        $dispatch = new Dispatch();
+
+        $this->assertSame(
+            $response,
+            $dispatch($route, null, $request, $this->response->reveal(), $next->reveal())
+        );
+
+        $this->assertAttributeSame($this->response->reveal(), 'responsePrototype', $dispatch);
+    }
 }

@@ -65,6 +65,10 @@ class Dispatch
         ResponseInterface $response,
         callable $next
     ) {
+        if (! $this->responsePrototype) {
+            $this->setResponsePrototype($response);
+        }
+
         if ($this->isInteropMiddleware($route->handler)) {
             return $this->dispatchInteropMiddleware($route->handler, $next, $request);
         }
