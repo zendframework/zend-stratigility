@@ -9,6 +9,7 @@
 
 namespace ZendTest\Stratigility;
 
+use PHPUnit_Framework_Assert as Assert;
 use PHPUnit_Framework_TestCase as TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,56 +17,45 @@ use RuntimeException;
 use stdClass;
 use TypeError;
 use Zend\Stratigility\Dispatch;
+use Zend\Stratigility\Http;
 use Zend\Stratigility\Route;
 
 class DispatchTest extends TestCase
 {
-    /**
-     * @var \Zend\Stratigility\Http\Request|\PHPUnit_Framework_MockObject_MockObject
-     */
     private $request;
 
-    /**
-     * @var \Zend\Stratigility\Http\Response|\PHPUnit_Framework_MockObject_MockObject
-     */
     private $response;
 
     public function setUp()
     {
-        $this->request  = $this->getMockBuilder('Zend\Stratigility\Http\Request')
-            ->disableOriginalConstructor()
-            ->getMock();
-        $this->response = $this->getMockBuilder('Zend\Stratigility\Http\Response')
-            ->disableOriginalConstructor()
-            ->getMock();
+        $this->request = $this->prophesize(ServerRequestInterface::class);
+        $this->response = $this->prophesize(ResponseInterface::class);
     }
 
     public function testHasErrorAndHandleArityIsFourTriggersHandler()
     {
-        $phpunit   = $this;
         $triggered = false;
 
         $handler = function ($err, $req, $res, $next) use (&$triggered) {
             $triggered = $err;
         };
-        $next = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Next was called; it should not have been');
+        $next = function ($req, $res, $err) {
+            Assert::fail('Next was called; it should not have been');
         };
 
         $route = new Route('/foo', $handler);
         $dispatch = new Dispatch();
         $err = (object) ['error' => true];
-        $dispatch($route, $err, $this->request, $this->response, $next);
+        $dispatch($route, $err, $this->request->reveal(), $this->response->reveal(), $next);
         $this->assertSame($err, $triggered);
     }
 
     public function testHasErrorAndHandleArityLessThanFourTriggersNextWithError()
     {
-        $phpunit   = $this;
         $triggered = false;
 
-        $handler = function ($req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Handler was called; it should not have been');
+        $handler = function ($req, $res, $next) {
+            Assert::fail('Handler was called; it should not have been');
         };
         $next = function ($req, $res, $err) use (&$triggered) {
             $triggered = $err;
@@ -74,17 +64,16 @@ class DispatchTest extends TestCase
         $route = new Route('/foo', $handler);
         $dispatch = new Dispatch();
         $err = (object) ['error' => true];
-        $dispatch($route, $err, $this->request, $this->response, $next);
+        $dispatch($route, $err, $this->request->reveal(), $this->response->reveal(), $next);
         $this->assertSame($err, $triggered);
     }
 
     public function testNoErrorAndHandleArityGreaterThanThreeTriggersNext()
     {
-        $phpunit   = $this;
         $triggered = false;
 
-        $handler = function ($err, $req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Handler was called; it should not have been');
+        $handler = function ($err, $req, $res, $next) {
+            Assert::fail('Handler was called; it should not have been');
         };
         $next = function ($req, $res, $err) use (&$triggered) {
             $triggered = $err;
@@ -93,32 +82,30 @@ class DispatchTest extends TestCase
         $route = new Route('/foo', $handler);
         $dispatch = new Dispatch();
         $err = null;
-        $dispatch($route, $err, $this->request, $this->response, $next);
+        $dispatch($route, $err, $this->request->reveal(), $this->response->reveal(), $next);
         $this->assertSame($err, $triggered);
     }
 
     public function testNoErrorAndHandleArityLessThanFourTriggersHandler()
     {
-        $phpunit   = $this;
         $triggered = false;
 
         $handler = function ($req, $res, $next) use (&$triggered) {
             $triggered = $req;
         };
-        $next = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Next was called; it should not have been');
+        $next = function ($req, $res, $err) {
+            Assert::fail('Next was called; it should not have been');
         };
 
         $route = new Route('/foo', $handler);
         $dispatch = new Dispatch();
         $err = null;
-        $dispatch($route, $err, $this->request, $this->response, $next);
-        $this->assertSame($this->request, $triggered);
+        $dispatch($route, $err, $this->request->reveal(), $this->response->reveal(), $next);
+        $this->assertSame($this->request->reveal(), $triggered);
     }
 
     public function testThrowingExceptionInErrorHandlerTriggersNextWithException()
     {
-        $phpunit   = $this;
         $exception = new RuntimeException;
         $triggered = null;
 
@@ -132,13 +119,12 @@ class DispatchTest extends TestCase
         $route = new Route('/foo', $handler);
         $dispatch = new Dispatch();
         $err = (object) ['error' => true];
-        $dispatch($route, $err, $this->request, $this->response, $next);
+        $dispatch($route, $err, $this->request->reveal(), $this->response->reveal(), $next);
         $this->assertSame($exception, $triggered);
     }
 
     public function testThrowingExceptionInNonErrorHandlerTriggersNextWithException()
     {
-        $phpunit   = $this;
         $exception = new RuntimeException;
         $triggered = null;
 
@@ -152,42 +138,40 @@ class DispatchTest extends TestCase
         $route = new Route('/foo', $handler);
         $dispatch = new Dispatch();
         $err = null;
-        $dispatch($route, $err, $this->request, $this->response, $next);
+        $dispatch($route, $err, $this->request->reveal(), $this->response->reveal(), $next);
         $this->assertSame($exception, $triggered);
     }
 
     public function testReturnsValueFromNonErrorHandler()
     {
-        $phpunit = $this;
         $handler = function ($req, $res, $next) {
             return $res;
         };
-        $next = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Next was called; it should not have been');
+        $next = function ($req, $res, $err) {
+            Assert::fail('Next was called; it should not have been');
         };
 
         $route = new Route('/foo', $handler);
         $dispatch = new Dispatch();
         $err = null;
-        $result = $dispatch($route, $err, $this->request, $this->response, $next);
-        $this->assertSame($this->response, $result);
+        $result = $dispatch($route, $err, $this->request->reveal(), $this->response->reveal(), $next);
+        $this->assertSame($this->response->reveal(), $result);
     }
 
     public function testIfErrorHandlerReturnsResponseDispatchReturnsTheResponse()
     {
-        $phpunit = $this;
         $handler = function ($err, $req, $res, $next) {
             return $res;
         };
-        $next = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Next was called; it should not have been');
+        $next = function ($req, $res, $err) {
+            Assert::fail('Next was called; it should not have been');
         };
 
         $route = new Route('/foo', $handler);
         $dispatch = new Dispatch();
         $err = (object) ['error' => true];
-        $result = $dispatch($route, $err, $this->request, $this->response, $next);
-        $this->assertSame($this->response, $result);
+        $result = $dispatch($route, $err, $this->request->reveal(), $this->response->reveal(), $next);
+        $this->assertSame($this->response->reveal(), $result);
     }
 
     /**
@@ -195,16 +179,15 @@ class DispatchTest extends TestCase
      */
     public function testShouldAllowDispatchingPsr7Instances()
     {
-        $phpunit = $this;
         $handler = function ($req, $res, $next) {
             return $res;
         };
-        $next = function ($req, $res, $err) use ($phpunit) {
-            $phpunit->fail('Next was called; it should not have been');
+        $next = function ($req, $res, $err) {
+            Assert::fail('Next was called; it should not have been');
         };
 
-        $request  = $this->prophesize('Psr\Http\Message\ServerRequestInterface');
-        $response = $this->prophesize('Psr\Http\Message\ResponseInterface');
+        $request  = $this->prophesize(ServerRequestInterface::class);
+        $response = $this->prophesize(ResponseInterface::class);
         $dispatch = new Dispatch();
         $route    = new Route('/foo', $handler);
         $err      = null;
@@ -226,6 +209,8 @@ class DispatchTest extends TestCase
             $callableWithHint('not an stdClass');
         };
 
+        // Using PHPUnit mock here to allow asserting that the method is called.
+        // Prophecy doesn't allow defining arbitrary methods on mocks it generates.
         $errorHandler = $this->getMockBuilder('stdClass')
             ->setMethods(['__invoke'])
             ->getMock();
@@ -233,8 +218,8 @@ class DispatchTest extends TestCase
             ->expects(self::once())
             ->method('__invoke')
             ->with(
-                $this->request,
-                $this->response,
+                $this->request->reveal(),
+                $this->response->reveal(),
                 self::callback(function (TypeError $throwable) {
                     self::assertStringStartsWith(
                         'Argument 1 passed to ZendTest\Stratigility\DispatchTest::ZendTest\Stratigility\{closure}()'
@@ -251,8 +236,8 @@ class DispatchTest extends TestCase
         $dispatch(
             new Route('/foo', $middleware),
             null,
-            $this->request,
-            $this->response,
+            $this->request->reveal(),
+            $this->response->reveal(),
             $errorHandler
         );
     }
