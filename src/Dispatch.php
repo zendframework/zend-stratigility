@@ -9,8 +9,11 @@
 
 namespace Zend\Stratigility;
 
-use Exception;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Throwable;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -24,6 +27,11 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Dispatch
 {
+    /**
+     * @var ResponseInterface
+     */
+    private $responsePrototype;
+
     /**
      * Dispatch middleware
      *
@@ -84,10 +92,114 @@ class Dispatch
             }
         } catch (Throwable $throwable) {
             return $next($request, $response, $throwable);
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return $next($request, $response, $exception);
         }
 
         return $next($request, $response, $err);
+    }
+
+    /**
+     * @param Route $route
+     * @param RequestInterface $request
+     * @param callable $next
+     * @return ResponseInterface
+     * @throws Exception\MissingResponsePrototypeException
+     * @throws Exception\InvalidRequestTypeException
+     */
+    public function process(Route $route, RequestInterface $request, callable $next)
+    {
+        if ($this->isNotInteropMiddleware($route->handler, $request)) {
+            return $this($route, null, $request, $this->responsePrototype, $next);
+        }
+
+        try {
+            return $route->handler->process($request, $next);
+        } catch (Throwable $throwable) {
+            return $this->handleThrowableFromInteropMiddleware($throwable, $request, $next);
+        } catch (\Exception $exception) {
+            return $this->handleThrowableFromInteropMiddleware($exception, $request, $next);
+        }
+    }
+
+    /**
+     * @param ResponseInterface $responsePrototype
+     * @return void
+     */
+    public function setResponsePrototype(ResponseInterface $responsePrototype)
+    {
+        $this->responsePrototype = $responsePrototype;
+    }
+
+    /**
+     * Test if the middleware composed by a route is not interop middleware.
+     *
+     * @param mixed $handler
+     * @param RequestInterface $request
+     * @return bool
+     * @throws Exception\MissingResponsePrototypeException if non-interop
+     *     middleware is detected, but no response prototype is available.
+     * @throws Exception\InvalidRequestTypeException if non-interop middleware
+     *     is detected, but the request provided is not a server-side request.
+     */
+    private function isNotInteropMiddleware($handler, RequestInterface $request)
+    {
+        if ($handler instanceof ServerMiddlewareInterface || $handler instanceof InteropMiddlewareInterface) {
+            return false;
+        }
+
+        if (! $this->responsePrototype) {
+            throw new Exception\MissingResponsePrototypeException(
+                'Invoking callable middleware following http-interop middleware, '
+                . 'but no response prototype is present; please inject one in your '
+                . 'MiddlewarePipe or ensure Stratigility callable middleware exists '
+                . 'in the outer layer of your application.'
+            );
+        }
+
+        if (! $request instanceof ServerRequestInterface) {
+            throw new Exception\InvalidRequestTypeException(
+                'Invoking callable middleware following http-interop middleware, '
+                . 'but a server request was not provided.'
+            );
+        }
+
+        return true;
+    }
+
+    /**
+     * @param Throwable|\Exception $throwable
+     * @param RequestInterface $request
+     * @param callable $next
+     * @return ResponseInterface
+     * @throws Exception\MissingResponsePrototypeException if no response
+     *     prototype is available with which to call the delegate.
+     * @throws Exception\InvalidRequestTypeException if the request provided
+     *     is not a server-side request.
+     */
+    private function handleThrowableFromInteropMiddleware(
+        $throwable,
+        RequestInterface $request,
+        callable $next
+    ) {
+        if (! $this->responsePrototype) {
+            throw new Exception\MissingResponsePrototypeException(
+                'Caught Throwable from http-interop middleware, but unable to handle '
+                . 'due to missing response prototype',
+                $throwable->getCode(),
+                $throwable
+            );
+        }
+
+        if (! $request instanceof ServerRequestInterface) {
+            throw new Exception\InvalidRequestTypeException(
+                'Caught Throwable from http-interop middleware, but unable to handle '
+                . 'because request is not a server request',
+                $throwable->getCode(),
+                $throwable
+            );
+        }
+
+        return $next($request, $this->responsePrototype, $throwable);
     }
 }
