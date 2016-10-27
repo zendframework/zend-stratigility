@@ -11,6 +11,7 @@ namespace ZendTest\Stratigility;
 
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\MiddlewareInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use PHPUnit_Framework_Assert as Assert;
 use PHPUnit_Framework_TestCase as TestCase;
 use Prophecy\Argument;
@@ -36,6 +37,14 @@ class DispatchTest extends TestCase
     {
         $this->request = $this->prophesize(ServerRequestInterface::class);
         $this->response = $this->prophesize(ResponseInterface::class);
+    }
+
+    public function interopMiddlewareProvider()
+    {
+        return [
+            MiddlewareInterface::class => [MiddlewareInterface::class],
+            ServerMiddlewareInterface::class => [ServerMiddlewareInterface::class],
+        ];
     }
 
     public function testHasErrorAndHandleArityIsFourTriggersHandler()
@@ -325,17 +334,18 @@ class DispatchTest extends TestCase
 
     /**
      * @group http-interop
+     * @dataProvider interopMiddlewareProvider
      */
-    public function testProcessRaisesExceptionWhenCatchingAnExceptionAndNoResponsePrototypePresent()
+    public function testProcessRaisesExceptionWhenCatchingAnExceptionAndNoResponsePrototypePresent($middlewareType)
     {
         $next = $this->prophesize(Next::class);
         $next->willImplement(DelegateInterface::class);
 
-        $request = $this->prophesize(RequestInterface::class)->reveal();
+        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
 
         $exception = new RuntimeException();
 
-        $middleware = $this->prophesize(MiddlewareInterface::class);
+        $middleware = $this->prophesize($middlewareType);
         $middleware
             ->process($request, Argument::that([$next, 'reveal']))
             ->willThrow($exception);
@@ -400,5 +410,84 @@ class DispatchTest extends TestCase
                 get_class($e)
             ));
         }
+    }
+
+    /**
+     * @group http-interop
+     * @dataProvider interopMiddlewareProvider
+     */
+    public function testCallingProcessWithInteropMiddlewareDispatchesIt($middlewareType)
+    {
+        $next = $this->prophesize(Next::class);
+        $next->willImplement(DelegateInterface::class);
+
+        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $response = $this->prophesize(ResponseInterface::class);
+
+        $middleware = $this->prophesize($middlewareType);
+        $middleware
+            ->process($request, Argument::that([$next, 'reveal']))
+            ->will([$response, 'reveal']);
+
+        $route = new Route('/foo', $middleware->reveal());
+
+        $dispatch = new Dispatch();
+
+        $this->assertSame(
+            $response->reveal(),
+            $dispatch->process($route, $request, $next->reveal())
+        );
+    }
+
+    /**
+     * @group http-interop
+     */
+    public function testCallingProcessWithCallableMiddlewareDispatchesIt()
+    {
+        $next = $this->prophesize(Next::class);
+
+        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $middleware = function ($req, $res, $next) use ($response) {
+            return $response;
+        };
+
+        $route = new Route('/foo', $middleware);
+
+        $dispatch = new Dispatch();
+        $dispatch->setResponsePrototype($this->response->reveal());
+
+        $this->assertSame(
+            $response,
+            $dispatch->process($route, $request, $next->reveal())
+        );
+    }
+
+    /**
+     * @group http-interop
+     * @dataProvider interopMiddlewareProvider
+     */
+    public function testInvokingWithInteropMiddlewareDispatchesIt($middlewareType)
+    {
+        $next = $this->prophesize(Next::class);
+        $next->willImplement(DelegateInterface::class);
+
+        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $middleware = $this->prophesize($middlewareType);
+        $middleware
+            ->process($request, Argument::that([$next, 'reveal']))
+            ->willReturn($response);
+
+        $route = new Route('/foo', $middleware->reveal());
+
+        $dispatch = new Dispatch();
+
+        $this->assertSame(
+            $response,
+            $dispatch($route, null, $request, $this->response->reveal(), $next->reveal())
+        );
     }
 }

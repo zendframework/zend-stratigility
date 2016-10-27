@@ -65,41 +65,23 @@ class Dispatch
         ResponseInterface $response,
         callable $next
     ) {
-        $handler  = $route->handler;
-        $hasError = (null !== $err);
-
-        switch (true) {
-            case ($handler instanceof ErrorMiddlewareInterface):
-                $arity = 4;
-                break;
-            case ($handler instanceof MiddlewareInterface):
-                $arity = 3;
-                break;
-            default:
-                $arity = Utils::getArity($handler);
-                break;
+        if ($this->isInteropMiddleware($route->handler)) {
+            return $this->dispatchInteropMiddleware($route->handler, $next, $request);
         }
 
-        // @todo Trigger event with Route, original URL from request?
-
-        try {
-            if ($hasError && $arity === 4) {
-                return $handler($err, $request, $response, $next);
-            }
-
-            if (! $hasError && $arity < 4) {
-                return $handler($request, $response, $next);
-            }
-        } catch (Throwable $throwable) {
-            return $next($request, $response, $throwable);
-        } catch (\Exception $exception) {
-            return $next($request, $response, $exception);
-        }
-
-        return $next($request, $response, $err);
+        return $this->dispatchCallableMiddleware($route->handler, $next, $request, $response, $err);
     }
 
     /**
+     * Process middleware as invoked from an http-interop middleware instance.
+     *
+     * Name chosen to mirror Interop\Http\Middleware\DelegateInterface, and thus
+     * imply this should be dispatched from interop middleware.
+     *
+     * If the route provided is not http-interop middleware, this method will
+     * dispatch using callable middleware semantics; otherwise, it dispatches
+     * using http-interop semantics.
+     *
      * @param Route $route
      * @param RequestInterface $request
      * @param callable $next
@@ -110,19 +92,15 @@ class Dispatch
     public function process(Route $route, RequestInterface $request, callable $next)
     {
         if ($this->isNotInteropMiddleware($route->handler, $request)) {
-            return $this($route, null, $request, $this->responsePrototype, $next);
+            return $this->dispatchCallableMiddleware($route->handler, $next, $request, $this->responsePrototype);
         }
 
-        try {
-            return $route->handler->process($request, $next);
-        } catch (Throwable $throwable) {
-            return $this->handleThrowableFromInteropMiddleware($throwable, $request, $next);
-        } catch (\Exception $exception) {
-            return $this->handleThrowableFromInteropMiddleware($exception, $request, $next);
-        }
+        return $this->dispatchInteropMiddleware($route->handler, $next, $request);
     }
 
     /**
+     * Set a response prototype to use when invoking callable middleware following http-interop middleware.
+     *
      * @param ResponseInterface $responsePrototype
      * @return void
      */
@@ -132,7 +110,19 @@ class Dispatch
     }
 
     /**
-     * Test if the middleware composed by a route is not interop middleware.
+     * Test if the middleware composed by a route is http-interop middleware.
+     *
+     * @param mixed $handler
+     * @return bool
+     */
+    private function isInteropMiddleware($handler)
+    {
+        return $handler instanceof ServerMiddlewareInterface
+            || $handler instanceof InteropMiddlewareInterface;
+    }
+
+    /**
+     * Test if the middleware composed by a route is not http-interop middleware.
      *
      * @param mixed $handler
      * @param RequestInterface $request
@@ -165,6 +155,77 @@ class Dispatch
         }
 
         return true;
+    }
+
+    /**
+     * Dispatch non-interop middleware.
+     *
+     * @param callable $middleware
+     * @param callable $next
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param mixed $err
+     * @return ResponseInterface
+     */
+    private function dispatchCallableMiddleware(
+        callable $middleware,
+        callable $next,
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        $err = null
+    ) {
+        $hasError = (null !== $err);
+
+        switch (true) {
+            case ($middleware instanceof ErrorMiddlewareInterface):
+                $arity = 4;
+                break;
+            case ($middleware instanceof MiddlewareInterface):
+                $arity = 3;
+                break;
+            default:
+                $arity = Utils::getArity($middleware);
+                break;
+        }
+
+        try {
+            if ($hasError && $arity === 4) {
+                return $middleware($err, $request, $response, $next);
+            }
+
+            if (! $hasError && $arity < 4) {
+                return $middleware($request, $response, $next);
+            }
+        } catch (Throwable $throwable) {
+            return $next($request, $response, $throwable);
+        } catch (\Exception $exception) {
+            return $next($request, $response, $exception);
+        }
+
+        return $next($request, $response, $err);
+    }
+
+    /**
+     * Dispatch http-interop middleware
+     *
+     * @param ServerMiddlewareInterface|InteropMiddlewareInterface $middleware
+     * @param callable $next
+     * @param RequestInterface $request
+     * @return ResponseInterface
+     * @throws Exception\MissingResponsePrototypeException if no response
+     *     prototype is available with which to call the delegate.
+     * @throws Exception\InvalidRequestTypeException if the request provided
+     *     is not a server-side request.
+     */
+    private function dispatchInteropMiddleware($middleware, callable $next, RequestInterface $request)
+    {
+        try {
+            return $middleware->process($request, $next);
+        } catch (Throwable $throwable) {
+            return $this->handleThrowableFromInteropMiddleware($throwable, $request, $next);
+        } catch (\Exception $exception) {
+            return $this->handleThrowableFromInteropMiddleware($exception, $request, $next);
+        }
     }
 
     /**
