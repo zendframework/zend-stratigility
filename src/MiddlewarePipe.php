@@ -9,15 +9,18 @@
 
 namespace Zend\Stratigility;
 
-use Zend\Stratigility\Exception\InvalidMiddlewareException;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use SplQueue;
+use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
 /**
  * Pipe middleware like unix pipes.
  *
- * This class implements a pipe-line of middleware, which can be attached using
+ * This class implements a pipeline of middleware, which can be attached using
  * the `pipe()` method, and is itself middleware.
  *
  * The request and response objects are decorated using the Zend\Stratigility\Http
@@ -33,12 +36,17 @@ use SplQueue;
  *
  * @see https://github.com/sencha/connect
  */
-class MiddlewarePipe implements MiddlewareInterface
+class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
 {
     /**
      * @var SplQueue
      */
     protected $pipeline;
+
+    /**
+     * @var Response
+     */
+    private $responsePrototype;
 
     /**
      * Constructor
@@ -84,7 +92,32 @@ class MiddlewarePipe implements MiddlewareInterface
 
         $done   = $out ?: new FinalHandler([], $response);
         $next   = new Next($this->pipeline, $done);
+        $next->setResponsePrototype($response);
         $result = $next($request, $response);
+
+        return ($result instanceof Response ? $result : $response);
+    }
+
+    /**
+     * http-interop invocation: single-pass with delegate.
+     *
+     * Executes the internal pipeline, passing $delegate as the "final
+     * handler" in cases when the pipeline exhausts itself.
+     *
+     * @param Request $request
+     * @param DelegateInterface $delegate
+     * @return Response
+     */
+    public function process(Request $request, DelegateInterface $delegate)
+    {
+        $response = $this->responsePrototype;
+
+        $next = new Next($this->pipeline, $delegate);
+        if ($response) {
+            $next->setResponsePrototype($response);
+        }
+
+        $result = $next->process($request);
 
         return ($result instanceof Response ? $result : $response);
     }
@@ -113,13 +146,15 @@ class MiddlewarePipe implements MiddlewareInterface
      */
     public function pipe($path, $middleware = null)
     {
-        if (null === $middleware && is_callable($path)) {
+        if (null === $middleware
+            && $this->isValidMiddleware($path)
+        ) {
             $middleware = $path;
             $path       = '/';
         }
 
         // Ensure we have a valid handler
-        if (! is_callable($middleware)) {
+        if (! $this->isValidMiddleware($middleware)) {
             throw InvalidMiddlewareException::fromValue($middleware);
         }
 
@@ -130,6 +165,23 @@ class MiddlewarePipe implements MiddlewareInterface
 
         // @todo Trigger event here with route details?
         return $this;
+    }
+
+    /**
+     * @param Response $prototype
+     * @return void
+     */
+    public function setResponsePrototype(Response $prototype)
+    {
+        $this->responsePrototype = $prototype;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasResponsePrototype()
+    {
+        return $this->responsePrototype instanceof Response;
     }
 
     /**
@@ -183,5 +235,18 @@ class MiddlewarePipe implements MiddlewareInterface
         }
 
         return new Http\Response($response);
+    }
+
+    /**
+     * Is the provided middleware argument valid middleware?
+     *
+     * @param mixed $middleware
+     * @return bool
+     */
+    private function isValidMiddleware($middleware)
+    {
+        return is_callable($middleware)
+            || $middleware instanceof ServerMiddlewareInterface
+            || $middleware instanceof InteropMiddlewareInterface;
     }
 }

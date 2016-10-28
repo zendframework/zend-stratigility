@@ -24,6 +24,7 @@ use TypeError;
 use Zend\Stratigility\Dispatch;
 use Zend\Stratigility\Exception;
 use Zend\Stratigility\Http;
+use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\Next;
 use Zend\Stratigility\Route;
 
@@ -515,5 +516,57 @@ class DispatchTest extends TestCase
         );
 
         $this->assertAttributeSame($this->response->reveal(), 'responsePrototype', $dispatch);
+    }
+
+    /**
+     * @group http-interop
+     */
+    public function testProcessWillInjectMiddlewarePipeWithResponsePrototypeIfPipelineDoesNotHaveOne()
+    {
+        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $next = $this->prophesize(Next::class);
+        $next->willImplement(DelegateInterface::class);
+
+        $pipeline = $this->prophesize(MiddlewarePipe::class);
+        $pipeline->hasResponsePrototype()->willReturn(false);
+        $pipeline->setResponsePrototype($response)->shouldBeCalled();
+        $pipeline->process($request, $next->reveal())->willReturn($response);
+
+        $dispatch = new Dispatch();
+        $dispatch->setResponsePrototype($response);
+
+        $this->assertSame($response, $dispatch->process(
+            new Route('/', $pipeline->reveal()),
+            $request,
+            $next->reveal()
+        ));
+    }
+
+    /**
+     * @group http-interop
+     */
+    public function testProcessWillNotInjectMiddlewarePipeWithResponsePrototypeIfPipelineAlreadyHasOne()
+    {
+        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $next = $this->prophesize(Next::class);
+        $next->willImplement(DelegateInterface::class);
+
+        $pipeline = $this->prophesize(MiddlewarePipe::class);
+        $pipeline->hasResponsePrototype()->willReturn(true);
+        $pipeline->setResponsePrototype($response)->shouldNotBeCalled();
+        $pipeline->process($request, $next->reveal())->willReturn(null);
+
+        $dispatch = new Dispatch();
+        $dispatch->setResponsePrototype($response);
+
+        $this->assertNull($dispatch->process(
+            new Route('/', $pipeline->reveal()),
+            $request,
+            $next->reveal()
+        ));
     }
 }

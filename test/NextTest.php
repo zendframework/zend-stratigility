@@ -718,4 +718,19 @@ class NextTest extends TestCase
         $this->setExpectedException(Exception\MissingResponsePrototypeException::class);
         $next->process($request);
     }
+
+    /**
+     * @todo Remove for 2.0.0, as the $done handler will no longer be used.
+     * @group http-interop
+     */
+    public function testNextCanUseADelegateForTheDoneHandler()
+    {
+        $delegate = $this->prophesize(DelegateInterface::class);
+        $delegate
+            ->process(Argument::type(RequestInterface::class))
+            ->willReturn('FOOBAR');
+
+        $next = new Next($this->queue, $delegate->reveal());
+        $this->assertEquals('FOOBAR', $next->process($this->request));
+    }
 }

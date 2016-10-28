@@ -9,7 +9,13 @@
 
 namespace ZendTest\Stratigility;
 
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\MiddlewareInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use PHPUnit_Framework_TestCase as TestCase;
+use Prophecy\Argument;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use ReflectionProperty;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Response;
@@ -558,5 +564,59 @@ class MiddlewarePipeTest extends TestCase
         $this->assertEquals(201, $result->getStatusCode());
         $this->assertEquals('Some content', (string) $result->getBody());
         $this->assertTrue($triggered, 'Error handler was not triggered');
+    }
+
+    /**
+     * @todo Remove for 2.0.0.
+     * @group http-interop
+     */
+    public function testNoResponsePrototypeComposeByDefault()
+    {
+        $pipeline = new MiddlewarePipe();
+        $this->assertAttributeEmpty('responsePrototype', $pipeline);
+    }
+
+    /**
+     * @todo Remove for 2.0.0, maybe; it may be useful to have this in order
+     *     to ensure we always return a response?
+     * @group http-interop
+     */
+    public function testCanComposeResponsePrototype()
+    {
+        $response = $this->prophesize(Response::class)->reveal();
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($response);
+        $this->assertAttributeSame($response, 'responsePrototype', $pipeline);
+    }
+
+    public function interopMiddleware()
+    {
+        return [
+            MiddlewareInterface::class => [MiddlewareInterface::class],
+            ServerMiddlewareInterface::class => [ServerMiddlewareInterface::class],
+        ];
+    }
+
+    /**
+     * @group http-interop
+     * @dataProvider interopMiddleware
+     */
+    public function testCanPipeInteropMiddleware($middlewareType)
+    {
+        $delegate = $this->prophesize(DelegateInterface::class)->reveal();
+
+        $response = $this->prophesize(ResponseInterface::class);
+        $middleware = $this->prophesize($middlewareType);
+        $middleware
+            ->process(Argument::type(RequestInterface::class), Argument::type(DelegateInterface::class))
+            ->will([$response, 'reveal']);
+
+        $pipeline = new MiddlewarePipe();
+        $pipeline->pipe($middleware->reveal());
+
+        $done = function () {
+        };
+
+        $this->assertSame($response->reveal(), $pipeline->process($this->request, $delegate));
     }
 }

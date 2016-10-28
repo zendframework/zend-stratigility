@@ -10,6 +10,7 @@
 namespace Zend\Stratigility;
 
 use Interop\Http\Middleware\DelegateInterface;
+use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -56,14 +57,25 @@ class Next implements DelegateInterface
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param callable $done Deprecated since 1.3.0; will be removed starting
-     *     in 2.0.0.
+     * @param callable|DelegateInterface $done Deprecated since 1.3.0; will be
+     *     removed starting in 2.0.0.
+     * @throws InvalidArgumentException for a non-callable, non-delegate $done
+     *     argument.
      */
-    public function __construct(SplQueue $queue, callable $done)
+    public function __construct(SplQueue $queue, $done)
     {
+        if (! (is_callable($done) || $done instanceof DelegateInterface)) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid "$done" argument provided to %s; must be callable '
+                . 'or a %s instance; received %s',
+                get_class($this),
+                DelegateInterface::class,
+                is_object($done) ? get_class($done) : gettype($done)
+            ));
+        }
+
         $this->queue    = clone $queue;
         $this->done     = $done;
-
         $this->dispatch = new Dispatch();
     }
 
@@ -112,7 +124,7 @@ class Next implements DelegateInterface
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            return $done($request, $response, $err);
+            return $this->dispatchDone($done, $request, $response, $err);
         }
 
         $layer           = $this->queue->dequeue();
@@ -155,9 +167,7 @@ class Next implements DelegateInterface
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            $response = $this->getResponsePrototype();
-            $this->validateServerRequest($request);
-            return $done($request, $response, null);
+            return $this->dispatchDone($done, $request);
         }
 
         $layer           = $this->queue->dequeue();
@@ -344,5 +354,30 @@ class Next implements DelegateInterface
             ServerRequestInterface::class,
             DelegateInterface::class
         ));
+    }
+
+    /**
+     * Dispatch the "done" argument.
+     *
+     * For DelegateInterface implementations, calls the process method with
+     * only the request instance.
+     *
+     * For callables, calls with request, response, and error.
+     *
+     * @param callable|DelegateInterface $done
+     * @param RequestInterface $request
+     * @param ResponseInterface|null $response
+     * @param mixed $err
+     * @return ResponseInterface
+     */
+    private function dispatchDone($done, RequestInterface $request, ResponseInterface $response = null, $err = null)
+    {
+        if ($done instanceof DelegateInterface) {
+            return $done->process($request);
+        }
+
+        $response = $response ?: $this->getResponsePrototype();
+        $this->validateServerRequest($request);
+        return $done($request, $response, $err);
     }
 }

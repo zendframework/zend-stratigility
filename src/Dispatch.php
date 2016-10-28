@@ -223,6 +223,13 @@ class Dispatch
      */
     private function dispatchInteropMiddleware($middleware, callable $next, RequestInterface $request)
     {
+        if ($middleware instanceof MiddlewarePipe
+            && ! $middleware->hasResponsePrototype()
+            && $this->responsePrototype
+        ) {
+            $middleware->setResponsePrototype($this->responsePrototype);
+        }
+
         try {
             return $middleware->process($request, $next);
         } catch (Throwable $throwable) {
