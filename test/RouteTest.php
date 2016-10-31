@@ -9,16 +9,22 @@
 
 namespace ZendTest\Stratigility;
 
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use PHPUnit_Framework_TestCase as TestCase;
 use Zend\Stratigility\Route;
 
 class RouteTest extends TestCase
 {
+    public function createEmptyMiddleware()
+    {
+        return $this->prophesize(ServerMiddlewareInterface::class)->reveal();
+    }
+
     public function testPathAndHandlerAreAccessibleAfterInstantiation()
     {
         $path = '/foo';
-        $handler = function () {
-        };
+        $handler = $this->createEmptyMiddleware();
+
         $route = new Route($path, $handler);
         $this->assertSame($path, $route->path);
         $this->assertSame($handler, $route->handler);
@@ -42,14 +48,12 @@ class RouteTest extends TestCase
     public function testDoesNotAllowNonStringPaths($path)
     {
         $this->setExpectedException('InvalidArgumentException');
-        $route = new Route($path, function () {
-        });
+        $route = new Route($path, $this->createEmptyMiddleware());
     }
 
     public function testExceptionIsRaisedIfUndefinedPropertyIsAccessed()
     {
-        $route = new Route('/foo', function () {
-        });
+        $route = new Route('/foo', $this->createEmptyMiddleware());
 
         $this->setExpectedException('OutOfRangeException');
         $foo = $route->foo;
