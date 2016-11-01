@@ -20,6 +20,7 @@ use ReflectionProperty;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Uri;
+use Zend\Stratigility\ErrorMiddlewareInterface;
 use Zend\Stratigility\Http\Request as RequestDecorator;
 use Zend\Stratigility\Http\Response as ResponseDecorator;
 use Zend\Stratigility\MiddlewarePipe;
@@ -621,6 +622,9 @@ class MiddlewarePipeTest extends TestCase
         $this->assertSame($response->reveal(), $pipeline->process($this->request, $delegate));
     }
 
+    /**
+     * @group http-interop
+     */
     public function testWillDecorateCallableMiddlewareAsInteropMiddlewareIfResponsePrototypePresent()
     {
         $pipeline = new MiddlewarePipe();
@@ -639,5 +643,35 @@ class MiddlewarePipeTest extends TestCase
         $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
         $this->assertAttributeSame($this->response, 'responsePrototype', $test);
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     */
+    public function errorMiddleware()
+    {
+        yield 'callable' => [function ($err, $request, $response, $next) {
+        }];
+
+        yield 'interface' => [$this->prophesize(ErrorMiddlewareInterface::class)->reveal()];
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     * @dataProvider errorMiddleware
+     * @group http-interop
+     */
+    public function testWillNotDecorateCallableErrorMiddlewareDuringPipingEvenWithResponsePrototypePresent($middleware)
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $this->assertSame($middleware, $route->handler);
     }
 }

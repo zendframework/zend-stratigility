@@ -157,6 +157,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
         // a response prototype present.
         if (is_callable($middleware)
             && ! $this->isInteropMiddleware($middleware)
+            && ! $this->isErrorMiddleware($middleware)
             && $this->responsePrototype
         ) {
             $middleware = new Middleware\CallableMiddlewareWrapper($middleware, $this->responsePrototype);
@@ -270,5 +271,18 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
         return ! is_callable($middleware)
             && ($middleware instanceof ServerMiddlewareInterface
                 || $middleware instanceof InteropMiddlewareInterface);
+    }
+
+    /**
+     * Is the middleware error middleware?
+     *
+     * @todo Remove for 2.0.0
+     * @param mixed $middleware
+     * @return bool
+     */
+    private function isErrorMiddleware($middleware)
+    {
+        return $middleware instanceof ErrorMiddlewareInterface
+            || Utils::getArity($middleware) >= 4;
     }
 }
