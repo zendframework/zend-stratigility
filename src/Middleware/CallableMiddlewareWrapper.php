@@ -11,7 +11,7 @@ use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Stratigility\Delegate\CallableDelegateDecorator;
+use Zend\Stratigility\Next;
 
 /**
  * Decorate legacy callable middleware to make it dispatchable as server
@@ -49,12 +49,12 @@ class CallableMiddlewareWrapper implements ServerMiddlewareInterface
     public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
         $middleware = $this->middleware;
-        return $middleware(
-            $request,
-            $this->responsePrototype,
-            function ($request) use ($delegate) {
+        $delegate = $delegate instanceof Next
+            ? $delegate
+            : function ($request) use ($delegate) {
                 return $delegate->process($request);
-            }
-        );
+            };
+
+        return $middleware($request, $this->responsePrototype, $delegate);
     }
 }
