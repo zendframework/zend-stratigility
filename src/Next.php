@@ -28,10 +28,9 @@ class Next implements DelegateInterface
     private $dispatch;
 
     /**
-     * @deprecated starting in 1.3.0; will be removed in 2.0.0.
-     * @var Callable
+     * @var callable|DelegateInterface
      */
-    private $done;
+    private $nextDelegate;
 
     /**
      * @var SplQueue
@@ -57,8 +56,9 @@ class Next implements DelegateInterface
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param callable|DelegateInterface $done Deprecated since 1.3.0; will be
-     *     removed starting in 2.0.0.
+     * @param callable|DelegateInterface $done Next delegate to invoke when the
+     *     queue is exhausted. Note: this argument becomes optional starting in
+     *     2.0.0.
      * @throws InvalidArgumentException for a non-callable, non-delegate $done
      *     argument.
      */
@@ -74,9 +74,9 @@ class Next implements DelegateInterface
             ));
         }
 
-        $this->queue    = clone $queue;
-        $this->done     = $done;
-        $this->dispatch = new Dispatch();
+        $this->queue        = clone $queue;
+        $this->nextDelegate = $done;
+        $this->dispatch     = new Dispatch();
     }
 
     /**
@@ -119,12 +119,12 @@ class Next implements DelegateInterface
         }
 
         $dispatch = $this->dispatch;
-        $done     = $this->done;
+        $done     = $this->nextDelegate;
         $request  = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            return $this->dispatchDone($done, $request, $response, $err);
+            return $this->dispatchNextDelegate($done, $request, $response, $err);
         }
 
         $layer           = $this->queue->dequeue();
@@ -162,12 +162,12 @@ class Next implements DelegateInterface
     public function process(RequestInterface $request)
     {
         $dispatch = $this->dispatch;
-        $done     = $this->done;
+        $done     = $this->nextDelegate;
         $request  = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            return $this->dispatchDone($done, $request);
+            return $this->dispatchNextDelegate($done, $request);
         }
 
         $layer           = $this->queue->dequeue();
@@ -357,27 +357,31 @@ class Next implements DelegateInterface
     }
 
     /**
-     * Dispatch the "done" argument.
+     * Dispatch the next delegate.
      *
      * For DelegateInterface implementations, calls the process method with
      * only the request instance.
      *
      * For callables, calls with request, response, and error.
      *
-     * @param callable|DelegateInterface $done
+     * @param callable|DelegateInterface $nextDelegate
      * @param RequestInterface $request
      * @param ResponseInterface|null $response
      * @param mixed $err
      * @return ResponseInterface
      */
-    private function dispatchDone($done, RequestInterface $request, ResponseInterface $response = null, $err = null)
-    {
-        if ($done instanceof DelegateInterface) {
-            return $done->process($request);
+    private function dispatchNextDelegate(
+        $nextDelegate,
+        RequestInterface $request,
+        ResponseInterface $response = null,
+        $err = null
+    ) {
+        if ($nextDelegate instanceof DelegateInterface) {
+            return $nextDelegate->process($request);
         }
 
         $response = $response ?: $this->getResponsePrototype();
         $this->validateServerRequest($request);
-        return $done($request, $response, $err);
+        return $nextDelegate($request, $response, $err);
     }
 }
