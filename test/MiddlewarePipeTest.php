@@ -23,6 +23,7 @@ use Zend\Diactoros\Uri;
 use Zend\Stratigility\Http\Request as RequestDecorator;
 use Zend\Stratigility\Http\Response as ResponseDecorator;
 use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 use Zend\Stratigility\NoopFinalHandler;
 use Zend\Stratigility\Utils;
 
@@ -618,5 +619,25 @@ class MiddlewarePipeTest extends TestCase
         };
 
         $this->assertSame($response->reveal(), $pipeline->process($this->request, $delegate));
+    }
+
+    public function testWillDecorateCallableMiddlewareAsInteropMiddlewareIfResponsePrototypePresent()
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+
+        $middleware = function () {
+        };
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $test = $route->handler;
+        $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
+        $this->assertAttributeSame($middleware, 'middleware', $test);
+        $this->assertAttributeSame($this->response, 'responsePrototype', $test);
     }
 }
