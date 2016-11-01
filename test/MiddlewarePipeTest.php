@@ -24,6 +24,7 @@ use Zend\Stratigility\ErrorMiddlewareInterface;
 use Zend\Stratigility\Http\Request as RequestDecorator;
 use Zend\Stratigility\Http\Response as ResponseDecorator;
 use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 use Zend\Stratigility\NoopFinalHandler;
 use Zend\Stratigility\Utils;
@@ -673,5 +674,24 @@ class MiddlewarePipeTest extends TestCase
 
         $route = $queue->dequeue();
         $this->assertSame($middleware, $route->handler);
+    }
+
+    public function testWillDecorateACallableDefiningADelegateArgumentUsingAlternateDecorator()
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+
+        $middleware = function ($request, DelegateInterface $delegate) {
+        };
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $test = $route->handler;
+        $this->assertInstanceOf(CallableInteropMiddlewareWrapper::class, $test);
+        $this->assertAttributeSame($middleware, 'middleware', $test);
     }
 }

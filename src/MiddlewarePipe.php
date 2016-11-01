@@ -9,11 +9,14 @@
 
 namespace Zend\Stratigility;
 
+use Closure;
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use ReflectionFunction;
+use ReflectionMethod;
 use SplQueue;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
@@ -160,7 +163,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
             && ! $this->isErrorMiddleware($middleware)
             && $this->responsePrototype
         ) {
-            $middleware = new Middleware\CallableMiddlewareWrapper($middleware, $this->responsePrototype);
+            $middleware = $this->decorateCallableMiddleware($middleware, $this->responsePrototype);
         }
 
         // Ensure we have a valid handler
@@ -284,5 +287,39 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     {
         return $middleware instanceof ErrorMiddlewareInterface
             || Utils::getArity($middleware) >= 4;
+    }
+
+    /**
+     * @param callable $middleware
+     * @return ServerMiddlewareInterface
+     */
+    private function decorateCallableMiddleware(callable $middleware, Response $response)
+    {
+        $r = $this->getReflectionFunction($middleware);
+        $paramsCount = $r->getNumberOfParameters();
+
+        if ($paramsCount !== 2) {
+            return new Middleware\CallableMiddlewareWrapper($middleware, $response);
+        }
+
+        $params = $r->getParameters();
+        if ($params[1]->getClass()->getName() !== DelegateInterface::class) {
+            return new Middleware\CallableMiddlewareWrapper($middleware, $response);
+        }
+
+        return new Middleware\CallableInteropMiddlewareWrapper($middleware);
+    }
+
+    /**
+     * @param callable $middleware
+     * @return \ReflectionFunctionAbstract
+     */
+    private function getReflectionFunction(callable $middleware)
+    {
+        if ($middleware instanceof Closure || ! is_object($middleware)) {
+            return new ReflectionFunction($middleware);
+        }
+
+        return new ReflectionMethod($middleware, '__invoke');
     }
 }
