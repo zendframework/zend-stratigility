@@ -161,9 +161,8 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
         if (is_callable($middleware)
             && ! $this->isInteropMiddleware($middleware)
             && ! $this->isErrorMiddleware($middleware)
-            && $this->responsePrototype
         ) {
-            $middleware = $this->decorateCallableMiddleware($middleware, $this->responsePrototype);
+            $middleware = $this->decorateCallableMiddleware($middleware);
         }
 
         // Ensure we have a valid handler
@@ -291,20 +290,26 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
 
     /**
      * @param callable $middleware
-     * @return ServerMiddlewareInterface
+     * @return ServerMiddlewareInterface|callable Callable, if unable to
+     *     decorate the middleware; ServerMiddlewareInterface if it can.
      */
-    private function decorateCallableMiddleware(callable $middleware, Response $response)
+    private function decorateCallableMiddleware(callable $middleware)
     {
         $r = $this->getReflectionFunction($middleware);
         $paramsCount = $r->getNumberOfParameters();
 
         if ($paramsCount !== 2) {
-            return new Middleware\CallableMiddlewareWrapper($middleware, $response);
+            return $this->responsePrototype
+                ? new Middleware\CallableMiddlewareWrapper($middleware, $this->responsePrototype)
+                : $middleware;
         }
 
         $params = $r->getParameters();
-        if ($params[1]->getClass()->getName() !== DelegateInterface::class) {
-            return new Middleware\CallableMiddlewareWrapper($middleware, $response);
+        $type = $params[1]->getClass();
+        if (! $type || $type->getName() !== DelegateInterface::class) {
+            return $this->responsePrototype
+                ? new Middleware\CallableMiddlewareWrapper($middleware, $this->responsePrototype)
+                : $middleware;
         }
 
         return new Middleware\CallableInteropMiddlewareWrapper($middleware);
