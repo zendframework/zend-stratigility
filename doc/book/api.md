@@ -131,7 +131,7 @@ when calling it in your application, or return a response yourself.
 >
 > Using the `$response` argument is unsafe when using delegation, as an inner
 > layer could return an entirely different response, ignoring any changes you
-> may have introduced previously. Additionally, hen manipulating the response
+> may have introduced previously. Additionally, when manipulating the response
 > from an inner layer, you may be inheriting unwanted context.
 >
 > As such, we recommend ignoring the `$response` argument and doing one of the
