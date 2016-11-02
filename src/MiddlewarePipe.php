@@ -9,11 +9,14 @@
 
 namespace Zend\Stratigility;
 
+use Closure;
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use ReflectionFunction;
+use ReflectionMethod;
 use SplQueue;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
@@ -124,8 +127,10 @@ class MiddlewarePipe implements ServerMiddlewareInterface
             $path       = '/';
         }
 
+        // Decorate callable middleware as http-interop middleware if we have
+        // a response prototype present.
         if (is_callable($middleware)
-            && ! $this->isValidMiddleware($middleware)
+            && ! $this->isInteropMiddleware($middleware)
         ) {
             $middleware = $this->decorateCallableMiddleware($middleware);
         }
@@ -208,13 +213,28 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     }
 
     /**
-     * @param calalble $middleware
-     * @return ServerMiddlewareInterface
+     * @param callable $middleware
+     * @return ServerMiddlewareInterface|callable Callable, if unable to
+     *     decorate the middleware; ServerMiddlewareInterface if it can.
      */
     private function decorateCallableMiddleware(callable $middleware)
     {
-        $factory = $this->getCallableMiddlewareDecorator();
-        return $factory->decorateCallableMiddleware($middleware);
+        $r = $this->getReflectionFunction($middleware);
+        $paramsCount = $r->getNumberOfParameters();
+
+        if ($paramsCount !== 2) {
+            return $this->getCallableMiddlewareDecorator()
+                ->decorateCallableMiddleware($middleware);
+        }
+
+        $params = $r->getParameters();
+        $type = $params[1]->getClass();
+        if (! $type || $type->getName() !== DelegateInterface::class) {
+            return $this->getCallableMiddlewareDecorator()
+                ->decorateCallableMiddleware($middleware);
+        }
+
+        return new Middleware\CallableInteropMiddlewareWrapper($middleware);
     }
 
     /**
@@ -245,5 +265,31 @@ class MiddlewarePipe implements ServerMiddlewareInterface
         );
 
         return $this->callableMiddlewareDecorator;
+    }
+
+    /**
+     * Is the provided middleware argument http-interop middleware?
+     *
+     * @param mixed $middleware
+     * @return bool
+     */
+    private function isInteropMiddleware($middleware)
+    {
+        return ! is_callable($middleware)
+            && ($middleware instanceof ServerMiddlewareInterface
+                || $middleware instanceof InteropMiddlewareInterface);
+    }
+
+    /**
+     * @param callable $middleware
+     * @return \ReflectionFunctionAbstract
+     */
+    private function getReflectionFunction(callable $middleware)
+    {
+        if ($middleware instanceof Closure || ! is_object($middleware)) {
+            return new ReflectionFunction($middleware);
+        }
+
+        return new ReflectionMethod($middleware, '__invoke');
     }
 }

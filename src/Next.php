@@ -25,7 +25,7 @@ use SplQueue;
 class Next implements DelegateInterface
 {
     /**
-     * @param null|DelegateInterface
+     * @var callable|DelegateInterface
      */
     private $nextDelegate;
 
@@ -45,12 +45,14 @@ class Next implements DelegateInterface
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param null|DelegateInterface $nextDelegate Next delegate to call once
-     *     the queue is exhausted.
+     * @param null|DelegateInterface $done Next delegate to invoke when the
+     *     queue is exhausted.
+     * @throws InvalidArgumentException for a non-callable, non-delegate $done
+     *     argument.
      */
     public function __construct(SplQueue $queue, DelegateInterface $nextDelegate = null)
     {
-        $this->queue = clone $queue;
+        $this->queue        = clone $queue;
         $this->nextDelegate = $nextDelegate;
     }
 

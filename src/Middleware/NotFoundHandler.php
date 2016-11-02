@@ -7,11 +7,13 @@
 
 namespace Zend\Stratigility\Middleware;
 
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Zend\Stratigility\MiddlewareInterface;
+use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 
-class NotFoundHandler implements MiddlewareInterface
+class NotFoundHandler implements ServerMiddlewareInterface
 {
     /**
      * @var ResponseInterface
@@ -28,14 +30,29 @@ class NotFoundHandler implements MiddlewareInterface
     }
 
     /**
-     * Creates and returns a 404 response.
+     * Proxy to process()
+     *
+     * Proxies to process, after first wrapping the `$next` argument using the
+     * CallableDelegateDecorator.
      *
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response Ignored.
-     * @param callable $next Ignored.
+     * @param ResponseInterface $response
+     * @param callable $next
      * @return ResponseInterface
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
+    {
+        return $this->process($request, new CallableDelegateDecorator($next, $response));
+    }
+
+    /**
+     * Creates and returns a 404 response.
+     *
+     * @param ServerRequestInterface $request Ignored.
+     * @param DelegateInterface $delegate Ignored.
+     * @return ResponseInterface
+     */
+    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
         $response = $this->responsePrototype
             ->withStatus(404);

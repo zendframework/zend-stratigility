@@ -28,13 +28,18 @@ $app->pipe(new NotFoundHandler(new Response());
 ```
 
 Note that it is the last middleware piped into the application! Since it returns
-a response, no deeper neseted layers will execute once it has been invoked.
+a response, no deeper nested layers will execute once it has been invoked.
 
 If you would like a templated response, you will need to write your own
 middleware; such middleware might look like the following:
 
 ```php
-class NotFoundMiddleware
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+class NotFoundMiddleware implements ServerMiddlewareInterface
 {
     private $renderer;
 
@@ -46,7 +51,7 @@ class NotFoundMiddleware
         $this->response = $response;
     }
 
-    public function __invoke($request)
+    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
         $response = $this->response->withStatus(404);
         $response->getBody()->write(
@@ -60,12 +65,12 @@ class NotFoundMiddleware
 ## Handling PHP errors and exceptions
 
 `Zend\Stratigility\Middleware\ErrorHandler` is a middleware implementation to
-register as the *outermost layer* of your application (or one of the outermost
-layers). It does the following:
+register as the *outermost layer* of your application (or close to the outermost
+layer). It does the following:
 
 - Creates a PHP error handler that catches any errors in the `error_handling()`
   mask and throws them as `ErrorException` instances.
-- Wraps the call to `$next()` in a try/catch block:
+- Wraps the invocation of the delegate in a try/catch block:
   - if no exception is caught, and the result is a response, it returns it.
   - if no exception is caught, it raises an exception, which will be caught.
   - any caught exception is transformed into an error response.
@@ -85,7 +90,7 @@ function (
 ```
 
 We provide a default implementation, `Zend\Stratigility\Middleware\ErrorResponseGenerator`,
-which generates an error response with a 5XX series status code and a message
+which generates an error response with a `5XX` series status code and a message
 derived from the reason phrase, if any is present. You may pass a boolean flag
 to its constructor indicating the application is in development mode; if so, the
 response will have the stack trace included in the body.
@@ -121,7 +126,7 @@ $app->pipe(new NotFoundHandler(new Response());
 ```
 
 The `ErrorResponseGenerator` provides no templating facilities, and only
-responds as text/html. If you want to provide a templated response, or a
+responds as `text/html`. If you want to provide a templated response, or a
 different serialization and/or markup format, you will need to write your own
 error response generator.
 
