@@ -138,7 +138,7 @@ class Dispatch
      */
     private function isNotInteropMiddleware($handler, RequestInterface $request)
     {
-        if ($handler instanceof ServerMiddlewareInterface || $handler instanceof InteropMiddlewareInterface) {
+        if ($this->isInteropMiddleware($handler)) {
             return false;
         }
 
