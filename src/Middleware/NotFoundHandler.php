@@ -11,6 +11,7 @@ use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 
 class NotFoundHandler implements ServerMiddlewareInterface
 {
@@ -26,6 +27,22 @@ class NotFoundHandler implements ServerMiddlewareInterface
     public function __construct(ResponseInterface $responsePrototype)
     {
         $this->responsePrototype = $responsePrototype;
+    }
+
+    /**
+     * Proxy to process()
+     *
+     * Proxies to process, after first wrapping the `$next` argument using the
+     * CallableDelegateDecorator.
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param callable $next
+     * @return ResponseInterface
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
+    {
+        return $this->process($request, new CallableDelegateDecorator($next, $response));
     }
 
     /**
