@@ -12,10 +12,10 @@ changes will still require changes to your code following the 2.0 release.
 
 In the original 1.X releases, Stratigility would decorate the request and
 response instances with `Zend\Stratigility\Http\Request` and
-`Zend\Stratigility\Http\Response`, respectively. This was done originally to
-facilitate access to the incoming request in cases of nested layers, where the
-URI path may have been truncated (`Next` truncates matched paths when executing
-a layer if a path was provided when piping the middleware).
+`Zend\Stratigility\Http\Response`, respectively. This was done to facilitate
+access to the incoming request in cases of nested layers, where the URI path
+may have been truncated (`Next` truncates matched paths when executing a layer
+if a path was provided when piping the middleware).
 
 Internally, prior to 1.3, only `Zend\Stratigility\FinalHandler` was still using
 this functionality:
@@ -97,10 +97,10 @@ most of its meaning, as you are now handling errors and 404 conditions as
 middleware layers.
 
 However, you still need to ensure that the pipeline returns a response,
-regardless of how the pipeline is setup, and for that we still need some form of
-"final" handler that can do so. (In fact, starting in version 2, the `$out`
-argument will be renamed to either `$next` or `$delegate`, and will be a
-required argument of the `MiddlewareInterface` and, thus, the `MiddlewarePipe`.)
+regardless of how the pipeline is setup, and for that we still need some form
+of "final" handler that can do so. (In fact, starting in version 2, the `$out`
+argument will be renamed to `$delegate`, and will be a required argument for
+invoking the `MiddlewarePipe`.)
 
 Starting in version 1.3, we now offer a `Zend\Stratigility\NoopFinalHandler`
 implementation, which simply returns the response passed to it. You can compose
@@ -131,9 +131,20 @@ work in all version 1 releases as well.
 (You can also compose your own custom final handler; it only needs to accept a
 request and a response, and be guaranteed to return a response instance.)
 
+To summarize:
+
+- Use the new `Zend\Stratigility\Middleware\NotFoundHandler` as the innermost
+  layer of your application pipeline in order to provide 404 responses.
+- Use the new `Zend\Stratigility\Middleware\ErrorHandler` middleware as the
+  outermost (or close to outermost) layer of your application pipeline in order
+  to handle exceptions.
+- Use the `Zend\Stratigility\NoopFinalHandler` as the `$out` argument when
+  dispatching your application pipeline.
+
 ## http-interop compatibility
 
-Starting in version 1.3.0, we offer compatibility with [http-interop middleware 0.2.0](https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9).
+Starting in version 1.3.0, we offer compatibility with
+[http-interop middleware 0.2.0](https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9).
 That version of the specification defines the following interfaces:
 
 ```php
@@ -164,7 +175,8 @@ The support in version 1.3.0 consists of the following:
 - `MiddlewarePipe` now also implements `ServerMiddlewareInterface`, and allows
   piping either type of http-interop middleware.
 - `Next` now also implements `DelegateInterface`.
-- `Dispatch` is now capable of dispatching either http-interop middleware type.
+- `Dispatch` is now capable of dispatching either http-interop middleware type,
+  in addition to legacy callable middleware.
 
 Additionally, `MiddlewarePipe` will now allow composing a *response prototype*;
 this is a PSR-7 `ResponseInterface` instance. If not set, the first time the
@@ -184,7 +196,8 @@ Starting in version 2.0.0, `MiddlewarePipe` *will no longer implement
 Callable middleware can be used without change in version 1.3.0. However, we
 recommend updating your code to prepare for version 2.0.0.
 
-First, **we recommend *never* using the `$response` argument provided to middleware.**
+First, **we recommend *never* using the `$response` argument provided to
+middleware.**
 
 The reason for this recommendation is two-fold. First, the http-interop
 interfaces do not provide it, and, as such, using it within your middleware
@@ -210,8 +223,8 @@ The first, outer layer of middleware sets a response header. However, the
 second, inner middleware, *creates and returns an entirely new response*,
 making the new header disappear.
 
-As such, we recommend rewriting such middleware to modify the *returned* response
-instead:
+As such, we recommend rewriting such middleware to modify the *returned*
+response instead:
 
 ```php
 use Zend\Diactoros\Response\JsonResponse;
@@ -238,7 +251,7 @@ work with http-interop delegators.
 ```php
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 
-// Decorating callable middleware for use with http-interop:
+// Manually decorating callable middleware for use with http-interop:
 $pipeline->pipe(new CallableMiddlewareWrapper($middleware, $response));
 
 // Auto-decorate middleware by providing a response prototype:
@@ -431,9 +444,9 @@ pipeline, you must do one of the following:
     // the http-interop signature already.
     ```
 
-### Invoking MiddlewarePipe instances
+### Invoking MiddlewarePipe instances in version 2.0.0
 
-Invocation of the outer-most middleware can now be done in two ways:
+Invocation of the outermost middleware can now be done in two ways:
 
 - Using `__invoke()`. This now requires a third argument, `$delegate`, which
   may be one of a `callable` accepting `ServerRequestInterface` and `ResponseInterface`
@@ -488,4 +501,6 @@ The following classes, methods, and arguments are deprecated starting in version
 - `Zend\Stratigility\Http\Response` (class)
 - The `$response` argument to middleware is deprecated; please see the
   [section on callable middleware](callable-middleware-in-version-1.3.0)
-  for details.
+  for details, and adapt your middleware to no longer use the argument.
+  While the legacy callable signature will continue to work, we recommend
+  implementing an http-interop middleware interface.
