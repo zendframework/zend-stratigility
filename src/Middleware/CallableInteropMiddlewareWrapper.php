@@ -31,6 +31,7 @@ class CallableInteropMiddlewareWrapper implements ServerMiddlewareInterface
      */
     public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
+        $middleware = $this->middleware;
         return $middleware($request, $delegate);
     }
 }
