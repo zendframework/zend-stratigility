@@ -49,7 +49,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     /**
      * @var Response
      */
-    private $responsePrototype;
+    protected $responsePrototype;
 
     /**
      * Constructor
