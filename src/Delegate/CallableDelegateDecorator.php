@@ -40,7 +40,7 @@ class CallableDelegateDecorator implements DelegateInterface
     /**
      * Proxies to the underlying callable delegate to process a request.
      *
-     * {@inheritDocs}
+     * {@inheritDoc}
      */
     public function process(RequestInterface $request)
     {
