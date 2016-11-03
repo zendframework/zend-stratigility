@@ -189,7 +189,7 @@ prototype will be passed to the callable for the response argument.
 
 Starting in version 2.0.0, `MiddlewarePipe` *will no longer implement
 `Zend\Stratigility\MiddlewareInterface`, and only implement the http-interop
-`ServerMiddlewareInterface`*. This has several repurcussions.
+`ServerMiddlewareInterface`*. This has several repercussions.
 
 ### Callable middleware in version 1.3.0
 
