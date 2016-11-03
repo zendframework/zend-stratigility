@@ -38,6 +38,8 @@ class Route
     /**
      * @param string $path
      * @param callable|InteropMiddlewareInterface|ServerMiddlewareInterface $handler
+     * @throws Exception\InvalidArgumentException if the $handler provided is
+     *     neither a callable nor an http-interop implementation.
      */
     public function __construct($path, $handler)
     {
