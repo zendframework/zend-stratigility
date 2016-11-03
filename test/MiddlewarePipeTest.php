@@ -694,4 +694,35 @@ class MiddlewarePipeTest extends TestCase
         $this->assertInstanceOf(CallableInteropMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
     }
+
+    /**
+     * Used to test that array callables are decorated correctly.
+     *
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @param callable $next
+     * @return ResponseInterface
+     */
+    public function sampleMiddleware($request, $response, $next)
+    {
+        return $response;
+    }
+
+    public function testWillDecorateCallableArrayMiddlewareWithoutErrors()
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+
+        $middleware = [$this, 'sampleMiddleware'];
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $test = $route->handler;
+        $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
+        $this->assertAttributeSame($middleware, 'middleware', $test);
+    }
 }
