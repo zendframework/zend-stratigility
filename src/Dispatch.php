@@ -57,6 +57,7 @@ class Dispatch
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @param callable $next
+     * @return ResponseInterface
      */
     public function __invoke(
         Route $route,
