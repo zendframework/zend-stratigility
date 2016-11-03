@@ -14,11 +14,8 @@ use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
-use Zend\Escaper\Escaper;
 use Zend\Stratigility\Delegate\CallableDelegateDecorator;
-use Zend\Stratigility\Exception\MissingDelegateException;
 use Zend\Stratigility\Exception\MissingResponseException;
-use Zend\Stratigility\Utils;
 
 /**
  * Error handler middleware.
