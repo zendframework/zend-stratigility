@@ -286,6 +286,12 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      */
     private function getReflectionFunction(callable $middleware)
     {
+        if (is_array($middleware)) {
+            $class = array_shift($middleware);
+            $method = array_shift($middleware);
+            return new ReflectionMethod($class, $method);
+        }
+
         if ($middleware instanceof Closure || ! is_object($middleware)) {
             return new ReflectionFunction($middleware);
         }
