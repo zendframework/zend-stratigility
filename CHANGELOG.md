@@ -120,6 +120,46 @@ details.
   - `originalResponse`, representing the response provided to it.
   - `originalUri`, representing URI instance composed in the request provided to it.
 
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) adds support
+  for [http-interop middleware 0.2.0](https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9).
+  For full details, see the [migration guide](https://docs.zendframework.com/zend-stratigility/migration/to-v2/#http-interop-compatibility).
+  As a summary of features:
+  - You may now pipe http-interop middleware to `MiddlewarePipe` instances.
+  - You may now pipe callable middleware that defines the same signature as
+    http-interop middleware to `MiddlewarePipe` instances; these will be
+    decorated in a `Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper`
+    instance.
+  - `MiddlewarePipe` now implements the http-interop
+    `ServerMiddlewareInterface`, allowing it to be used in http-interop
+    middleware dispatchers.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) adds the
+  class `Zend\Stratigility\Middleware\CallableMiddlewareWrapper`. It accepts
+  callable double-pass middleware and a response prototype, and implements the
+  http-interop `ServerMiddlewareInterface`, allowing you to adapt existing
+  callable middleware to work with http-interop middleware dispatchers.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) adds the
+  class `Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper`. It accepts
+  callable middleware that follows the http-interop `ServerMiddlewareInterface`,
+  and implements that interface itself, to allow composing such middleware in
+  http-interop middleware dispatchers.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) adds the
+  class `Zend\Stratigility\Delegate\CallableDelegateDecorator`, which can be
+  used to add http-interop middleware support to your existing callable
+  middleware.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) adds a new
+  method to `MiddlewarePipe`, `setResponseProtoype()`. When this method is
+  invoked with a PSR-7 response, the following occurs:
+  - That response is injected in `Next` and `Dispatch` instances, to allow
+    dispatching legacy callable middleware as if it were http-interop
+    middleware.
+  - Any callable middleware implementing the legacy signature will now be
+    decorated using the above `CallableMiddlewareWrapper` in order to adapt it
+    as http-interop middleware.
+
 ### Changed
 
 - [#70](https://github.com/zendframework/zend-stratigility/pull/70) makes the
@@ -131,6 +171,26 @@ details.
   - It no longer writes to the response using the
     `Zend\Stratigility\Http\Response`-specific `write()` method, but rather
     pulls the message body and writes to that.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) updates
+  `MiddlewarePipe` to inject the `$response` argument to `__invoke()` as the
+  response prototype.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) updates
+  `Zend\Stratigility\Next` to implement the http-interop middleware
+  `DelegateInterface`. It also updates `Zend\Stratigility\Dispatch` to add a new
+  method, `process()`, following the `DelegateInterface` signature, thus
+  allowing `Next` to properly process http-interop middleware. These methods
+  will use the composed response prototype, if present, to invoke callable
+  middleware using the legacy signature.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) updates
+  `Next` to allow the `$done` constructor argument to be an http-interop
+  `DelegateInterface`, and will invoke it as such if the queue is exhausted.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) updates
+  `Route` (which is used internally by `MiddlewarePipe` to allow either callable
+  or http-interop middleware as route handlers.
 
 ### Deprecated
 
@@ -173,6 +233,17 @@ details.
   `Zend\Stratigility\Http\Response`. Additionally, the methods `write()`,
   `end()`, `isComplete()`, and `getOriginalResponse()` now emit deprecation
   notices when invoked, urging users to update their code.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) deprecates
+  the `$response` argument in existing callable middleware. Please only operate
+  on the response returned by `$next`/`$delegate`, or create a response. See the
+  documentation [section on response arguments](https://docs.zendframework.com/zend-stratigility/api/#response-argument)
+  for more details.
+
+- [#75](https://github.com/zendframework/zend-stratigility/pull/75) deprecates
+  usage of error middleware, and thus deprecates the `$err` argument to `$next`;
+  explicitly invoking error middleware using that argument to `$next` will now
+  raise a deprecation notice.
 
 ### Removed
 
