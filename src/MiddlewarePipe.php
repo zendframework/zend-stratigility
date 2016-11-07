@@ -161,6 +161,16 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     }
 
     /**
+     * Enable the "raise throwables" flag.
+     *
+     * @deprecated Since 2.0.0; this feature is now a no-op.
+     * @return void
+     */
+    public function raiseThrowables()
+    {
+    }
+
+    /**
      * @param Response $prototype
      * @return void
      */

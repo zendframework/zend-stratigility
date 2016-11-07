@@ -79,8 +79,17 @@ These approaches, however, have several shortcomings:
 Starting in 1.3, we are promoting using standard middleware layers as error
 handlers, instead of using the existing error middleware/final handler system.
 
-To achieve this, we have provided some new functionality, as well as augmented
-existing functionality:
+The first step is to opt-in to having throwables and exceptions raised by
+middleware, instead of having the dispatcher catch them and then invoke
+middleware. Do this via the `MiddlewarePipe::raiseThrowables()` method:
+
+```php
+$pipeline = new MiddlewarePipe();
+$pipeline->raiseThrowables();
+```
+
+Once you have done that you may start using some of the new functionality, as
+well as augmented existing functionality:
 
 - [NotFoundHandler middleware](../error-handlers.md#handling-404-conditions)
 - [ErrorHandler middleware](../error-handlers.md#handling-php-errors-and-exceptions)
@@ -133,6 +142,8 @@ request and a response, and be guaranteed to return a response instance.)
 
 To summarize:
 
+- Call the `raiseThrowables()` method of your `MiddlewarePipe` instance to
+  opt-in to the new error handling strategy.
 - Use the new `Zend\Stratigility\Middleware\NotFoundHandler` as the innermost
   layer of your application pipeline in order to provide 404 responses.
 - Use the new `Zend\Stratigility\Middleware\ErrorHandler` middleware as the
