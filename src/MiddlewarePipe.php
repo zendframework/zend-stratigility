@@ -9,15 +9,21 @@
 
 namespace Zend\Stratigility;
 
-use Zend\Stratigility\Exception\InvalidMiddlewareException;
+use Closure;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use ReflectionFunction;
+use ReflectionMethod;
 use SplQueue;
+use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
 /**
  * Pipe middleware like unix pipes.
  *
- * This class implements a pipe-line of middleware, which can be attached using
+ * This class implements a pipeline of middleware, which can be attached using
  * the `pipe()` method, and is itself middleware.
  *
  * It creates an instance of `Next` internally, invoking it with the provided
@@ -28,12 +34,22 @@ use SplQueue;
  *
  * @see https://github.com/sencha/connect
  */
-class MiddlewarePipe implements MiddlewareInterface
+class MiddlewarePipe implements ServerMiddlewareInterface
 {
+    /**
+     * @var Middleware\CallableMiddlewareWrapperFactory
+     */
+    private $callableMiddlewareDecorator;
+
     /**
      * @var SplQueue
      */
     protected $pipeline;
+
+    /**
+     * @var Response
+     */
+    protected $responsePrototype;
 
     /**
      * Constructor
@@ -57,17 +73,32 @@ class MiddlewarePipe implements MiddlewareInterface
      *
      * @param Request $request
      * @param Response $response
-     * @param callable $out
+     * @param callable|DelegateInterface $delegate
      * @return Response
      */
-    public function __invoke(Request $request, Response $response, callable $next)
+    public function __invoke(Request $request, Response $response, $delegate)
     {
-        $layer = new Next($this->pipeline);
-        $result = $layer($request, $response);
+        if (! $delegate instanceof DelegateInterface && is_callable($delegate)) {
+            $delegate = new Delegate\CallableDelegateDecorator($delegate, $response);
+        }
 
-        return $result instanceof Response
-            ? $next($request, $result)
-            : $next($request, $response);
+        return $this->process($request, $delegate);
+    }
+
+    /**
+     * http-interop invocation: single-pass with delegate.
+     *
+     * Executes the internal pipeline, passing $delegate as the "final
+     * handler" in cases when the pipeline exhausts itself.
+     *
+     * @param Request $request
+     * @param DelegateInterface $delegate
+     * @return Response
+     */
+    public function process(Request $request, DelegateInterface $delegate)
+    {
+        $next = new Next($this->pipeline, $delegate);
+        return $next->process($request);
     }
 
     /**
@@ -89,13 +120,23 @@ class MiddlewarePipe implements MiddlewareInterface
      */
     public function pipe($path, $middleware = null)
     {
-        if (null === $middleware && is_callable($path)) {
+        if (null === $middleware
+            && ($this->isValidMiddleware($path) || is_callable($path))
+        ) {
             $middleware = $path;
             $path       = '/';
         }
 
+        // Decorate callable middleware as http-interop middleware if we have
+        // a response prototype present.
+        if (is_callable($middleware)
+            && ! $this->isInteropMiddleware($middleware)
+        ) {
+            $middleware = $this->decorateCallableMiddleware($middleware);
+        }
+
         // Ensure we have a valid handler
-        if (! is_callable($middleware)) {
+        if (! $this->isValidMiddleware($middleware)) {
             throw InvalidMiddlewareException::fromValue($middleware);
         }
 
@@ -106,6 +147,34 @@ class MiddlewarePipe implements MiddlewareInterface
 
         // @todo Trigger event here with route details?
         return $this;
+    }
+
+    /**
+     * Inject a factory for decorating callable middleware.
+     *
+     * @param Middleware\CallableMiddlewareWrapperFactory $decorator
+     * @return void
+     */
+    public function setCallableMiddlewareDecorator(Middleware\CallableMiddlewareWrapperFactory $decorator)
+    {
+        $this->callableMiddlewareDecorator = $decorator;
+    }
+
+    /**
+     * @param Response $prototype
+     * @return void
+     */
+    public function setResponsePrototype(Response $prototype)
+    {
+        $this->responsePrototype = $prototype;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasResponsePrototype()
+    {
+        return $this->responsePrototype instanceof Response;
     }
 
     /**
@@ -129,5 +198,104 @@ class MiddlewarePipe implements MiddlewareInterface
         }
 
         return $path;
+    }
+
+    /**
+     * Is the provided middleware argument valid middleware?
+     *
+     * @param mixed $middleware
+     * @return bool
+     */
+    private function isValidMiddleware($middleware)
+    {
+        return $middleware instanceof ServerMiddlewareInterface
+            || $middleware instanceof InteropMiddlewareInterface;
+    }
+
+    /**
+     * @param callable $middleware
+     * @return ServerMiddlewareInterface|callable Callable, if unable to
+     *     decorate the middleware; ServerMiddlewareInterface if it can.
+     */
+    private function decorateCallableMiddleware(callable $middleware)
+    {
+        $r = $this->getReflectionFunction($middleware);
+        $paramsCount = $r->getNumberOfParameters();
+
+        if ($paramsCount !== 2) {
+            return $this->getCallableMiddlewareDecorator()
+                ->decorateCallableMiddleware($middleware);
+        }
+
+        $params = $r->getParameters();
+        $type = $params[1]->getClass();
+        if (! $type || $type->getName() !== DelegateInterface::class) {
+            return $this->getCallableMiddlewareDecorator()
+                ->decorateCallableMiddleware($middleware);
+        }
+
+        return new Middleware\CallableInteropMiddlewareWrapper($middleware);
+    }
+
+    /**
+     * @return Middleware\CallableMiddlewareWrapperFactory
+     * @throws Exception\MissingResponsePrototypeException if no middleware
+     *     decorator and no response prototype are present.
+     */
+    private function getCallableMiddlewareDecorator()
+    {
+        if ($this->callableMiddlewareDecorator) {
+            return $this->callableMiddlewareDecorator;
+        }
+
+        if (! $this->responsePrototype) {
+            throw new Exception\MissingResponsePrototypeException(sprintf(
+                'Cannot wrap callable middleware; no %s or %s instances composed '
+                . 'in middleware pipeline; use setCallableMiddlewareDecorator() or '
+                . 'setResponsePrototype() on your %s instance to provide one or the '
+                . 'other, or decorate callable middleware manually before piping.',
+                Middleware\CallableMiddlewareWrapperFactory::class,
+                Response::class,
+                get_class($this)
+            ));
+        }
+
+        $this->setCallableMiddlewareDecorator(
+            new Middleware\CallableMiddlewareWrapperFactory($this->responsePrototype)
+        );
+
+        return $this->callableMiddlewareDecorator;
+    }
+
+    /**
+     * Is the provided middleware argument http-interop middleware?
+     *
+     * @param mixed $middleware
+     * @return bool
+     */
+    private function isInteropMiddleware($middleware)
+    {
+        return ! is_callable($middleware)
+            && ($middleware instanceof ServerMiddlewareInterface
+                || $middleware instanceof InteropMiddlewareInterface);
+    }
+
+    /**
+     * @param callable $middleware
+     * @return \ReflectionFunctionAbstract
+     */
+    private function getReflectionFunction(callable $middleware)
+    {
+        if (is_array($middleware)) {
+            $class = array_shift($middleware);
+            $method = array_shift($middleware);
+            return new ReflectionMethod($class, $method);
+        }
+
+        if ($middleware instanceof Closure || ! is_object($middleware)) {
+            return new ReflectionFunction($middleware);
+        }
+
+        return new ReflectionMethod($middleware, '__invoke');
     }
 }

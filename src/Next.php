@@ -9,6 +9,11 @@
 
 namespace Zend\Stratigility;
 
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
+use InvalidArgumentException;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
@@ -17,8 +22,13 @@ use SplQueue;
 /**
  * Iterate a queue of middlewares and execute them.
  */
-class Next
+class Next implements DelegateInterface
 {
+    /**
+     * @var callable|DelegateInterface
+     */
+    private $nextDelegate;
+
     /**
      * @var SplQueue
      */
@@ -35,35 +45,56 @@ class Next
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
+     * @param null|DelegateInterface $done Next delegate to invoke when the
+     *     queue is exhausted.
+     * @throws InvalidArgumentException for a non-callable, non-delegate $done
+     *     argument.
      */
-    public function __construct(SplQueue $queue)
+    public function __construct(SplQueue $queue, DelegateInterface $nextDelegate = null)
     {
-        $this->queue = clone $queue;
+        $this->queue        = clone $queue;
+        $this->nextDelegate = $nextDelegate;
     }
 
     /**
-     * Call the next Route in the queue.
+     * Invokable form; proxy to process().
      *
-     * Next requires that a request and response are provided; these will be
-     * passed to any middleware invoked.
-     *
-     * Once dispatch is complete, if the result is a response instance, that
-     * value will be returned; otherwise, the currently registered response
-     * instance will be returned.
+     * Ignores any arguments other than the request.
      *
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
      * @return ResponseInterface
+     * @throws Exception\MissingResponseException If the queue is exhausted, and
+     *     no "next delegate" is present.
+     * @throws Exception\MissingResponseException If the middleware executed does
+     *     not return a response.
      */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response
-    ) {
+    public function __invoke(ServerRequestInterface $request)
+    {
+        return $this->process($request);
+    }
+
+    /**
+     * @param RequestInterface $request
+     * @return ResponseInterface
+     * @throws Exception\MissingResponseException If the queue is exhausted, and
+     *     no "next delegate" is present.
+     * @throws Exception\MissingResponseException If the middleware executed does
+     *     not return a response.
+     */
+    public function process(RequestInterface $request)
+    {
         $request  = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            return $response;
+            if ($this->nextDelegate) {
+                return $this->nextDelegate->process($request);
+            }
+
+            throw new Exception\MissingResponseException(sprintf(
+                'Queue provided to %s was exhausted, with no response returned',
+                get_class($this)
+            ));
         }
 
         $layer           = $this->queue->dequeue();
@@ -73,13 +104,13 @@ class Next
 
         // Skip if layer path does not match current url
         if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
-            return $this($request, $response);
+            return $this->process($request);
         }
 
         // Skip if match is not at a border ('/', '.', or end)
         $border = $this->getBorder($path, $normalizedRoute);
         if ($border && '/' !== $border && '.' !== $border) {
-            return $this($request, $response);
+            return $this->process($request);
         }
 
         // Trim off the part of the url that matches the layer route
@@ -88,16 +119,27 @@ class Next
         }
 
         $middleware = $layer->handler;
-        return $middleware($request, $response, $this);
+        $response = $middleware->process($request, $this);
+
+        if (! $response instanceof ResponseInterface) {
+            throw new Exception\MissingResponseException(sprintf(
+                "Last middleware executed did not return a response.\nMethod: %s\nPath: %s\n.Handler: %s",
+                $request->getMethod(),
+                $request->getUri()->getPath(),
+                get_class($middleware)
+            ));
+        }
+
+        return $response;
     }
 
     /**
      * Reset the path, if a segment was previously stripped
      *
-     * @param ServerRequestInterface $request
-     * @return ServerRequestInterface
+     * @param RequestInterface $request
+     * @return RequestInterface
      */
-    private function resetPath(ServerRequestInterface $request)
+    private function resetPath(RequestInterface $request)
     {
         if (! $this->removed) {
             return $request;
@@ -147,11 +189,11 @@ class Next
     /**
      * Strip the route from the request path
      *
-     * @param ServerRequestInterface $request
+     * @param RequestInterface $request
      * @param string $route
-     * @return ServerRequestInterface
+     * @return RequestInterface
      */
-    private function stripRouteFromPath(ServerRequestInterface $request, $route)
+    private function stripRouteFromPath(RequestInterface $request, $route)
     {
         $this->removed = $route;
 
