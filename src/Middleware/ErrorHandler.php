@@ -9,14 +9,13 @@ namespace Zend\Stratigility\Middleware;
 
 use ErrorException;
 use Exception;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
-use Zend\Escaper\Escaper;
-use Zend\Stratigility\Exception\MissingDelegateException;
+use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 use Zend\Stratigility\Exception\MissingResponseException;
-use Zend\Stratigility\MiddlewareInterface;
-use Zend\Stratigility\Utils;
 
 /**
  * Error handler middleware.
@@ -64,7 +63,7 @@ use Zend\Stratigility\Utils;
  * Listeners are attached using the attachListener() method, and triggered
  * in the order attached.
  */
-final class ErrorHandler implements MiddlewareInterface
+final class ErrorHandler implements ServerMiddlewareInterface
 {
     /**
      * @var callable[]
@@ -91,6 +90,22 @@ final class ErrorHandler implements MiddlewareInterface
     {
         $this->responsePrototype = $responsePrototype;
         $this->responseGenerator = $responseGenerator ?: new ErrorResponseGenerator();
+    }
+
+    /**
+     * Proxy to process()
+     *
+     * Proxies to process, after first wrapping the `$next` argument using the
+     * CallableDelegateDecorator.
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param callable $next
+     * @return ResponseInterface
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
+    {
+        return $this->process($request, new CallableDelegateDecorator($next, $response));
     }
 
     /**
@@ -131,20 +146,15 @@ final class ErrorHandler implements MiddlewareInterface
      * used.
      *
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param null|callable $next
+     * @param DelegateInterface $delegate
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
+    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
         set_error_handler($this->createErrorHandler());
 
         try {
-            if (! $next) {
-                throw new MissingDelegateException('No middleware stack provided.');
-            }
-
-            $response = $next($request, $response);
+            $response = $delegate->process($request);
 
             if (! $response instanceof ResponseInterface) {
                 throw new MissingResponseException('Application did not return a response');

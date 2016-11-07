@@ -9,14 +9,23 @@
 
 namespace ZendTest\Stratigility;
 
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\MiddlewareInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use PHPUnit_Framework_TestCase as TestCase;
+use Prophecy\Argument;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use ReflectionProperty;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Uri;
+use Zend\Stratigility\ErrorMiddlewareInterface;
 use Zend\Stratigility\Http\Request as RequestDecorator;
 use Zend\Stratigility\Http\Response as ResponseDecorator;
 use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
+use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 use Zend\Stratigility\NoopFinalHandler;
 use Zend\Stratigility\Utils;
 
@@ -558,5 +567,162 @@ class MiddlewarePipeTest extends TestCase
         $this->assertEquals(201, $result->getStatusCode());
         $this->assertEquals('Some content', (string) $result->getBody());
         $this->assertTrue($triggered, 'Error handler was not triggered');
+    }
+
+    /**
+     * @todo Remove for 2.0.0.
+     * @group http-interop
+     */
+    public function testNoResponsePrototypeComposeByDefault()
+    {
+        $pipeline = new MiddlewarePipe();
+        $this->assertAttributeEmpty('responsePrototype', $pipeline);
+    }
+
+    /**
+     * @todo Remove for 2.0.0, maybe; it may be useful to have this in order
+     *     to ensure we always return a response?
+     * @group http-interop
+     */
+    public function testCanComposeResponsePrototype()
+    {
+        $response = $this->prophesize(Response::class)->reveal();
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($response);
+        $this->assertAttributeSame($response, 'responsePrototype', $pipeline);
+    }
+
+    public function interopMiddleware()
+    {
+        return [
+            MiddlewareInterface::class => [MiddlewareInterface::class],
+            ServerMiddlewareInterface::class => [ServerMiddlewareInterface::class],
+        ];
+    }
+
+    /**
+     * @group http-interop
+     * @dataProvider interopMiddleware
+     */
+    public function testCanPipeInteropMiddleware($middlewareType)
+    {
+        $delegate = $this->prophesize(DelegateInterface::class)->reveal();
+
+        $response = $this->prophesize(ResponseInterface::class);
+        $middleware = $this->prophesize($middlewareType);
+        $middleware
+            ->process(Argument::type(RequestInterface::class), Argument::type(DelegateInterface::class))
+            ->will([$response, 'reveal']);
+
+        $pipeline = new MiddlewarePipe();
+        $pipeline->pipe($middleware->reveal());
+
+        $done = function () {
+        };
+
+        $this->assertSame($response->reveal(), $pipeline->process($this->request, $delegate));
+    }
+
+    /**
+     * @group http-interop
+     */
+    public function testWillDecorateCallableMiddlewareAsInteropMiddlewareIfResponsePrototypePresent()
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+
+        $middleware = function () {
+        };
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $test = $route->handler;
+        $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
+        $this->assertAttributeSame($middleware, 'middleware', $test);
+        $this->assertAttributeSame($this->response, 'responsePrototype', $test);
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     */
+    public function errorMiddleware()
+    {
+        yield 'callable' => [function ($err, $request, $response, $next) {
+        }];
+
+        yield 'interface' => [$this->prophesize(ErrorMiddlewareInterface::class)->reveal()];
+    }
+
+    /**
+     * @todo Remove with 2.0.0
+     * @dataProvider errorMiddleware
+     * @group http-interop
+     */
+    public function testWillNotDecorateCallableErrorMiddlewareDuringPipingEvenWithResponsePrototypePresent($middleware)
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $this->assertSame($middleware, $route->handler);
+    }
+
+    public function testWillDecorateACallableDefiningADelegateArgumentUsingAlternateDecorator()
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+
+        $middleware = function ($request, DelegateInterface $delegate) {
+        };
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $test = $route->handler;
+        $this->assertInstanceOf(CallableInteropMiddlewareWrapper::class, $test);
+        $this->assertAttributeSame($middleware, 'middleware', $test);
+    }
+
+    /**
+     * Used to test that array callables are decorated correctly.
+     *
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
+     * @param callable $next
+     * @return ResponseInterface
+     */
+    public function sampleMiddleware($request, $response, $next)
+    {
+        return $response;
+    }
+
+    public function testWillDecorateCallableArrayMiddlewareWithoutErrors()
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+
+        $middleware = [$this, 'sampleMiddleware'];
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $test = $route->handler;
+        $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
+        $this->assertAttributeSame($middleware, 'middleware', $test);
     }
 }

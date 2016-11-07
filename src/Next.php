@@ -9,6 +9,9 @@
 
 namespace Zend\Stratigility;
 
+use Interop\Http\Middleware\DelegateInterface;
+use InvalidArgumentException;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
@@ -17,7 +20,7 @@ use SplQueue;
 /**
  * Iterate a queue of middlewares and execute them.
  */
-class Next
+class Next implements DelegateInterface
 {
     /**
      * @var Dispatch
@@ -25,9 +28,9 @@ class Next
     private $dispatch;
 
     /**
-     * @var Callable
+     * @var callable|DelegateInterface
      */
-    private $done;
+    private $nextDelegate;
 
     /**
      * @var SplQueue
@@ -40,19 +43,40 @@ class Next
     private $removed = '';
 
     /**
+     * Response prototype to use with the $done handler and/or callable
+     * middleware when the instance is invoked by http-interop middleware.
+     *
+     * @var ResponseInterface
+     */
+    private $responsePrototype;
+
+    /**
      * Constructor.
      *
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param callable $done
+     * @param callable|DelegateInterface $done Next delegate to invoke when the
+     *     queue is exhausted. Note: this argument becomes optional starting in
+     *     2.0.0.
+     * @throws InvalidArgumentException for a non-callable, non-delegate $done
+     *     argument.
      */
-    public function __construct(SplQueue $queue, callable $done)
+    public function __construct(SplQueue $queue, $done)
     {
-        $this->queue    = clone $queue;
-        $this->done     = $done;
+        if (! (is_callable($done) || $done instanceof DelegateInterface)) {
+            throw new InvalidArgumentException(sprintf(
+                'Invalid "$done" argument provided to %s; must be callable '
+                . 'or a %s instance; received %s',
+                get_class($this),
+                DelegateInterface::class,
+                is_object($done) ? get_class($done) : gettype($done)
+            ));
+        }
 
-        $this->dispatch = new Dispatch();
+        $this->queue        = clone $queue;
+        $this->nextDelegate = $done;
+        $this->dispatch     = new Dispatch();
     }
 
     /**
@@ -90,13 +114,17 @@ class Next
             );
         }
 
+        if (! $this->responsePrototype) {
+            $this->setResponsePrototype($response);
+        }
+
         $dispatch = $this->dispatch;
-        $done     = $this->done;
+        $done     = $this->nextDelegate;
         $request  = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            return $done($request, $response, $err);
+            return $this->dispatchNextDelegate($done, $request, $response, $err);
         }
 
         $layer           = $this->queue->dequeue();
@@ -126,12 +154,69 @@ class Next
     }
 
     /**
+     * @param RequestInterface $request
+     * @return ResponseInterface
+     * @throws Exception\MissingResponsePrototypeException
+     * @throws Exception\InvalidRequestTypeException
+     */
+    public function process(RequestInterface $request)
+    {
+        $dispatch = $this->dispatch;
+        $done     = $this->nextDelegate;
+        $request  = $this->resetPath($request);
+
+        // No middleware remains; done
+        if ($this->queue->isEmpty()) {
+            return $this->dispatchNextDelegate($done, $request);
+        }
+
+        $layer           = $this->queue->dequeue();
+        $path            = $request->getUri()->getPath() ?: '/';
+        $route           = $layer->path;
+        $normalizedRoute = (strlen($route) > 1) ? rtrim($route, '/') : $route;
+
+        // Skip if layer path does not match current url
+        if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
+            return $this->process($request);
+        }
+
+        // Skip if match is not at a border ('/', '.', or end)
+        $border = $this->getBorder($path, $normalizedRoute);
+        if ($border && '/' !== $border && '.' !== $border) {
+            return $this->process($request);
+        }
+
+        // Trim off the part of the url that matches the layer route
+        if (! empty($route) && $route !== '/') {
+            $request = $this->stripRouteFromPath($request, $route);
+        }
+
+        $result = $dispatch->process($layer, $request, $this);
+
+        if (! $result instanceof ResponseInterface) {
+            return $this->getResponsePrototype();
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param ResponseInterface $prototype
+     * @return void
+     */
+    public function setResponsePrototype(ResponseInterface $prototype)
+    {
+        $this->responsePrototype = $prototype;
+        $this->dispatch->setResponsePrototype($prototype);
+    }
+
+    /**
      * Reset the path, if a segment was previously stripped
      *
-     * @param ServerRequestInterface $request
-     * @return ServerRequestInterface
+     * @param RequestInterface $request
+     * @return RequestInterface
      */
-    private function resetPath(ServerRequestInterface $request)
+    private function resetPath(RequestInterface $request)
     {
         if (! $this->removed) {
             return $request;
@@ -181,11 +266,11 @@ class Next
     /**
      * Strip the route from the request path
      *
-     * @param ServerRequestInterface $request
+     * @param RequestInterface $request
      * @param string $route
-     * @return ServerRequestInterface
+     * @return RequestInterface
      */
-    private function stripRouteFromPath(ServerRequestInterface $request, $route)
+    private function stripRouteFromPath(RequestInterface $request, $route)
     {
         $this->removed = $route;
 
@@ -231,5 +316,72 @@ class Next
         throw new RuntimeException(
             'Layer and request path have gone out of sync'
         );
+    }
+
+    /**
+     * @return ResponseInterface
+     * @throws Exception\MissingResponsePrototypeException
+     */
+    private function getResponsePrototype()
+    {
+        if ($this->responsePrototype) {
+            return $this->responsePrototype;
+        }
+
+        throw new Exception\MissingResponsePrototypeException(
+            'Invoking callable middleware or final handler following http-interop '
+            . 'middleware, but no response prototype is present; please inject '
+            . 'one in your MiddlewarePipe or ensure Stratigility callable '
+            . 'middleware exists in the outer layer of your application.'
+        );
+    }
+
+    /**
+     * @param RequestInterface $request
+     * @return bool
+     * @throws Exception\InvalidRequestTypeException
+     */
+    private function validateServerRequest(RequestInterface $request)
+    {
+        if ($request instanceof ServerRequestInterface) {
+            return true;
+        }
+
+        throw new Exception\InvalidRequestTypeException(sprintf(
+            'Invoking callable middleware or final handler following http-interop '
+            . 'middleware, but did not receive a %s; please ensure that your '
+            . 'middleware always calls %s::process() using one.',
+            ServerRequestInterface::class,
+            DelegateInterface::class
+        ));
+    }
+
+    /**
+     * Dispatch the next delegate.
+     *
+     * For DelegateInterface implementations, calls the process method with
+     * only the request instance.
+     *
+     * For callables, calls with request, response, and error.
+     *
+     * @param callable|DelegateInterface $nextDelegate
+     * @param RequestInterface $request
+     * @param ResponseInterface|null $response
+     * @param mixed $err
+     * @return ResponseInterface
+     */
+    private function dispatchNextDelegate(
+        $nextDelegate,
+        RequestInterface $request,
+        ResponseInterface $response = null,
+        $err = null
+    ) {
+        if ($nextDelegate instanceof DelegateInterface) {
+            return $nextDelegate->process($request);
+        }
+
+        $response = $response ?: $this->getResponsePrototype();
+        $this->validateServerRequest($request);
+        return $nextDelegate($request, $response, $err);
     }
 }
