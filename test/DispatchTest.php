@@ -569,4 +569,104 @@ class DispatchTest extends TestCase
             $next->reveal()
         ));
     }
+
+    public function throwablesProvider()
+    {
+        if (class_exists('Error')) {
+            yield 'throwable' => [new \Error()];
+        }
+        yield 'exception' => [new \Exception()];
+    }
+
+    /**
+     * @dataProvider throwablesProvider
+     * @group error-handling
+     */
+    public function testThrowsThrowablesRaisedByCallableMiddlewareWhenRaiseThrowablesFlagIsEnabled($throwable)
+    {
+        $middleware = function () use ($throwable) {
+            throw $throwable;
+        };
+
+        $route = new Route('/', $middleware);
+        $next = $this->prophesize(Next::class);
+        $next
+            ->__invoke(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(ResponseInterface::class),
+                $throwable
+            )
+            ->shouldNotBeCalled();
+
+        $dispatch = new Dispatch();
+        $dispatch->raiseThrowables();
+
+        try {
+            $dispatch(
+                $route,
+                null,
+                $this->request->reveal(),
+                $this->response->reveal(),
+                $next->reveal()
+            );
+            $this->fail('Dispatch succeeded and should not have');
+        } catch (\Throwable $e) {
+            $this->assertSame($throwable, $e, sprintf(
+                'Throwable raised is not the one expected: %s',
+                $e->getMessage()
+            ));
+        } catch (\Exception $e) {
+            $this->assertSame($throwable, $e, sprintf(
+                'Exception raised is not the one expected: %s',
+                $e->getMessage()
+            ));
+        }
+    }
+
+    /**
+     * @dataProvider throwablesProvider
+     * @group error-handling
+     */
+    public function testThrowsThrowablesRaisedByInteropMiddlewareWhenRaiseThrowablesFlagIsEnabled($throwable)
+    {
+        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $middleware
+            ->process(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(DelegateInterface::class)
+            )
+            // Necessary to do this as willThrow does not support Throwable
+            // types yet:
+            ->will(function () use ($throwable) {
+                throw $throwable;
+            });
+
+        $route = new Route('/', $middleware->reveal());
+        $next = $this->prophesize(Next::class);
+        $next
+            ->__invoke(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(ResponseInterface::class),
+                $throwable
+            )
+            ->shouldNotBeCalled();
+
+        $dispatch = new Dispatch();
+        $dispatch->raiseThrowables();
+
+        try {
+            $dispatch->process($route, $this->request->reveal(), $next->reveal());
+            $this->fail('Dispatch succeeded and should not have');
+        } catch (\Throwable $e) {
+            $this->assertSame($throwable, $e, sprintf(
+                'Throwable raised is not the one expected: %s',
+                $e->getMessage()
+            ));
+        } catch (\Exception $e) {
+            $this->assertSame($throwable, $e, sprintf(
+                'Exception raised is not the one expected: %s',
+                $e->getMessage()
+            ));
+        }
+    }
 }
