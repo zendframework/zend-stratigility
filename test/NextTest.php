@@ -30,12 +30,28 @@ use Zend\Stratigility\Route;
 
 class NextTest extends TestCase
 {
+    protected $errorHandler;
+
     public function setUp()
     {
+        $this->restoreErrorHandler();
         $psrRequest     = new PsrRequest([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->queue    = new SplQueue();
         $this->request  = new Request($psrRequest);
         $this->response = new Response(new PsrResponse());
+    }
+
+    public function tearDown()
+    {
+        $this->restoreErrorHandler();
+    }
+
+    public function restoreErrorHandler()
+    {
+        if ($this->errorHandler) {
+            restore_error_handler();
+            $this->errorHandler = null;
+        }
     }
 
     public function testDoneHandlerIsInvokedWhenQueueIsExhausted()
@@ -732,5 +748,166 @@ class NextTest extends TestCase
 
         $next = new Next($this->queue, $delegate->reveal());
         $this->assertEquals('FOOBAR', $next->process($this->request));
+    }
+
+    /**
+     * @todo Remove for 2.0.0; operation should become a no-op at that time.
+     * @group error-handling
+     */
+    public function testSettingRaiseThrowablesFlagSetsCorrespondingFlagOnComposedDispatchInstance()
+    {
+        $next = new Next($this->queue, $this->prophesize(DelegateInterface::class)->reveal());
+        $next->raiseThrowables();
+
+        $this->assertAttributeSame(true, 'raiseThrowables', $next);
+
+        $r = new ReflectionProperty($next, 'dispatch');
+        $r->setAccessible(true);
+        $dispatch = $r->getValue($next);
+        $this->assertAttributeSame(true, 'raiseThrowables', $dispatch);
+    }
+
+    public function throwablesProvider()
+    {
+        if (class_exists('Error')) {
+            yield 'throwable' => [ new \Error() ];
+        }
+
+        yield 'exception' => [ new \Exception() ];
+    }
+
+    /**
+     * @todo Remove for 2.0.0; $err goes away in that version.
+     * @dataProvider throwablesProvider
+     * @group error-handling
+     */
+    public function testEnablingRaiseThrowablesFlagWillCauseInvocationToRaiseThrowableForThrowableErrorArguments(
+        $throwable
+    ) {
+        $next = new Next($this->queue, $this->prophesize(DelegateInterface::class)->reveal());
+        $next->raiseThrowables();
+
+        try {
+            $next(
+                $this->request,
+                $this->response,
+                $throwable
+            );
+            $this->fail('Throwable not raised when it was expected');
+        } catch (\Throwable $e) {
+            $this->assertSame($throwable, $e);
+        } catch (\Exception $e) {
+            $this->assertSame($throwable, $e);
+        }
+    }
+
+    /**
+     * @todo Remove for 2.0.0; $err goes away in that version.
+     * @group error-handling
+     */
+    public function testEnablingRaiseThrowablesFlagWillCauseInvocationToRaiseMiddlewareExceptionForStringArgument()
+    {
+        $next = new Next($this->queue, $this->prophesize(DelegateInterface::class)->reveal());
+        $next->raiseThrowables();
+
+        $triggered = false;
+        $this->errorHandler = set_error_handler(function ($errno, $errstr) use (&$triggered) {
+            $this->assertContains('error middleware is deprecated', $errstr);
+            $triggered = true;
+            return true;
+        }, E_USER_DEPRECATED);
+
+        try {
+            $next(
+                $this->request,
+                $this->response,
+                'Throwable'
+            );
+            $this->fail('Throwable not raised when it was expected');
+        } catch (Exception\MiddlewareException $e) {
+            $this->assertEquals('Throwable', $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->fail(sprintf(
+                'Caught unexpected throwable: %s',
+                $e->getMessage()
+            ));
+        } catch (\Exception $e) {
+            $this->fail(sprintf(
+                'Caught unexpected exception: %s',
+                $e->getMessage()
+            ));
+        }
+
+        $this->assertTrue($triggered, 'Deprecation notice not triggered');
+    }
+
+    public function nonNullNonThrowableNonStringErrors()
+    {
+        return [
+            'false'      => [false],
+            'true'       => [true],
+            'zero'       => [0],
+            'int'        => [1],
+            'zero-float' => [0.0],
+            'float'      => [1.1],
+            'array'      => [[0, 1, 2]],
+            'object'     => [(object) ['value' => 'message']],
+        ];
+    }
+
+    /**
+     * @todo Remove for 2.0.0; $err goes away in that version.
+     * @group error-handling
+     * @dataProvider nonNullNonThrowableNonStringErrors
+     */
+    public function testEnablingRaiseThrowablesFlagWillCauseInvocationToRaiseMiddlewareExceptionForNonNullArguments(
+        $error
+    ) {
+        $next = new Next($this->queue, $this->prophesize(DelegateInterface::class)->reveal());
+        $next->raiseThrowables();
+
+        $triggered = false;
+        $this->errorHandler = set_error_handler(function ($errno, $errstr) use (&$triggered) {
+            $this->assertContains('error middleware is deprecated', $errstr);
+            $triggered = true;
+            return true;
+        }, E_USER_DEPRECATED);
+
+        switch (true) {
+            case (is_object($error)):
+                $expected = get_class($error);
+                break;
+            case (is_array($error)):
+                $expected = gettype($error);
+                break;
+            case (is_scalar($error)):
+                // fall-through
+            default:
+                $expected = var_export($error, true);
+                break;
+        }
+
+        try {
+            $next(
+                $this->request,
+                $this->response,
+                $error
+            );
+            $this->fail('Throwable not raised when it was expected');
+        } catch (Exception\MiddlewareException $e) {
+            $this->assertContains($expected, $e->getMessage());
+        } catch (\Throwable $e) {
+            $this->fail(sprintf(
+                'Caught unexpected throwable: %s',
+                $e->getMessage()
+            ));
+        } catch (\Exception $e) {
+            $this->fail(sprintf(
+                'Caught unexpected exception: %s',
+                $e->getMessage()
+            ));
+        }
+
+        $this->assertTrue($triggered, 'Deprecation notice not triggered');
     }
 }

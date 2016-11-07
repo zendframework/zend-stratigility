@@ -16,6 +16,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use SplQueue;
+use Throwable;
 
 /**
  * Iterate a queue of middlewares and execute them.
@@ -36,6 +37,15 @@ class Next implements DelegateInterface
      * @var SplQueue
      */
     private $queue;
+
+    /**
+     * Flag indicating whether or not the dispatcher should raise throwables
+     * when encountered, and whether or not $err arguments should raise them;
+     * defaults false.
+     *
+     * @var bool
+     */
+    private $raiseThrowables = false;
 
     /**
      * @var string
@@ -105,13 +115,12 @@ class Next implements DelegateInterface
         ResponseInterface $response,
         $err = null
     ) {
+        if ($err !== null && $this->raiseThrowables) {
+            $this->raiseThrowableFromError($err);
+        }
+
         if (null !== $err) {
-            trigger_error(
-                'Usage of error middleware is deprecated as of 1.3.0, and will be removed in 2.0.0; '
-                . 'please see https://docs.zendframework.com/zend-stratigility/migration/to-v2/ '
-                . 'for details on how to update your application to remove this message.',
-                E_USER_DEPRECATED
-            );
+            $this->triggerErrorDeprecation();
         }
 
         if (! $this->responsePrototype) {
@@ -198,6 +207,17 @@ class Next implements DelegateInterface
         }
 
         return $result;
+    }
+
+    /**
+     * Toggle the "raise throwables" flag on.
+     *
+     * @return void
+     */
+    public function raiseThrowables()
+    {
+        $this->raiseThrowables = true;
+        $this->dispatch->raiseThrowables();
     }
 
     /**
@@ -383,5 +403,34 @@ class Next implements DelegateInterface
         $response = $response ?: $this->getResponsePrototype();
         $this->validateServerRequest($request);
         return $nextDelegate($request, $response, $err);
+    }
+
+    /**
+     * @param mixed $err
+     * @throws Throwable|\Exception
+     */
+    private function raiseThrowableFromError($err)
+    {
+        if ($err instanceof Throwable
+            || $err instanceof \Exception
+        ) {
+            throw $err;
+        }
+
+        $this->triggerErrorDeprecation();
+        throw Exception\MiddlewareException::fromErrorValue($err);
+    }
+
+    /**
+     * @todo Remove for 2.0.0
+     */
+    private function triggerErrorDeprecation()
+    {
+        trigger_error(
+            'Usage of error middleware is deprecated as of 1.3.0, and will be removed in 2.0.0; '
+            . 'please see https://docs.zendframework.com/zend-stratigility/migration/to-v2/ '
+            . 'for details on how to update your application to remove this message.',
+            E_USER_DEPRECATED
+        );
     }
 }
