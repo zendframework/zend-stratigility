@@ -16,7 +16,9 @@ use PHPUnit_Framework_TestCase as TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use ReflectionProperty;
+use RuntimeException;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Uri;
@@ -724,5 +726,115 @@ class MiddlewarePipeTest extends TestCase
         $test = $route->handler;
         $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
+    }
+
+    /**
+     * @todo Remove for 2.0.0, as error middleware is removed in that version.
+     * @group error-handling
+     */
+    public function testRaiseThrowablesFlagIsFalseByDefault()
+    {
+        $pipeline = new MiddlewarePipe();
+        $this->assertAttributeSame(false, 'raiseThrowables', $pipeline);
+    }
+
+    /**
+     * @todo Remove for 2.0.0, as error middleware is removed in that version.
+     * @group error-handling
+     */
+    public function testCanEnableRaiseThrowablesFlag()
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->raiseThrowables();
+        $this->assertAttributeSame(true, 'raiseThrowables', $pipeline);
+    }
+
+    /**
+     * @todo Remove for 2.0.0, as error middleware is removed in that version.
+     * @group error-handling
+     */
+    public function testEnablingRaiseThrowablesCausesInvocationToThrowExceptions()
+    {
+        $expected = new RuntimeException('To throw from middleware');
+
+        $pipeline = new MiddlewarePipe();
+        $pipeline->raiseThrowables();
+
+        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $middleware
+            ->process(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(DelegateInterface::class)
+            )
+            ->will(function () use ($expected) {
+                throw $expected;
+            });
+
+        $pipeline->pipe($middleware->reveal());
+
+        $done = function ($request, $response) {
+            $this->fail('"Done" callable invoked, when it should have been');
+        };
+
+        try {
+            $pipeline($this->request, $this->response, $done);
+            $this->fail('Pipeline with middleware that throws did not result in exception!');
+        } catch (RuntimeException $e) {
+            $this->assertSame($expected, $e);
+        } catch (Throwable $e) {
+            $this->fail(sprintf(
+                'Unexpected throwable raised by pipeline: %s',
+                $e->getMessage()
+            ));
+        } catch (\Exception $e) {
+            $this->fail(sprintf(
+                'Unexpected exception raised by pipeline: %s',
+                $e->getMessage()
+            ));
+        }
+    }
+
+    /**
+     * @todo Remove for 2.0.0, as error middleware is removed in that version.
+     * @group error-handling
+     */
+    public function testEnablingRaiseThrowablesCausesProcessToThrowExceptions()
+    {
+        $expected = new RuntimeException('To throw from middleware');
+
+        $pipeline = new MiddlewarePipe();
+        $pipeline->raiseThrowables();
+
+        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $middleware
+            ->process(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(DelegateInterface::class)
+            )
+            ->will(function () use ($expected) {
+                throw $expected;
+            });
+
+        $pipeline->pipe($middleware->reveal());
+
+        $done = $this->prophesize(DelegateInterface::class);
+        $done->process(Argument::any())->shouldNotBeCalled();
+
+        try {
+            $pipeline->process($this->request, $done->reveal());
+            $this->fail('Pipeline with middleware that throws did not result in exception!');
+        } catch (RuntimeException $e) {
+            $this->assertSame($expected, $e);
+        } catch (Throwable $e) {
+            $this->fail(sprintf(
+                'Unexpected throwable raised by pipeline: %s',
+                $e->getMessage()
+            ));
+        } catch (\Exception $e) {
+            $this->fail(sprintf(
+                'Unexpected exception raised by pipeline: %s',
+                $e->getMessage()
+            ));
+        }
     }
 }
