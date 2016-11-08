@@ -3,16 +3,16 @@
 
     
     <url>
-     <loc>None/</loc>
-     <lastmod>2016-09-30</lastmod>
+     <loc>/</loc>
+     <lastmod>2016-11-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
 
     
     <url>
-     <loc>None/intro/</loc>
-     <lastmod>2016-09-30</lastmod>
+     <loc>/intro/</loc>
+     <lastmod>2016-11-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -20,44 +20,44 @@
     
         
     <url>
-     <loc>None/install/</loc>
-     <lastmod>2016-09-30</lastmod>
+     <loc>/install/</loc>
+     <lastmod>2016-11-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/usage/</loc>
-     <lastmod>2016-09-30</lastmod>
+     <loc>/usage/</loc>
+     <lastmod>2016-11-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/middleware/</loc>
-     <lastmod>2016-09-30</lastmod>
+     <loc>/middleware/</loc>
+     <lastmod>2016-11-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/error-handlers/</loc>
-     <lastmod>2016-09-30</lastmod>
+     <loc>/error-handlers/</loc>
+     <lastmod>2016-11-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/creating-middleware/</loc>
-     <lastmod>2016-09-30</lastmod>
+     <loc>/creating-middleware/</loc>
+     <lastmod>2016-11-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/executing-middleware/</loc>
-     <lastmod>2016-09-30</lastmod>
+     <loc>/executing-middleware/</loc>
+     <lastmod>2016-11-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/api/</loc>
-     <lastmod>2016-09-30</lastmod>
+     <loc>/api/</loc>
+     <lastmod>2016-11-08</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
