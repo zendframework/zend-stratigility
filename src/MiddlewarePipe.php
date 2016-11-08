@@ -67,9 +67,13 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      * Takes the pipeline, creates a Next handler, and delegates to the
      * Next handler.
      *
-     * If $out is a callable, it is used as the "final handler" when
-     * $next has exhausted the pipeline; otherwise, a FinalHandler instance
-     * is created and passed to $next during initialization.
+     * $delegate will be invoked if the internal queue is exhausted without
+     * returning a response; in such situations, $delegate will then be
+     * responsible for creating and returning the final response.
+     *
+     * $delegate may be either a DelegateInterface instance, or a callable
+     * accepting at least a request instance (in such cases, the delegate
+     * will be decorated using Delegate\CallableDelegateDecorator).
      *
      * @param Request $request
      * @param Response $response
@@ -158,6 +162,16 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     public function setCallableMiddlewareDecorator(Middleware\CallableMiddlewareWrapperFactory $decorator)
     {
         $this->callableMiddlewareDecorator = $decorator;
+    }
+
+    /**
+     * Enable the "raise throwables" flag.
+     *
+     * @deprecated Since 2.0.0; this feature is now a no-op.
+     * @return void
+     */
+    public function raiseThrowables()
+    {
     }
 
     /**

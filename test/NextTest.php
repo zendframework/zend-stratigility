@@ -29,6 +29,8 @@ use Zend\Stratigility\Route;
 
 class NextTest extends TestCase
 {
+    protected $errorHandler;
+
     public function setUp()
     {
         $this->queue     = new SplQueue();
