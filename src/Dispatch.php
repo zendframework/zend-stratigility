@@ -9,7 +9,6 @@
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Throwable;
