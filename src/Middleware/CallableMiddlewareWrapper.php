@@ -11,7 +11,6 @@ use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 use Zend\Stratigility\Next;
 
 /**

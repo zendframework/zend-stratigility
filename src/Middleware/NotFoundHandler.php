@@ -9,8 +9,8 @@ namespace Zend\Stratigility\Middleware;
 
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 
 class NotFoundHandler implements ServerMiddlewareInterface

@@ -10,21 +10,19 @@ namespace ZendTest\Stratigility;
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\MiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
-use PHPUnit_Framework_Assert as Assert;
 use PHPUnit_Framework_TestCase as TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionProperty;
-use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
+use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
-use Zend\Stratigility\Utils;
 
 class MiddlewarePipeTest extends TestCase
 {

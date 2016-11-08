@@ -15,7 +15,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Zend\Escaper\Escaper;
-use Zend\Stratigility\Exception\MissingDelegateException;
 use Zend\Stratigility\Middleware\ErrorHandler;
 use Zend\Stratigility\Middleware\ErrorResponseGenerator;
 

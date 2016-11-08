@@ -8,8 +8,8 @@
 namespace Zend\Stratigility\Middleware;
 
 use Exception;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 use Zend\Escaper\Escaper;
 use Zend\Stratigility\Utils;

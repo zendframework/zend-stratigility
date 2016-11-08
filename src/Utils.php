@@ -9,8 +9,6 @@ namespace Zend\Stratigility;
 
 use Exception;
 use Psr\Http\Message\ResponseInterface;
-use ReflectionFunction;
-use ReflectionMethod;
 use Throwable;
 
 /**
