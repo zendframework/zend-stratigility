@@ -47,6 +47,14 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     protected $pipeline;
 
     /**
+     * Whether or not exceptions thrown by middleware or invocation of
+     * middleware using the $err argument should bubble up as exceptions.
+     *
+     * @var bool
+     */
+    private $raiseThrowables = false;
+
+    /**
      * @var Response
      */
     protected $responsePrototype;
@@ -73,6 +81,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
      *
      * @todo Make $out required for 2.0.0.
      * @todo Remove trigger of deprecation notice when preparing for 2.0.0.
+     * @todo Remove raiseThrowables logic for 2.0.0.
      * @param Request $request
      * @param Response $response
      * @param callable $out
@@ -96,6 +105,10 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
         $done   = $out ?: new FinalHandler([], $response);
         $next   = new Next($this->pipeline, $done);
         $next->setResponsePrototype($response);
+        if ($this->raiseThrowables) {
+            $next->raiseThrowables();
+        }
+
         $result = $next($request, $response);
 
         return ($result instanceof Response ? $result : $response);
@@ -118,6 +131,9 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
         $next = new Next($this->pipeline, $delegate);
         if ($response) {
             $next->setResponsePrototype($response);
+        }
+        if ($this->raiseThrowables) {
+            $next->raiseThrowables();
         }
 
         $result = $next->process($request);
@@ -177,6 +193,17 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
 
         // @todo Trigger event here with route details?
         return $this;
+    }
+
+    /**
+     * Enable the "raise throwables" flag.
+     *
+     * @todo Deprecate this starting in 2.0.0
+     * @return void
+     */
+    public function raiseThrowables()
+    {
+        $this->raiseThrowables = true;
     }
 
     /**

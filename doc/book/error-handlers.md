@@ -11,6 +11,8 @@ You can typically handle these conditions via middleware itself.
 
 ## Handling 404 conditions
 
+- Since 1.3.0
+
 If no middleware is able to handle the incoming request, this is typically
 representative of an HTTP 404 status. Stratigility provides a barebones
 middleware that you may register in an innermost layer that will return a 404
@@ -63,6 +65,27 @@ class NotFoundMiddleware implements ServerMiddlewareInterface
 ```
 
 ## Handling PHP errors and exceptions
+
+- Since 1.3.0
+
+> ### Opting in to error middleware
+>
+> If you have upgraded from Expressive 1.0.0, you will have been using the
+> `FinalHandler` implementation, and relying on the fact that, internally,
+> dispatching wraps all middleware in `try/catch` blocks.
+> 
+> Starting in 1.3.0, we provide a new way to handle errors via middleware.
+> 
+> **To opt-in to the new system, you must call `raiseThrowables()` on your
+> middleware pipeline:**
+> 
+> ```php
+> $pipeline = new MiddlewarePipe();
+> $pipeline->raiseThrowables();
+> ```
+> 
+> (Starting in 2.0.0, this will no longer be necessary, but until then, this is
+> how you opt-in to the system described below.)
 
 `Zend\Stratigility\Middleware\ErrorHandler` is a middleware implementation to
 register as the *outermost layer* of your application (or close to the outermost

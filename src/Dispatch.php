@@ -9,7 +9,6 @@
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Throwable;
@@ -27,6 +26,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Dispatch
 {
+    /**
+     * Flag indicating whether or not to raise throwables during dispatch; when
+     * false, a try/catch block is used instead (default behavior).
+     *
+     * @var bool
+     */
+    private $raiseThrowables = false;
+
     /**
      * @var ResponseInterface
      */
@@ -101,6 +108,17 @@ class Dispatch
         }
 
         return $this->dispatchInteropMiddleware($route->handler, $next, $request);
+    }
+
+    /**
+     * Enables the "raise throwables", causing this instance to raise
+     * throwables instead of catch them.
+     *
+     * @return void
+     */
+    public function raiseThrowables()
+    {
+        $this->raiseThrowables = true;
     }
 
     /**
@@ -193,6 +211,18 @@ class Dispatch
                 break;
         }
 
+        if ($this->raiseThrowables) {
+            if ($hasError && $arity === 4) {
+                return $middleware($err, $request, $response, $next);
+            }
+
+            if (! $hasError && $arity < 4) {
+                return $middleware($request, $response, $next);
+            }
+
+            return $next($request, $response, $err);
+        }
+
         try {
             if ($hasError && $arity === 4) {
                 return $middleware($err, $request, $response, $next);
@@ -229,6 +259,10 @@ class Dispatch
             && $this->responsePrototype
         ) {
             $middleware->setResponsePrototype($this->responsePrototype);
+        }
+
+        if ($this->raiseThrowables) {
+            return $middleware->process($request, $next);
         }
 
         try {
