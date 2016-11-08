@@ -1,7 +1,7 @@
 # zend-stratigility
 
 [![Build Status](https://secure.travis-ci.org/zendframework/zend-stratigility.svg?branch=master)](https://secure.travis-ci.org/zendframework/zend-stratigility)
-
+[![Coverage Status](https://coveralls.io/repos/github/zendframework/zend-stratigility/badge.svg?branch=master)](https://coveralls.io/github/zendframework/zend-stratigility?branch=master)
 > From "Strata", Latin for "layer", and "agility".
 
 This package supercedes and replaces [phly/conduit](https://github.com/phly/conduit).
