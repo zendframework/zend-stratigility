@@ -29,6 +29,9 @@ class InvalidMiddlewareExceptionTest extends TestCase
 
     /**
      * @dataProvider invalidMiddlewareValues
+     *
+     * @param mixed $value
+     * @param string $expected
      */
     public function testFromValueProvidesNewExceptionWithMessageRelatedToValue($value, $expected)
     {

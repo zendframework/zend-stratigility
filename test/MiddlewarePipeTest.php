@@ -19,6 +19,7 @@ use ReflectionProperty;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
+use Zend\Stratigility\Exception\InvalidMiddlewareException;
 use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 use Zend\Stratigility\MiddlewarePipe;
@@ -57,10 +58,12 @@ class MiddlewarePipeTest extends TestCase
 
     /**
      * @dataProvider invalidHandlers
+     *
+     * @param mixed $handler
      */
     public function testPipeThrowsExceptionForInvalidHandler($handler)
     {
-        $this->setExpectedException('InvalidArgumentException');
+        $this->expectException(InvalidMiddlewareException::class);
         $this->middleware->pipe('/foo', $handler);
     }
 
@@ -245,6 +248,8 @@ class MiddlewarePipeTest extends TestCase
     /**
      * @group matching
      * @dataProvider rootPaths
+     *
+     * @param string $path
      */
     public function testMiddlewareTreatsBothSlashAndEmptyPathAsTheRootPath($path)
     {
@@ -365,6 +370,11 @@ class MiddlewarePipeTest extends TestCase
      * @group matching
      * @group nesting
      * @dataProvider nestedPaths
+     *
+     * @param string $topPath
+     * @param string $nestedPath
+     * @param string $fullPath
+     * @param string $assertion
      */
     public function testNestedMiddlewareMatchesOnlyAtPathBoundaries($topPath, $nestedPath, $fullPath, $assertion)
     {
@@ -426,6 +436,8 @@ class MiddlewarePipeTest extends TestCase
     /**
      * @group http-interop
      * @dataProvider interopMiddleware
+     *
+     * @param string $middlewareType
      */
     public function testCanPipeInteropMiddleware($middlewareType)
     {

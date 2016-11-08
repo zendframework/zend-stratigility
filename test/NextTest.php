@@ -229,7 +229,7 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $next    = new Next($this->queue);
 
-        $this->setExpectedException(Exception\MissingResponseException::class);
+        $this->expectException(Exception\MissingResponseException::class);
         $next($request, $this->response);
     }
 
@@ -265,7 +265,8 @@ class NextTest extends TestCase
     {
         $next = new Next($this->queue);
 
-        $this->setExpectedException(Exception\MissingResponseException::class, 'exhausted');
+        $this->expectException(Exception\MissingResponseException::class);
+        $this->expectExceptionMessage('exhausted');
         $next->process($this->request);
     }
 
@@ -450,7 +451,7 @@ class NextTest extends TestCase
 
         $next = new Next($this->queue);
 
-        $this->setExpectedException(Exception\MissingResponseException::class);
+        $this->expectException(Exception\MissingResponseException::class);
         $next->process($request);
     }
 }
