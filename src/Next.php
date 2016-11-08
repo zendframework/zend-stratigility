@@ -41,7 +41,7 @@ class Next implements DelegateInterface
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param null|DelegateInterface $done Next delegate to invoke when the
+     * @param null|DelegateInterface $nextDelegate Next delegate to invoke when the
      *     queue is exhausted.
      * @throws InvalidArgumentException for a non-callable, non-delegate $done
      *     argument.

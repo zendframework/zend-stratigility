@@ -36,7 +36,7 @@ class Route
     /**
      * @param string $path
      * @param InteropMiddlewareInterface|ServerMiddlewareInterface $handler
-     * @throws Exception\InvalidArgumentException if the $handler provided is
+     * @throws Exception\InvalidMiddlewareException if the $handler provided is
      *     not an http-interop middleare type.
      */
     public function __construct($path, $handler)
