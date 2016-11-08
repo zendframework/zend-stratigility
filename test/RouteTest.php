@@ -1,16 +1,16 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
  * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace ZendTest\Stratigility;
 
 use Interop\Http\Middleware\ServerMiddlewareInterface;
-use PHPUnit_Framework_TestCase as TestCase;
+use InvalidArgumentException;
+use OutOfRangeException;
+use PHPUnit\Framework\TestCase;
 use Zend\Stratigility\Route;
 
 class RouteTest extends TestCase
@@ -44,10 +44,12 @@ class RouteTest extends TestCase
 
     /**
      * @dataProvider nonStringPaths
+     *
+     * @param mixed $path
      */
     public function testDoesNotAllowNonStringPaths($path)
     {
-        $this->setExpectedException('InvalidArgumentException');
+        $this->expectException(InvalidArgumentException::class);
         $route = new Route($path, $this->createEmptyMiddleware());
     }
 
@@ -55,7 +57,7 @@ class RouteTest extends TestCase
     {
         $route = new Route('/foo', $this->createEmptyMiddleware());
 
-        $this->setExpectedException('OutOfRangeException');
+        $this->expectException(OutOfRangeException::class);
         $foo = $route->foo;
     }
 }

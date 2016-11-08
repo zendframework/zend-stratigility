@@ -1,10 +1,8 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
  * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace ZendTest\Stratigility;
@@ -12,15 +10,14 @@ namespace ZendTest\Stratigility;
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use PHPUnit_Framework_Assert as Assert;
-use PHPUnit_Framework_TestCase as TestCase;
+use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use ReflectionProperty;
 use SplQueue;
-use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Exception;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory;
@@ -234,7 +231,7 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $next    = new Next($this->queue);
 
-        $this->setExpectedException(Exception\MissingResponseException::class);
+        $this->expectException(Exception\MissingResponseException::class);
         $next($request, $this->response);
     }
 
@@ -270,7 +267,8 @@ class NextTest extends TestCase
     {
         $next = new Next($this->queue);
 
-        $this->setExpectedException(Exception\MissingResponseException::class, 'exhausted');
+        $this->expectException(Exception\MissingResponseException::class);
+        $this->expectExceptionMessage('exhausted');
         $next->process($this->request);
     }
 
@@ -455,7 +453,7 @@ class NextTest extends TestCase
 
         $next = new Next($this->queue);
 
-        $this->setExpectedException(Exception\MissingResponseException::class);
+        $this->expectException(Exception\MissingResponseException::class);
         $next->process($request);
     }
 }
