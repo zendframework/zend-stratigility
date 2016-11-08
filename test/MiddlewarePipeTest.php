@@ -1,10 +1,8 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
  * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace ZendTest\Stratigility;
@@ -12,22 +10,20 @@ namespace ZendTest\Stratigility;
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\MiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
-use PHPUnit_Framework_Assert as Assert;
-use PHPUnit_Framework_TestCase as TestCase;
+use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionProperty;
-use RuntimeException;
-use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\Exception\InvalidMiddlewareException;
 use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
+use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
-use Zend\Stratigility\Utils;
 
 class MiddlewarePipeTest extends TestCase
 {
@@ -62,10 +58,12 @@ class MiddlewarePipeTest extends TestCase
 
     /**
      * @dataProvider invalidHandlers
+     *
+     * @param mixed $handler
      */
     public function testPipeThrowsExceptionForInvalidHandler($handler)
     {
-        $this->setExpectedException('InvalidArgumentException');
+        $this->expectException(InvalidMiddlewareException::class);
         $this->middleware->pipe('/foo', $handler);
     }
 
@@ -250,6 +248,8 @@ class MiddlewarePipeTest extends TestCase
     /**
      * @group matching
      * @dataProvider rootPaths
+     *
+     * @param string $path
      */
     public function testMiddlewareTreatsBothSlashAndEmptyPathAsTheRootPath($path)
     {
@@ -370,6 +370,11 @@ class MiddlewarePipeTest extends TestCase
      * @group matching
      * @group nesting
      * @dataProvider nestedPaths
+     *
+     * @param string $topPath
+     * @param string $nestedPath
+     * @param string $fullPath
+     * @param string $assertion
      */
     public function testNestedMiddlewareMatchesOnlyAtPathBoundaries($topPath, $nestedPath, $fullPath, $assertion)
     {
@@ -431,6 +436,8 @@ class MiddlewarePipeTest extends TestCase
     /**
      * @group http-interop
      * @dataProvider interopMiddleware
+     *
+     * @param string $middlewareType
      */
     public function testCanPipeInteropMiddleware($middlewareType)
     {
