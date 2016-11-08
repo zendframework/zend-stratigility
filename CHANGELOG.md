@@ -84,9 +84,14 @@ details.
   `Zend\Stratigility\Route` constructor to raise an exception if
   non-http-interop middleware is provided as the route handler.
 
+- [#79](https://github.com/zendframework/zend-stratigility/pull/79) updates the
+  `raiseThrowables()` method of each of `MiddlewarePipe` and `Next` to be
+  no-ops.
+
 ### Deprecated
 
-- Nothing.
+- [#79](https://github.com/zendframework/zend-stratigility/pull/79) deprecates
+  the `raiseThrowables()` method of each of `MiddlewarePipe` and `Next`.
 
 ### Removed
 
