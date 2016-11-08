@@ -10,7 +10,7 @@ namespace ZendTest\Stratigility;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
-use PHPUnit_Framework_TestCase as TestCase;
+use PHPUnit\Framework\TestCase;
 use Zend\Stratigility\Route;
 
 class RouteTest extends TestCase

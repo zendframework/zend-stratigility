@@ -7,7 +7,7 @@
 
 namespace ZendTest\Stratigility\Exception;
 
-use PHPUnit_Framework_TestCase as TestCase;
+use PHPUnit\Framework\TestCase;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
 class InvalidMiddlewareExceptionTest extends TestCase
