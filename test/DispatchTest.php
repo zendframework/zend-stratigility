@@ -22,6 +22,7 @@ use RuntimeException;
 use stdClass;
 use TypeError;
 use Zend\Stratigility\Dispatch;
+use Zend\Stratigility\ErrorMiddlewareInterface;
 use Zend\Stratigility\Exception;
 use Zend\Stratigility\Http;
 use Zend\Stratigility\MiddlewarePipe;
@@ -605,6 +606,139 @@ class DispatchTest extends TestCase
             $dispatch(
                 $route,
                 null,
+                $this->request->reveal(),
+                $this->response->reveal(),
+                $next->reveal()
+            );
+            $this->fail('Dispatch succeeded and should not have');
+        } catch (\Throwable $e) {
+            $this->assertSame($throwable, $e, sprintf(
+                'Throwable raised is not the one expected: %s',
+                $e->getMessage()
+            ));
+        } catch (\Exception $e) {
+            $this->assertSame($throwable, $e, sprintf(
+                'Exception raised is not the one expected: %s',
+                $e->getMessage()
+            ));
+        }
+    }
+
+    /**
+     * @dataProvider throwablesProvider
+     * @group error-handling
+     */
+    public function testThrowsThrowablesRaisedByErrorMiddlewareWhenRaiseThrowablesFlagIsEnabled($throwable)
+    {
+        $middleware = $this->prophesize(ErrorMiddlewareInterface::class);
+        $middleware
+            ->__invoke(
+                $throwable,
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(ResponseInterface::class),
+                Argument::type(Next::class)
+            )
+            ->will(function () use ($throwable) {
+                throw $throwable;
+            });
+
+        $route = new Route('/', $middleware->reveal());
+        $next = $this->prophesize(Next::class);
+        $next
+            ->__invoke(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(ResponseInterface::class),
+                $throwable
+            )
+            ->shouldNotBeCalled();
+
+        $dispatch = new Dispatch();
+        $dispatch->raiseThrowables();
+
+        try {
+            $dispatch(
+                $route,
+                $throwable,
+                $this->request->reveal(),
+                $this->response->reveal(),
+                $next->reveal()
+            );
+            $this->fail('Dispatch succeeded and should not have');
+        } catch (\Throwable $e) {
+            $this->assertSame($throwable, $e, sprintf(
+                'Throwable raised is not the one expected: %s',
+                $e->getMessage()
+            ));
+        } catch (\Exception $e) {
+            $this->assertSame($throwable, $e, sprintf(
+                'Exception raised is not the one expected: %s',
+                $e->getMessage()
+            ));
+        }
+    }
+
+    public function nonStandardMiddlewareProvider()
+    {
+        $middlewares = [
+            'too-few' => function () {
+            },
+            'too-many' => function ($one, $two, $three, $four, $five) {
+            },
+        ];
+
+        foreach ($middlewares as $type => $middleware) {
+            $dataSet = 'errorless-' . $type;
+            yield $dataSet => [$middleware, null];
+
+
+            foreach ($this->throwablesProvider() as $errorType => $args) {
+                $dataSet = $errorType . '-' . $type;
+                $throwable = array_shift($args);
+
+                yield $dataSet => [$middleware, $throwable];
+            }
+        }
+    }
+
+    /**
+     * @dataProvider nonStandardMiddlewareProvider
+     * @group error-handling
+     */
+    public function testThrowsThrowablesRaisedByNextMiddlewareWhenRaiseThrowablesFlagIsEnabled($middleware, $throwable)
+    {
+        $route = new Route('/', $middleware);
+        $next = $this->prophesize(Next::class);
+        $next
+            ->__invoke(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(ResponseInterface::class),
+                $throwable
+            )
+            ->will(function () use ($throwable) {
+                if (null === $throwable) {
+                    return $throwable;
+                }
+                throw $throwable;
+            });
+
+        $dispatch = new Dispatch();
+        $dispatch->raiseThrowables();
+
+        if (null === $throwable) {
+            $this->assertNull($dispatch(
+                $route,
+                $throwable,
+                $this->request->reveal(),
+                $this->response->reveal(),
+                $next->reveal()
+            ));
+            return;
+        }
+
+        try {
+            $dispatch(
+                $route,
+                $throwable,
                 $this->request->reveal(),
                 $this->response->reveal(),
                 $next->reveal()
