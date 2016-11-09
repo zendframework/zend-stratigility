@@ -9,8 +9,8 @@
 
 namespace Zend\Stratigility;
 
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Middleware.
@@ -49,10 +49,10 @@ interface MiddlewareInterface
      * Often, middleware will `return $out();`, with the assumption that a
      * later middleware will return a response.
      *
-     * @param Request $request
-     * @param Response $response
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
      * @param null|callable $out
      * @return null|Response
      */
-    public function __invoke(Request $request, Response $response, callable $out = null);
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $out = null);
 }
