@@ -27,6 +27,7 @@ matrix:
     - php: 7
       env:
         - TEST_COVERAGE=true
+    - php: 7.1
     - php: hhvm 
   allow_failures:
     - php: hhvm
