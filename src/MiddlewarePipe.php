@@ -9,7 +9,6 @@ namespace Zend\Stratigility;
 
 use Closure;
 use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -123,7 +122,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     public function pipe($path, $middleware = null)
     {
         if (null === $middleware
-            && ($this->isValidMiddleware($path) || is_callable($path))
+            && ($path instanceof ServerMiddlewareInterface || is_callable($path))
         ) {
             $middleware = $path;
             $path       = '/';
@@ -138,7 +137,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
         }
 
         // Ensure we have a valid handler
-        if (! $this->isValidMiddleware($middleware)) {
+        if (! $middleware instanceof ServerMiddlewareInterface) {
             throw InvalidMiddlewareException::fromValue($middleware);
         }
 
@@ -210,18 +209,6 @@ class MiddlewarePipe implements ServerMiddlewareInterface
         }
 
         return $path;
-    }
-
-    /**
-     * Is the provided middleware argument valid middleware?
-     *
-     * @param mixed $middleware
-     * @return bool
-     */
-    private function isValidMiddleware($middleware)
-    {
-        return $middleware instanceof ServerMiddlewareInterface
-            || $middleware instanceof InteropMiddlewareInterface;
     }
 
     /**

@@ -227,6 +227,15 @@ details.
     decorated using the above `CallableMiddlewareWrapper` in order to adapt it
     as http-interop middleware.
 
+- [#78](https://github.com/zendframework/zend-stratigility/pull/78) adds a new
+  method to each of `Zend\Stratigility\MiddlewarePipe`, `Next`, and `Dispatch`:
+  `raiseThrowables()`. When called, `Dispatch` will no longer wrap dispatch of
+  middleware in a try/catch block, allowing throwables/exceptions to bubble out.
+  This enables the ability to create error handling middleware as an outer layer
+  or your application instead of relying on error middleware and/or the final
+  handler. Typical usage will be to call the method on the `MiddlewarePipe`
+  before dispatching it.
+
 ### Changed
 
 - [#70](https://github.com/zendframework/zend-stratigility/pull/70) makes the
