@@ -10,7 +10,6 @@
 namespace ZendTest\Stratigility;
 
 use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\MiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use PHPUnit_Framework_Assert as Assert;
 use PHPUnit_Framework_TestCase as TestCase;
@@ -39,14 +38,6 @@ class DispatchTest extends TestCase
     {
         $this->request = $this->prophesize(ServerRequestInterface::class);
         $this->response = $this->prophesize(ResponseInterface::class);
-    }
-
-    public function interopMiddlewareProvider()
-    {
-        return [
-            MiddlewareInterface::class => [MiddlewareInterface::class],
-            ServerMiddlewareInterface::class => [ServerMiddlewareInterface::class],
-        ];
     }
 
     public function testHasErrorAndHandleArityIsFourTriggersHandler()
@@ -336,9 +327,8 @@ class DispatchTest extends TestCase
 
     /**
      * @group http-interop
-     * @dataProvider interopMiddlewareProvider
      */
-    public function testProcessRaisesExceptionWhenCatchingAnExceptionAndNoResponsePrototypePresent($middlewareType)
+    public function testProcessRaisesExceptionWhenCatchingAnExceptionAndNoResponsePrototypePresent()
     {
         $next = $this->prophesize(Next::class);
         $next->willImplement(DelegateInterface::class);
@@ -347,7 +337,7 @@ class DispatchTest extends TestCase
 
         $exception = new RuntimeException();
 
-        $middleware = $this->prophesize($middlewareType);
+        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
         $middleware
             ->process($request, Argument::that([$next, 'reveal']))
             ->willThrow($exception);
@@ -377,48 +367,7 @@ class DispatchTest extends TestCase
     /**
      * @group http-interop
      */
-    public function testProcessRaisesExceptionWhenCatchingAnExceptionAndRequestIsNotAServerSideRequest()
-    {
-        $next = $this->prophesize(Next::class);
-        $next->willImplement(DelegateInterface::class);
-
-        $request = $this->prophesize(RequestInterface::class)->reveal();
-
-        $exception = new RuntimeException();
-
-        $middleware = $this->prophesize(MiddlewareInterface::class);
-        $middleware
-            ->process($request, Argument::that([$next, 'reveal']))
-            ->willThrow($exception);
-
-        $route = new Route('/foo', $middleware->reveal());
-
-        $dispatch = new Dispatch();
-        $dispatch->setResponsePrototype($this->response->reveal());
-
-        try {
-            $dispatch->process($route, $request, $next->reveal());
-            $this->fail('Dispatch::process succeeded when it should have raised an exception');
-        } catch (Exception\InvalidRequestTypeException $e) {
-            $this->assertSame($exception, $e->getPrevious(), $e);
-        } catch (\Throwable $e) {
-            $this->fail(sprintf(
-                'Expected MissingResponsePrototypeException; received %s',
-                get_class($e)
-            ));
-        } catch (\Exception $e) {
-            $this->fail(sprintf(
-                'Expected MissingResponsePrototypeException; received %s',
-                get_class($e)
-            ));
-        }
-    }
-
-    /**
-     * @group http-interop
-     * @dataProvider interopMiddlewareProvider
-     */
-    public function testCallingProcessWithInteropMiddlewareDispatchesIt($middlewareType)
+    public function testCallingProcessWithInteropMiddlewareDispatchesIt()
     {
         $next = $this->prophesize(Next::class);
         $next->willImplement(DelegateInterface::class);
@@ -426,7 +375,7 @@ class DispatchTest extends TestCase
         $request = $this->prophesize(ServerRequestInterface::class)->reveal();
         $response = $this->prophesize(ResponseInterface::class);
 
-        $middleware = $this->prophesize($middlewareType);
+        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
         $middleware
             ->process($request, Argument::that([$next, 'reveal']))
             ->will([$response, 'reveal']);
@@ -468,9 +417,8 @@ class DispatchTest extends TestCase
 
     /**
      * @group http-interop
-     * @dataProvider interopMiddlewareProvider
      */
-    public function testInvokingWithInteropMiddlewareDispatchesIt($middlewareType)
+    public function testInvokingWithInteropMiddlewareDispatchesIt()
     {
         $next = $this->prophesize(Next::class);
         $next->willImplement(DelegateInterface::class);
@@ -478,7 +426,7 @@ class DispatchTest extends TestCase
         $request = $this->prophesize(ServerRequestInterface::class)->reveal();
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $middleware = $this->prophesize($middlewareType);
+        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
         $middleware
             ->process($request, Argument::that([$next, 'reveal']))
             ->willReturn($response);

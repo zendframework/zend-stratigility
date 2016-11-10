@@ -11,7 +11,6 @@ namespace Zend\Stratigility;
 
 use Closure;
 use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -285,8 +284,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     private function isValidMiddleware($middleware)
     {
         return is_callable($middleware)
-            || $middleware instanceof ServerMiddlewareInterface
-            || $middleware instanceof InteropMiddlewareInterface;
+            || $middleware instanceof ServerMiddlewareInterface;
     }
 
     /**
@@ -298,8 +296,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     private function isInteropMiddleware($middleware)
     {
         return ! is_callable($middleware)
-            && ($middleware instanceof ServerMiddlewareInterface
-                || $middleware instanceof InteropMiddlewareInterface);
+            && $middleware instanceof ServerMiddlewareInterface;
     }
 
     /**

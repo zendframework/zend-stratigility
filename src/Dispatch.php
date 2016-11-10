@@ -9,7 +9,6 @@
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Throwable;
 use Psr\Http\Message\RequestInterface;
@@ -77,7 +76,7 @@ class Dispatch
             $this->setResponsePrototype($response);
         }
 
-        if ($this->isInteropMiddleware($route->handler)) {
+        if ($route->handler instanceof ServerMiddlewareInterface) {
             return $this->dispatchInteropMiddleware($route->handler, $next, $request);
         }
 
@@ -133,18 +132,6 @@ class Dispatch
     }
 
     /**
-     * Test if the middleware composed by a route is http-interop middleware.
-     *
-     * @param mixed $handler
-     * @return bool
-     */
-    private function isInteropMiddleware($handler)
-    {
-        return $handler instanceof ServerMiddlewareInterface
-            || $handler instanceof InteropMiddlewareInterface;
-    }
-
-    /**
      * Test if the middleware composed by a route is not http-interop middleware.
      *
      * @param mixed $handler
@@ -157,7 +144,7 @@ class Dispatch
      */
     private function isNotInteropMiddleware($handler, RequestInterface $request)
     {
-        if ($this->isInteropMiddleware($handler)) {
+        if ($handler instanceof ServerMiddlewareInterface) {
             return false;
         }
 
@@ -243,7 +230,7 @@ class Dispatch
     /**
      * Dispatch http-interop middleware
      *
-     * @param ServerMiddlewareInterface|InteropMiddlewareInterface $middleware
+     * @param ServerMiddlewareInterface $middleware
      * @param callable $next
      * @param RequestInterface $request
      * @return ResponseInterface
@@ -252,8 +239,11 @@ class Dispatch
      * @throws Exception\InvalidRequestTypeException if the request provided
      *     is not a server-side request.
      */
-    private function dispatchInteropMiddleware($middleware, callable $next, RequestInterface $request)
-    {
+    private function dispatchInteropMiddleware(
+        ServerMiddlewareInterface $middleware,
+        callable $next,
+        RequestInterface $request
+    ) {
         if ($middleware instanceof MiddlewarePipe
             && ! $middleware->hasResponsePrototype()
             && $this->responsePrototype
