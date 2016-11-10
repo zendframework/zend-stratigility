@@ -126,6 +126,21 @@
 </li>
 
                         
+                            
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Migration</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../migration/to-v2/">To Version 2</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                        
                         </ul>
                     </li>
                 
@@ -198,9 +213,9 @@
 
 <h1 id="executing-and-composing-middleware">Executing and composing middleware</h1>
 <p>The easiest way to execute middleware is to write closures and attach them to a
-<code>Zend\Stratigility\MiddlewarePipe</code> instance. You can nest <code>MiddlewarePipe</code> instances to create
-groups of related middleware, and attach them using a base path so they only execute if that path is
-matched.</p>
+<code>Zend\Stratigility\MiddlewarePipe</code> instance. You can nest <code>MiddlewarePipe</code>
+instances to create groups of related middleware, and attach them using a base
+path so they only execute if that path is matched.</p>
 <pre class="codehilite"><code class="language-php">$api = new MiddlewarePipe();  // API middleware collection
 $api-&gt;pipe(/* ... */);        // repeat as necessary
 
@@ -208,32 +223,34 @@ $app = new MiddlewarePipe();  // Middleware representing the application
 $app-&gt;pipe('/api', $api);     // API middleware attached to the path &quot;/api&quot;</code></pre>
 
 
-<p>Another approach is to extend the <code>Zend\Stratigility\MiddlewarePipe</code> class itself, particularly if
-you want to allow attaching other middleware to your own middleware. In such a case, you will
-generally override the <code>__invoke()</code> method to perform any additional logic you have, and then call
-on the parent in order to iterate through your stack of middleware:</p>
-<pre class="codehilite"><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
+<p>Another approach is to extend the <code>Zend\Stratigility\MiddlewarePipe</code> class
+itself, particularly if you want to allow attaching other middleware to your
+own middleware. In such a case, you will generally override the <code>process()</code>
+method to perform any additional logic you have, and then call on the parent in
+order to iterate through your stack of middleware:</p>
+<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Zend\Stratigility\MiddlewarePipe;
 
 class CustomMiddleware extends MiddlewarePipe
 {
-    public function __invoke(Request $request, Response $response, callable $next = null)
+    public function process(Request $request, DelegateInterface $delegate)
     {
         // perform some work...
 
         // delegate to parent
-        parent::__invoke($request, $response, $next);
+        parent::process($request, $delegate);
 
         // maybe do more work?
     }
 }</code></pre>
 
 
-<p>Another approach using this method would be to override the constructor to add in specific
-middleware, perhaps using configuration provided. In this case, make sure to also call
-<code>parent::__construct()</code> to ensure the middleware queue is initialized; we recommend doing this as the
-first action of the method.</p>
+<p>Another approach using this method would be to override the constructor to add
+in specific middleware, perhaps using configuration provided. In this case,
+make sure to also call <code>parent::__construct()</code> to ensure the middleware queue
+is initialized; we recommend doing this as the first action of the method.</p>
 <pre class="codehilite"><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
 
 class CustomMiddleware extends MiddlewarePipe
@@ -251,9 +268,10 @@ class CustomMiddleware extends MiddlewarePipe
 }</code></pre>
 
 
-<p>These approaches are particularly suited for cases where you may want to implement a specific
-workflow for an application segment using existing middleware, but do not necessarily want that
-middleware applied to all requests in the application.</p>
+<p>These approaches are particularly suited for cases where you may want to
+implement a specific workflow for an application segment using existing
+middleware, but do not necessarily want that middleware applied to all requests
+in the application.</p>
 
 <hr />
 

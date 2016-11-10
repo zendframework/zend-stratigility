@@ -126,6 +126,21 @@
 </li>
 
                         
+                            
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Migration</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../migration/to-v2/">To Version 2</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                        
                         </ul>
                     </li>
                 
@@ -204,6 +219,7 @@
 <li>Instruct the server to listen for a request</li>
 </ul>
 <pre class="codehilite"><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\NoopFinalHandler;
 use Zend\Diactoros\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -216,7 +232,7 @@ $server = Server::createServer($app,
   $_COOKIE,
   $_FILES
 );
-$server-&gt;listen();</code></pre>
+$server-&gt;listen(new NoopFinalHandler());</code></pre>
 
 
 <p>The above example is useless by itself until you pipe middleware into the application.</p>

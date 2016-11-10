@@ -126,6 +126,21 @@
 </li>
 
                         
+                            
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Migration</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../migration/to-v2/">To Version 2</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                        
                         </ul>
                     </li>
                 
@@ -205,17 +220,22 @@
 <ul>
 <li>
 <p><code>psr/http-message</code>, which provides the interfaces specified in <a href="http://www.php-fig.org/psr/psr-7">PSR-7</a>,
-  and type-hinted against in this package. In order to use Stratigility, you will need an
-  implementation of PSR-7; one such package is
+  and type-hinted against in this package. In order to use Stratigility, you
+  will need an implementation of PSR-7; one such package is
   <a href="https://zendframework.github.io/zend-diactoros/">Diactoros</a>.</p>
 </li>
 <li>
-<p><code>zendframework/zend-escaper</code>, used by the <code>FinalHandler</code> for escaping error messages prior to
+<p><a href="https://github.com/http-interop/http-middleware"><code>http-interop/http-middleware</code></a>,
+  which provides the interfaces that will become PSR-15.</p>
+</li>
+<li>
+<p><code>zendframework/zend-escaper</code>, used by the <code>ErrorHandler</code> middleware and the
+  (legacy) <code>FinalHandler</code> implementation for escaping error messages prior to
   passing them to the response.</p>
 </li>
 </ul>
-<p>You can provide your own request and response implementations if desired as long as they implement
-the PSR-7 HTTP message interfaces.</p>
+<p>You can provide your own request and response implementations if desired as
+long as they implement the PSR-7 HTTP message interfaces.</p>
 
 <hr />
 

@@ -126,6 +126,21 @@
 </li>
 
                         
+                            
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Migration</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../migration/to-v2/">To Version 2</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                        
                         </ul>
                     </li>
                 
@@ -168,6 +183,8 @@
     
         <li class="main active"><a href="#creating-middleware">Creating Middleware</a></li>
         
+            <li><a href="#legacy-error-middleware">Legacy error middleware</a></li>
+        
     
     </ul>
 
@@ -197,14 +214,15 @@
 </ol>
 
 <h1 id="creating-middleware">Creating Middleware</h1>
-<p>To create middleware, write a callable capable of receiving minimally PSR-7 ServerRequest and Response
-objects, and optionally a callback to call the next in the chain.  In your middleware, you can handle
-as much or as little of the request as you want, including delegating to other middleware. If your
-middleware accepts a third argument, <code>$next</code>, it can allow further processing or return handling to
-the parent middleware by calling it.</p>
-<p>As an example, consider the following middleware which will use an external router to map the
-incoming request path to a handler; if unable to map the request, it returns processing to the next
-middleware.</p>
+<p>To create middleware, write a callable capable of receiving minimally PSR-7
+ServerRequest and Response objects, and a callback to call the next middleware
+in the chain. In your middleware, you can handle as much or as little of the
+request as you want, including delegating to other middleware. By accepting the
+third argument, <code>$next</code>, it can allow further processing via invoking that
+argument, or return handling to the parent middleware by returning a response.</p>
+<p>As an example, consider the following middleware which will use an external
+router to map the incoming request path to a handler; if unable to map the
+request, it returns processing to the next middleware.</p>
 <pre class="codehilite"><code class="language-php">function ($req, $res, $next) use ($router) {
     $path = $req-&gt;getUri()-&gt;getPath();
 
@@ -233,14 +251,21 @@ middleware.</p>
 <pre class="codehilite"><code class="language-php">function (
     Psr\Http\Message\ServerRequestInterface $request,
     Psr\Http\Message\ResponseInterface $response,
-    callable $next = null
+    callable $next
 ) : Psr\Http\Message\ResponseInterface</code></pre>
 
 
-<p>The implementation Stratigility offers also allows you to write specialized error handler
-middleware. The signature is the same as for normal middleware, except that it expects an additional
-argument prepended to the signature, <code>$error</code>.  (Alternately, you can implement
-<code>Zend\Stratigility\ErrorMiddlewareInterface</code>.) The signature is:</p>
+<h3 id="legacy-error-middleware">Legacy error middleware</h3>
+<ul>
+<li>Deprecated since 1.3.0; to be removed in version 2.0.0. Please use the the
+  <code>NotFoundHandler</code> and <code>ErrorHandler</code> detailed in the
+  <a href="../error-handlers/">error handling chapter</a>, or equivalents.</li>
+</ul>
+<p>The implementation Stratigility offers also allows you to write specialized
+error handler middleware. The signature is the same as for normal middleware,
+except that it expects an additional argument prepended to the signature,
+<code>$error</code>.  (Alternately, you can implement <code>Zend\Stratigility\ErrorMiddlewareInterface</code>.)
+The signature is:</p>
 <pre class="codehilite"><code class="language-php">function (
     $error, // Can be any type
     Psr\Http\Message\ServerRequestInterface $request,

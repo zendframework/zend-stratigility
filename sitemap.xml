@@ -4,7 +4,7 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2016-11-08</lastmod>
+     <lastmod>2016-11-10</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -12,7 +12,7 @@
     
     <url>
      <loc>/intro/</loc>
-     <lastmod>2016-11-08</lastmod>
+     <lastmod>2016-11-10</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -21,43 +21,49 @@
         
     <url>
      <loc>/install/</loc>
-     <lastmod>2016-11-08</lastmod>
+     <lastmod>2016-11-10</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/usage/</loc>
-     <lastmod>2016-11-08</lastmod>
+     <lastmod>2016-11-10</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/middleware/</loc>
-     <lastmod>2016-11-08</lastmod>
+     <lastmod>2016-11-10</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/error-handlers/</loc>
-     <lastmod>2016-11-08</lastmod>
+     <lastmod>2016-11-10</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/creating-middleware/</loc>
-     <lastmod>2016-11-08</lastmod>
+     <lastmod>2016-11-10</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/executing-middleware/</loc>
-     <lastmod>2016-11-08</lastmod>
+     <lastmod>2016-11-10</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/api/</loc>
-     <lastmod>2016-11-08</lastmod>
+     <lastmod>2016-11-10</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc></loc>
+     <lastmod></lastmod>
      <changefreq>daily</changefreq>
     </url>
         
