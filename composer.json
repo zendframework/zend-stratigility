@@ -21,14 +21,15 @@
     }
   },
   "require": {
-    "php": "^5.4.8 || ^7.0",
-    "psr/http-message": "~1.0.0",
-    "zendframework/zend-escaper": "~2.3"
+    "php": "^5.6 || ^7.0",
+    "psr/http-message": "^1.0",
+    "zendframework/zend-escaper": "^2.3",
+    "http-interop/http-middleware": "^0.2.0"
   },
   "require-dev": {
-    "zendframework/zend-diactoros": "~1.0",
+    "zendframework/zend-diactoros": "^1.0",
     "phpunit/phpunit": "^4.7 || ^5.5",
-    "squizlabs/php_codesniffer": "^2.3.1"
+    "squizlabs/php_codesniffer": "^2.6.2"
   },
   "suggest": {
     "psr/http-message-implementation": "Please install a psr/http-message-implementation to consume Stratigility; e.g., zendframework/zend-diactoros"
@@ -49,9 +50,9 @@
       "@test"
     ],
     "upload-coverage": "coveralls -v",
-    "cs-check": "phpcs",
-    "cs-fix": "phpcbf",
-    "test": "phpunit",
+    "cs-check": "phpcs --colors",
+    "cs-fix": "phpcbf --colors",
+    "test": "phpunit --colors=always",
     "test-coverage": "phpunit --coverage-clover clover.xml"
   }
 }
