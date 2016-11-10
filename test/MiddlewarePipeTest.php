@@ -10,7 +10,6 @@
 namespace ZendTest\Stratigility;
 
 use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\MiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use PHPUnit_Framework_TestCase as TestCase;
 use Prophecy\Argument;
@@ -594,24 +593,15 @@ class MiddlewarePipeTest extends TestCase
         $this->assertAttributeSame($response, 'responsePrototype', $pipeline);
     }
 
-    public function interopMiddleware()
-    {
-        return [
-            MiddlewareInterface::class => [MiddlewareInterface::class],
-            ServerMiddlewareInterface::class => [ServerMiddlewareInterface::class],
-        ];
-    }
-
     /**
      * @group http-interop
-     * @dataProvider interopMiddleware
      */
-    public function testCanPipeInteropMiddleware($middlewareType)
+    public function testCanPipeInteropMiddleware()
     {
         $delegate = $this->prophesize(DelegateInterface::class)->reveal();
 
         $response = $this->prophesize(ResponseInterface::class);
-        $middleware = $this->prophesize($middlewareType);
+        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
         $middleware
             ->process(Argument::type(RequestInterface::class), Argument::type(DelegateInterface::class))
             ->will([$response, 'reveal']);
