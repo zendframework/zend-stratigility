@@ -1,77 +1,37 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
  * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace ZendTest\Stratigility;
 
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
-use PHPUnit_Framework_TestCase as TestCase;
+use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionProperty;
-use RuntimeException;
-use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\ErrorMiddlewareInterface;
-use Zend\Stratigility\Http\Request as RequestDecorator;
-use Zend\Stratigility\Http\Response as ResponseDecorator;
-use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\Exception\InvalidMiddlewareException;
 use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
+use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
-use Zend\Stratigility\Utils;
 
 class MiddlewarePipeTest extends TestCase
 {
-    public $errorHandler;
-
-    public $deprecationsSuppressed = false;
-
     public function setUp()
     {
-        $this->deprecationsSuppressed = false;
-
-        $this->restoreErrorHandler();
-        $this->errorHandler = function ($errno, $errstr) {
-            if (false !== strstr($errstr, RequestDecorator::class . ' is now deprecated')) {
-                return true;
-            }
-            if (false !== strstr($errstr, ResponseDecorator::class . ' is now deprecated')) {
-                return true;
-            }
-
-            return false;
-        };
-        set_error_handler($this->errorHandler, E_USER_DEPRECATED);
-
         $this->request    = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->response   = new Response();
         $this->middleware = new MiddlewarePipe();
-    }
-
-    public function tearDown()
-    {
-        if (false !== $this->deprecationsSuppressed) {
-            restore_error_handler();
-        }
-        $this->restoreErrorHandler();
-    }
-
-    public function restoreErrorHandler()
-    {
-        if ($this->errorHandler) {
-            restore_error_handler();
-            $this->errorHandler = null;
-        }
+        $this->middleware->setResponsePrototype($this->response);
     }
 
     /**
@@ -80,16 +40,6 @@ class MiddlewarePipeTest extends TestCase
     public function createFinalHandler()
     {
         return new NoopFinalHandler();
-    }
-
-    public function suppressDeprecationNotice()
-    {
-        $this->deprecationsSuppressed = set_error_handler(function ($errno, $errstr) {
-            if (false === strstr($errstr, 'docs.zendframework.com')) {
-                return false;
-            }
-            return true;
-        }, E_USER_DEPRECATED);
     }
 
     public function invalidHandlers()
@@ -107,25 +57,28 @@ class MiddlewarePipeTest extends TestCase
 
     /**
      * @dataProvider invalidHandlers
+     *
+     * @param mixed $handler
      */
     public function testPipeThrowsExceptionForInvalidHandler($handler)
     {
-        $this->setExpectedException('InvalidArgumentException');
+        $this->expectException(InvalidMiddlewareException::class);
         $this->middleware->pipe('/foo', $handler);
     }
 
     public function testHandleInvokesUntilFirstHandlerThatDoesNotCallNext()
     {
         $this->middleware->pipe(function ($req, $res, $next) {
-            $res->write("First\n");
-            $next($req, $res);
+            $res->getBody()->write("First\n");
+            return $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $res->write("Second\n");
-            $next($req, $res);
+            $res->getBody()->write("Second\n");
+            return $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $res->write("Third\n");
+            $res->getBody()->write("Third\n");
+            return $res;
         });
 
         $this->middleware->pipe(function ($req, $res, $next) {
@@ -140,112 +93,29 @@ class MiddlewarePipeTest extends TestCase
         $this->assertContains('Third', $body);
     }
 
-    /**
-     * @todo remove for 2.0.0
-     */
-    public function testHandleInvokesFirstErrorHandlerOnErrorInChain()
+    public function testInvokesDelegateWhenQueueIsExhausted()
     {
-        $this->middleware->pipe(function ($req, $res, $next) {
-            $next($req, $res->write("First\n"));
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
-            return $next($req, $res, 'error');
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
-            return $res->write("Third\n");
-        });
-        $this->middleware->pipe(function ($err, $req, $res, $next) {
-            return $res->write("ERROR HANDLER\n");
-        });
-        $phpunit = $this;
-        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Should not hit fourth handler!');
-        });
-
-        set_error_handler(function ($errno, $errstr) {
-            // no-op; skip handling
-            return true;
-        }, E_USER_DEPRECATED);
-
-        $request  = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $response = $this->middleware->__invoke($request, $this->response);
-
-        restore_error_handler();
-
-        $body     = (string) $response->getBody();
-        $this->assertContains('First', $body);
-        $this->assertContains('ERROR HANDLER', $body);
-        $this->assertNotContains('Third', $body);
-    }
-
-    public function testHandleInvokesOutHandlerIfQueueIsExhausted()
-    {
-        $triggered = null;
-        $out = function ($err = null) use (&$triggered) {
-            $triggered = true;
-        };
+        $expected = $this->prophesize(ResponseInterface::class)->reveal();
+        $this->middleware->setResponsePrototype($expected);
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next($req, $res);
+            return $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next($req, $res);
+            return $next($req, $res);
         });
         $this->middleware->pipe(function ($req, $res, $next) {
-            $next($req, $res);
+            return $next($req, $res);
         });
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $this->middleware->__invoke($request, $this->response, $out);
-        $this->assertTrue($triggered);
-    }
 
-    public function testCanUseDecoratedRequestAndResponseDirectly()
-    {
-        $baseRequest = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
+        $delegate = $this->prophesize(DelegateInterface::class);
+        $delegate->process($request)->willReturn($expected);
 
-        $request  = new RequestDecorator($baseRequest);
-        $response = new ResponseDecorator($this->response);
-        $executed = false;
+        $result = $this->middleware->__invoke($request, $this->response, $delegate->reveal());
 
-        $middleware = $this->middleware;
-        $middleware->pipe(function ($req, $res, $next) use ($request, $response, &$executed) {
-            $this->assertSame($request, $req);
-            $this->assertSame($response, $res);
-            $executed = true;
-        });
-
-        $middleware($request, $response, function ($err = null) {
-            $this->fail('Next should not be called');
-        });
-
-        $this->assertTrue($executed);
-    }
-
-    /**
-     * @todo Update invocation to provide a no-op final handler for 2.0
-     */
-    public function testReturnsOrigionalResponseIfQueueDoesNotReturnAResponseAndNoFinalHandlerRegistered()
-    {
-        $this->suppressDeprecationNotice();
-
-        $this->middleware->pipe(function ($req, $res, $next) {
-            $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
-            $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
-            return;
-        });
-        $phpunit = $this;
-        $this->middleware->pipe(function ($req, $res, $next) use ($phpunit) {
-            $phpunit->fail('Should not hit fourth handler!');
-        });
-
-        $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $result  = $this->middleware->__invoke($request, $this->response);
-        $this->assertSame($this->response, $result->getOriginalResponse());
+        $this->assertSame($expected, $result);
     }
 
     public function testReturnsResponseReturnedByQueue()
@@ -281,7 +151,8 @@ class MiddlewarePipeTest extends TestCase
         });
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            return $res->write($req->getUri()->getPath());
+            $res->getBody()->write($req->getUri()->getPath());
+            return $res;
         });
 
         $request = new Request([], [], 'http://local.example.com/admin', 'GET', 'php://memory');
@@ -297,7 +168,8 @@ class MiddlewarePipeTest extends TestCase
         });
 
         $this->middleware->pipe(function ($req, $res, $next) {
-            return $res->write($req->getUri()->getPath());
+            $res->getBody()->write($req->getUri()->getPath());
+            return $res;
         });
 
         $request = new Request([], [], 'http://local.example.com/admin/', 'GET', 'php://memory');
@@ -308,28 +180,45 @@ class MiddlewarePipeTest extends TestCase
 
     public function testNestedMiddlewareMayInvokeDoneToInvokeNextOfParent()
     {
-        $child = new MiddlewarePipe();
-        $child->pipe('/', function ($req, $res, $next) {
-            return $next($req, $res);
-        });
+        $childMiddleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $childMiddleware
+            ->process(Argument::type(ServerRequestInterface::class), Argument::type(DelegateInterface::class))
+            ->will(function ($args) {
+                $request = $args[0];
+                $next = $args[1];
+                return $next->process($request);
+            });
 
-        $this->middleware->pipe(function ($req, $res, $next) {
-            return $next($req, $res);
-        });
+        $childPipeline = new MiddlewarePipe();
+        $childPipeline->pipe('/', $childMiddleware->reveal());
 
-        $this->middleware->pipe('/test', $child);
+        $outerMiddleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $outerMiddleware
+            ->process(Argument::type(ServerRequestInterface::class), Argument::type(DelegateInterface::class))
+            ->will(function ($args) {
+                $request = $args[0];
+                $next = $args[1];
+                return $next->process($request);
+            });
 
-        $triggered = false;
-        $this->middleware->pipe(function ($req, $res, $next) use (&$triggered) {
-            $triggered = true;
-            return $res;
-        });
+        $expected = $this->prophesize(ResponseInterface::class)->reveal();
+        $innerMiddleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $innerMiddleware
+            ->process(Argument::type(ServerRequestInterface::class), Argument::type(DelegateInterface::class))
+            ->willReturn($expected);
+
+        $pipeline = $this->middleware;
+        $pipeline->setResponsePrototype($this->response);
+        $pipeline->pipe($outerMiddleware->reveal());
+        $pipeline->pipe('/test', $childPipeline);
+        $pipeline->pipe($innerMiddleware->reveal());
 
         $request = new Request([], [], 'http://local.example.com/test', 'GET', 'php://memory');
-        $result  = $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
-        $this->assertTrue($triggered);
-        $this->assertInstanceOf('Zend\Stratigility\Http\Response', $result);
-        $this->assertSame($this->response, $result->getOriginalResponse());
+        $final = $this->prophesize(DelegateInterface::class);
+        $final->process(Argument::any())->shouldNotBeCalled();
+
+        $result = $pipeline->process($request, $final->reveal());
+        $this->assertSame($expected, $result);
     }
 
     public function testMiddlewareRequestPathMustBeTrimmedOffWithPipeRoutePath()
@@ -340,6 +229,7 @@ class MiddlewarePipeTest extends TestCase
         $this->middleware->pipe('/foo', function ($req, $res, $next) use (&$executed) {
             $this->assertEquals('/bar', $req->getUri()->getPath());
             $executed = true;
+            return $res;
         });
 
         $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
@@ -357,6 +247,8 @@ class MiddlewarePipeTest extends TestCase
     /**
      * @group matching
      * @dataProvider rootPaths
+     *
+     * @param string $path
      */
     public function testMiddlewareTreatsBothSlashAndEmptyPathAsTheRootPath($path)
     {
@@ -477,12 +369,18 @@ class MiddlewarePipeTest extends TestCase
      * @group matching
      * @group nesting
      * @dataProvider nestedPaths
+     *
+     * @param string $topPath
+     * @param string $nestedPath
+     * @param string $fullPath
+     * @param string $assertion
      */
     public function testNestedMiddlewareMatchesOnlyAtPathBoundaries($topPath, $nestedPath, $fullPath, $assertion)
     {
         $middleware = $this->middleware;
 
         $nest = new MiddlewarePipe();
+        $nest->setResponsePrototype($this->response);
         $nest->pipe($nestedPath, function ($req, $res) use ($nestedPath) {
             return $res->withHeader('X-Found', 'true');
         });
@@ -507,71 +405,6 @@ class MiddlewarePipeTest extends TestCase
     }
 
     /**
-     * Test that FinalHandler is passed the original response.
-     *
-     * Tests that MiddlewarePipe passes the original response passed to it when
-     * creating the FinalHandler instance, and that FinalHandler compares the
-     * response passed to it on invocation to its original response.
-     *
-     * If the two differ, the response passed during invocation should be
-     * returned unmodified; this is an indication that a middleware has provided
-     * a response, and is simply passing further up the chain to allow further
-     * processing (e.g., to allow an application-wide logger at the end of the
-     * request).
-     *
-     * @group nextChaining
-     */
-    public function testPassesOriginalResponseToFinalHandler()
-    {
-        $this->suppressDeprecationNotice();
-        $request  = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $response = new Response();
-        $test     = new Response();
-
-        $pipeline = new MiddlewarePipe();
-        $pipeline->pipe(function ($req, $res, $next) use ($test) {
-            return $next($req, $test);
-        });
-
-        // Pipeline MUST return response passed to $next if it differs from the
-        // original.
-        $result = $pipeline($request, $response);
-        $this->assertSame($test, $result);
-    }
-
-    public function testOmittingFinalHandlerDuringInvocationRaisesDeprecationNotice()
-    {
-        $request   = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $response  = new Response();
-        $triggered = false;
-
-        $this->deprecationsSuppressed = set_error_handler(function ($errno, $errstr) use (&$triggered) {
-            if (false !== strstr($errstr, ResponseDecorator::class)) {
-                // ignore response decorator deprecation message
-                return true;
-            }
-
-            $this->assertContains(MiddlewarePipe::class . '()', $errstr);
-            $triggered = true;
-            return true;
-        }, E_USER_DEPRECATED);
-
-        $pipeline = new MiddlewarePipe();
-        $pipeline->pipe(function ($req, $res, $next) {
-            $res->write('Some content');
-            return $res->withStatus(201);
-        });
-
-        $result = $pipeline($request, $response);
-
-        $this->assertNotSame($response, $result);
-        $this->assertEquals(201, $result->getStatusCode());
-        $this->assertEquals('Some content', (string) $result->getBody());
-        $this->assertTrue($triggered, 'Error handler was not triggered');
-    }
-
-    /**
-     * @todo Remove for 2.0.0.
      * @group http-interop
      */
     public function testNoResponsePrototypeComposeByDefault()
@@ -581,8 +414,6 @@ class MiddlewarePipeTest extends TestCase
     }
 
     /**
-     * @todo Remove for 2.0.0, maybe; it may be useful to have this in order
-     *     to ensure we always return a response?
      * @group http-interop
      */
     public function testCanComposeResponsePrototype()
@@ -638,36 +469,6 @@ class MiddlewarePipeTest extends TestCase
         $this->assertAttributeSame($this->response, 'responsePrototype', $test);
     }
 
-    /**
-     * @todo Remove with 2.0.0
-     */
-    public function errorMiddleware()
-    {
-        yield 'callable' => [function ($err, $request, $response, $next) {
-        }];
-
-        yield 'interface' => [$this->prophesize(ErrorMiddlewareInterface::class)->reveal()];
-    }
-
-    /**
-     * @todo Remove with 2.0.0
-     * @dataProvider errorMiddleware
-     * @group http-interop
-     */
-    public function testWillNotDecorateCallableErrorMiddlewareDuringPipingEvenWithResponsePrototypePresent($middleware)
-    {
-        $pipeline = new MiddlewarePipe();
-        $pipeline->setResponsePrototype($this->response);
-        $pipeline->pipe($middleware);
-
-        $r = new ReflectionProperty($pipeline, 'pipeline');
-        $r->setAccessible(true);
-        $queue = $r->getValue($pipeline);
-
-        $route = $queue->dequeue();
-        $this->assertSame($middleware, $route->handler);
-    }
-
     public function testWillDecorateACallableDefiningADelegateArgumentUsingAlternateDecorator()
     {
         $pipeline = new MiddlewarePipe();
@@ -716,115 +517,5 @@ class MiddlewarePipeTest extends TestCase
         $test = $route->handler;
         $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
-    }
-
-    /**
-     * @todo Remove for 2.0.0, as error middleware is removed in that version.
-     * @group error-handling
-     */
-    public function testRaiseThrowablesFlagIsFalseByDefault()
-    {
-        $pipeline = new MiddlewarePipe();
-        $this->assertAttributeSame(false, 'raiseThrowables', $pipeline);
-    }
-
-    /**
-     * @todo Remove for 2.0.0, as error middleware is removed in that version.
-     * @group error-handling
-     */
-    public function testCanEnableRaiseThrowablesFlag()
-    {
-        $pipeline = new MiddlewarePipe();
-        $pipeline->raiseThrowables();
-        $this->assertAttributeSame(true, 'raiseThrowables', $pipeline);
-    }
-
-    /**
-     * @todo Remove for 2.0.0, as error middleware is removed in that version.
-     * @group error-handling
-     */
-    public function testEnablingRaiseThrowablesCausesInvocationToThrowExceptions()
-    {
-        $expected = new RuntimeException('To throw from middleware');
-
-        $pipeline = new MiddlewarePipe();
-        $pipeline->raiseThrowables();
-
-        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
-        $middleware
-            ->process(
-                Argument::type(ServerRequestInterface::class),
-                Argument::type(DelegateInterface::class)
-            )
-            ->will(function () use ($expected) {
-                throw $expected;
-            });
-
-        $pipeline->pipe($middleware->reveal());
-
-        $done = function ($request, $response) {
-            $this->fail('"Done" callable invoked, when it should have been');
-        };
-
-        try {
-            $pipeline($this->request, $this->response, $done);
-            $this->fail('Pipeline with middleware that throws did not result in exception!');
-        } catch (RuntimeException $e) {
-            $this->assertSame($expected, $e);
-        } catch (Throwable $e) {
-            $this->fail(sprintf(
-                'Unexpected throwable raised by pipeline: %s',
-                $e->getMessage()
-            ));
-        } catch (\Exception $e) {
-            $this->fail(sprintf(
-                'Unexpected exception raised by pipeline: %s',
-                $e->getMessage()
-            ));
-        }
-    }
-
-    /**
-     * @todo Remove for 2.0.0, as error middleware is removed in that version.
-     * @group error-handling
-     */
-    public function testEnablingRaiseThrowablesCausesProcessToThrowExceptions()
-    {
-        $expected = new RuntimeException('To throw from middleware');
-
-        $pipeline = new MiddlewarePipe();
-        $pipeline->raiseThrowables();
-
-        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
-        $middleware
-            ->process(
-                Argument::type(ServerRequestInterface::class),
-                Argument::type(DelegateInterface::class)
-            )
-            ->will(function () use ($expected) {
-                throw $expected;
-            });
-
-        $pipeline->pipe($middleware->reveal());
-
-        $done = $this->prophesize(DelegateInterface::class);
-        $done->process(Argument::any())->shouldNotBeCalled();
-
-        try {
-            $pipeline->process($this->request, $done->reveal());
-            $this->fail('Pipeline with middleware that throws did not result in exception!');
-        } catch (RuntimeException $e) {
-            $this->assertSame($expected, $e);
-        } catch (Throwable $e) {
-            $this->fail(sprintf(
-                'Unexpected throwable raised by pipeline: %s',
-                $e->getMessage()
-            ));
-        } catch (\Exception $e) {
-            $this->fail(sprintf(
-                'Unexpected exception raised by pipeline: %s',
-                $e->getMessage()
-            ));
-        }
     }
 }

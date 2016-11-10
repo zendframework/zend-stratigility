@@ -1,10 +1,8 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
  * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace Zend\Stratigility;
@@ -23,11 +21,6 @@ use Throwable;
  */
 class Next implements DelegateInterface
 {
-    /**
-     * @var Dispatch
-     */
-    private $dispatch;
-
     /**
      * @var callable|DelegateInterface
      */
@@ -53,130 +46,61 @@ class Next implements DelegateInterface
     private $removed = '';
 
     /**
-     * Response prototype to use with the $done handler and/or callable
-     * middleware when the instance is invoked by http-interop middleware.
-     *
-     * @var ResponseInterface
-     */
-    private $responsePrototype;
-
-    /**
      * Constructor.
      *
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param callable|DelegateInterface $done Next delegate to invoke when the
-     *     queue is exhausted. Note: this argument becomes optional starting in
-     *     2.0.0.
+     * @param null|DelegateInterface $nextDelegate Next delegate to invoke when the
+     *     queue is exhausted.
      * @throws InvalidArgumentException for a non-callable, non-delegate $done
      *     argument.
      */
-    public function __construct(SplQueue $queue, $done)
+    public function __construct(SplQueue $queue, DelegateInterface $nextDelegate = null)
     {
-        if (! (is_callable($done) || $done instanceof DelegateInterface)) {
-            throw new InvalidArgumentException(sprintf(
-                'Invalid "$done" argument provided to %s; must be callable '
-                . 'or a %s instance; received %s',
-                get_class($this),
-                DelegateInterface::class,
-                is_object($done) ? get_class($done) : gettype($done)
-            ));
-        }
-
         $this->queue        = clone $queue;
-        $this->nextDelegate = $done;
-        $this->dispatch     = new Dispatch();
+        $this->nextDelegate = $nextDelegate;
     }
 
     /**
-     * Call the next Route in the queue.
+     * Invokable form; proxy to process().
      *
-     * Next requires that a request and response are provided; these will be
-     * passed to any middleware invoked, including the $done callable, if
-     * invoked.
-     *
-     * If the $err value is not null, the invocation is considered to be an
-     * error invocation, and Next will search for the next error middleware
-     * to dispatch, passing it $err along with the request and response.
-     *
-     * Once dispatch is complete, if the result is a response instance, that
-     * value will be returned; otherwise, the currently registered response
-     * instance will be returned.
+     * Ignores any arguments other than the request.
      *
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param null|mixed $err This argument is deprecated as of 1.3.0, and will
-     *     be removed in 2.0.0.
      * @return ResponseInterface
+     * @throws Exception\MissingResponseException If the queue is exhausted, and
+     *     no "next delegate" is present.
+     * @throws Exception\MissingResponseException If the middleware executed does
+     *     not return a response.
      */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        $err = null
-    ) {
-        if ($err !== null && $this->raiseThrowables) {
-            $this->raiseThrowableFromError($err);
-        }
-
-        if (null !== $err) {
-            $this->triggerErrorDeprecation();
-        }
-
-        if (! $this->responsePrototype) {
-            $this->setResponsePrototype($response);
-        }
-
-        $dispatch = $this->dispatch;
-        $done     = $this->nextDelegate;
-        $request  = $this->resetPath($request);
-
-        // No middleware remains; done
-        if ($this->queue->isEmpty()) {
-            return $this->dispatchNextDelegate($done, $request, $response, $err);
-        }
-
-        $layer           = $this->queue->dequeue();
-        $path            = $request->getUri()->getPath() ?: '/';
-        $route           = $layer->path;
-        $normalizedRoute = (strlen($route) > 1) ? rtrim($route, '/') : $route;
-
-        // Skip if layer path does not match current url
-        if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
-            return $this($request, $response, $err);
-        }
-
-        // Skip if match is not at a border ('/', '.', or end)
-        $border = $this->getBorder($path, $normalizedRoute);
-        if ($border && '/' !== $border && '.' !== $border) {
-            return $this($request, $response, $err);
-        }
-
-        // Trim off the part of the url that matches the layer route
-        if (! empty($route) && $route !== '/') {
-            $request = $this->stripRouteFromPath($request, $route);
-        }
-
-        $result = $dispatch($layer, $err, $request, $response, $this);
-
-        return ($result instanceof ResponseInterface ? $result : $response);
+    public function __invoke(ServerRequestInterface $request)
+    {
+        return $this->process($request);
     }
 
     /**
      * @param RequestInterface $request
      * @return ResponseInterface
-     * @throws Exception\MissingResponsePrototypeException
-     * @throws Exception\InvalidRequestTypeException
+     * @throws Exception\MissingResponseException If the queue is exhausted, and
+     *     no "next delegate" is present.
+     * @throws Exception\MissingResponseException If the middleware executed does
+     *     not return a response.
      */
     public function process(RequestInterface $request)
     {
-        $dispatch = $this->dispatch;
-        $done     = $this->nextDelegate;
         $request  = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            return $this->dispatchNextDelegate($done, $request);
+            if ($this->nextDelegate) {
+                return $this->nextDelegate->process($request);
+            }
+
+            throw new Exception\MissingResponseException(sprintf(
+                'Queue provided to %s was exhausted, with no response returned',
+                get_class($this)
+            ));
         }
 
         $layer           = $this->queue->dequeue();
@@ -200,34 +124,29 @@ class Next implements DelegateInterface
             $request = $this->stripRouteFromPath($request, $route);
         }
 
-        $result = $dispatch->process($layer, $request, $this);
+        $middleware = $layer->handler;
+        $response = $middleware->process($request, $this);
 
-        if (! $result instanceof ResponseInterface) {
-            return $this->getResponsePrototype();
+        if (! $response instanceof ResponseInterface) {
+            throw new Exception\MissingResponseException(sprintf(
+                "Last middleware executed did not return a response.\nMethod: %s\nPath: %s\n.Handler: %s",
+                $request->getMethod(),
+                $request->getUri()->getPath(),
+                get_class($middleware)
+            ));
         }
 
-        return $result;
+        return $response;
     }
 
     /**
      * Toggle the "raise throwables" flag on.
      *
+     * @deprecated Since 2.0.0; this functionality is now a no-op.
      * @return void
      */
     public function raiseThrowables()
     {
-        $this->raiseThrowables = true;
-        $this->dispatch->raiseThrowables();
-    }
-
-    /**
-     * @param ResponseInterface $prototype
-     * @return void
-     */
-    public function setResponsePrototype(ResponseInterface $prototype)
-    {
-        $this->responsePrototype = $prototype;
-        $this->dispatch->setResponsePrototype($prototype);
     }
 
     /**
@@ -335,102 +254,6 @@ class Next implements DelegateInterface
         // Segment is longer than path. There's an issue
         throw new RuntimeException(
             'Layer and request path have gone out of sync'
-        );
-    }
-
-    /**
-     * @return ResponseInterface
-     * @throws Exception\MissingResponsePrototypeException
-     */
-    private function getResponsePrototype()
-    {
-        if ($this->responsePrototype) {
-            return $this->responsePrototype;
-        }
-
-        throw new Exception\MissingResponsePrototypeException(
-            'Invoking callable middleware or final handler following http-interop '
-            . 'middleware, but no response prototype is present; please inject '
-            . 'one in your MiddlewarePipe or ensure Stratigility callable '
-            . 'middleware exists in the outer layer of your application.'
-        );
-    }
-
-    /**
-     * @param RequestInterface $request
-     * @return bool
-     * @throws Exception\InvalidRequestTypeException
-     */
-    private function validateServerRequest(RequestInterface $request)
-    {
-        if ($request instanceof ServerRequestInterface) {
-            return true;
-        }
-
-        throw new Exception\InvalidRequestTypeException(sprintf(
-            'Invoking callable middleware or final handler following http-interop '
-            . 'middleware, but did not receive a %s; please ensure that your '
-            . 'middleware always calls %s::process() using one.',
-            ServerRequestInterface::class,
-            DelegateInterface::class
-        ));
-    }
-
-    /**
-     * Dispatch the next delegate.
-     *
-     * For DelegateInterface implementations, calls the process method with
-     * only the request instance.
-     *
-     * For callables, calls with request, response, and error.
-     *
-     * @param callable|DelegateInterface $nextDelegate
-     * @param RequestInterface $request
-     * @param ResponseInterface|null $response
-     * @param mixed $err
-     * @return ResponseInterface
-     */
-    private function dispatchNextDelegate(
-        $nextDelegate,
-        RequestInterface $request,
-        ResponseInterface $response = null,
-        $err = null
-    ) {
-        if ($nextDelegate instanceof DelegateInterface) {
-            return $nextDelegate->process($request);
-        }
-
-        $response = $response ?: $this->getResponsePrototype();
-        $this->validateServerRequest($request);
-        return $nextDelegate($request, $response, $err);
-    }
-
-    /**
-     * @param mixed $err
-     * @throws Throwable|\Exception
-     */
-    private function raiseThrowableFromError($err)
-    {
-        if ($err instanceof Throwable
-            || $err instanceof \Exception
-        ) {
-            throw $err;
-        }
-
-        $this->triggerErrorDeprecation();
-        throw Exception\MiddlewareException::fromErrorValue($err);
-    }
-
-    /**
-     * @todo Remove for 2.0.0
-     */
-    private function triggerErrorDeprecation()
-    {
-        trigger_error(
-            'Usage of error middleware is deprecated as of 1.3.0, and will be removed in 2.0.0; '
-            . 'please see https://docs.zendframework.com/zend-stratigility/migration/to-v2/ '
-            . 'for details on how to update your application to remove this message.',
-            E_USER_DEPRECATED
         );
     }
 }

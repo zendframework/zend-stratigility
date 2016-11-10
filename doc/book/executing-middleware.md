@@ -13,6 +13,25 @@ $app = new MiddlewarePipe();  // Middleware representing the application
 $app->pipe('/api', $api);     // API middleware attached to the path "/api"
 ```
 
+## Handling errors
+
+While the above will give you a basic application, it has no error handling
+whatsoever. We recommend adding an initial middleware layer using the
+`Zend\Stratigility\Middleware\ErrorHandler` class:
+
+```php
+use Zend\Diactoros\Response;
+use Zend\Stratigility\Middleware\ErrorHandler;
+
+$app->pipe(new ErrorHandler(new Response());
+// Add more middleware...
+```
+
+You can learn how to customize the error handler to your needs in the
+[chapter on error handlers](error-handlers.md).
+
+## Extending the MiddlewarePipe
+
 Another approach is to extend the `Zend\Stratigility\MiddlewarePipe` class
 itself, particularly if you want to allow attaching other middleware to your
 own middleware. In such a case, you will generally override the `process()`
@@ -21,9 +40,8 @@ order to iterate through your stack of middleware:
 
 ```php
 use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
-use Zend\Stratigility\MiddlewarePipe;
 
 class CustomMiddleware extends MiddlewarePipe
 {

@@ -54,7 +54,7 @@ Finally, if you are creating an `onerror` handler for the `FinalHandler`, update
 your typehints to refer to the PSR-7 request and response interfaces instead of
 the Stratigility decorators, if you aren't already.
 
-The `Zend\Stratigility\Http` classes, interfaces, and namespace will be removed
+The `Zend\Stratigility\Http` classes, interfaces, and namespace are removed
 in version 2.0.0.
 
 ## Error handling
@@ -106,10 +106,10 @@ most of its meaning, as you are now handling errors and 404 conditions as
 middleware layers.
 
 However, you still need to ensure that the pipeline returns a response,
-regardless of how the pipeline is setup, and for that we still need some form
-of "final" handler that can do so. (In fact, starting in version 2, the `$out`
-argument will be renamed to `$delegate`, and will be a required argument for
-invoking the `MiddlewarePipe`.)
+regardless of how the pipeline is setup, and for that we still need some form of
+"final" handler that can do so. (In fact, starting in version 2, the `$out`
+argument is renamed to `$delegate`, and is a *required* argument of the
+`MiddlewarePipe`.)
 
 Starting in version 1.3, we now offer a `Zend\Stratigility\NoopFinalHandler`
 implementation, which simply returns the response passed to it. You can compose
@@ -507,6 +507,35 @@ The following classes, methods, and arguments are deprecated starting in version
 - The `$err` argument to `Zend\Stratigility\Next`'s `__invoke()` method.
   Starting in 1.3.0, if a non-null value is encountered, this method will now
   emit an `E_USER_DEPRECATED` notice, referencing this documentation.
+- `Zend\Stratigility\Http\Request` (class)
+- `Zend\Stratigility\Http\ResponseInterface` (interface)
+- `Zend\Stratigility\Http\Response` (class)
+
+## Interface/signature changes
+
+The following signature changes were made with the 2.0.0 release:
+
+- `Zend\Stratigility\Next`:
+  - The `$done` constructor argument was renamed to `$nextDelegate`, and now
+    allows either `callable` or `Interop\Http\Middleware\DelegateInterface`
+    arguments.
+  - The `$response` argument to `__invoke()` was removed.
+  - The (optional) `$err` argument to `__invoke()` was removed.
+
+## Removed functionality
+
+The following classes, methods, and arguments are removed starting in version
+2.0.0.
+
+- `Zend\Stratigility\Dispatch` (class)
+- `Zend\Stratigility\ErrorMiddlewareInterface` (class)
+- `Zend\Stratigility\FinalHandler` (class)
+- `Zend\Stratigility\MiddlewareInterface`. Define your middleware as callables,
+  or using http-interop middleware interfaces instead.
+- `Zend\Stratigility\Utils::getArity()` (static method); no longer used
+  internally.
+- The `$err` argument to `Zend\Stratigility\Next`'s `__invoke()` method. If
+  passed, it will now be ignored.
 - `Zend\Stratigility\Http\Request` (class)
 - `Zend\Stratigility\Http\ResponseInterface` (interface)
 - `Zend\Stratigility\Http\Response` (class)

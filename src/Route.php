@@ -1,10 +1,8 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
  * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace Zend\Stratigility;
@@ -26,7 +24,7 @@ use OutOfRangeException;
 class Route
 {
     /**
-     * @var callable
+     * @var InteropMiddlewareInterface|ServerMiddlewareInterface
      */
     protected $handler;
 
@@ -37,9 +35,9 @@ class Route
 
     /**
      * @param string $path
-     * @param callable|InteropMiddlewareInterface|ServerMiddlewareInterface $handler
-     * @throws Exception\InvalidArgumentException if the $handler provided is
-     *     neither a callable nor an http-interop implementation.
+     * @param InteropMiddlewareInterface|ServerMiddlewareInterface $handler
+     * @throws Exception\InvalidMiddlewareException if the $handler provided is
+     *     not an http-interop middleare type.
      */
     public function __construct($path, $handler)
     {
@@ -47,12 +45,12 @@ class Route
             throw new InvalidArgumentException('Path must be a string');
         }
 
-        if (! (is_callable($handler)
-            || $handler instanceof ServerMiddlewareInterface
-            || $handler instanceof InteropMiddlewareInterface
-        )) {
+        if (! ($handler instanceof ServerMiddlewareInterface
+                || $handler instanceof InteropMiddlewareInterface
+            )
+        ) {
             throw new Exception\InvalidMiddlewareException(sprintf(
-                'Middleware must be callable or implement an http-interop middleware interface; received %s',
+                'Middleware must implement an http-interop middleware interface; received %s',
                 is_object($handler) ? get_class($handler) : gettype($handler)
             ));
         }

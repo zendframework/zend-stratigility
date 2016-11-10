@@ -45,24 +45,3 @@ function (
     callable $next
 ) : Psr\Http\Message\ResponseInterface
 ```
-
-### Legacy error middleware
-
-- Deprecated since 1.3.0; to be removed in version 2.0.0. Please use the the
-  `NotFoundHandler` and `ErrorHandler` detailed in the
-  [error handling chapter](error-handlers.md), or equivalents.
-
-The implementation Stratigility offers also allows you to write specialized
-error handler middleware. The signature is the same as for normal middleware,
-except that it expects an additional argument prepended to the signature,
-`$error`.  (Alternately, you can implement `Zend\Stratigility\ErrorMiddlewareInterface`.)
-The signature is:
-
-```php
-function (
-    $error, // Can be any type
-    Psr\Http\Message\ServerRequestInterface $request,
-    Psr\Http\Message\ResponseInterface $response,
-    callable $next
-) : Psr\Http\Message\ResponseInterface
-```

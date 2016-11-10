@@ -16,7 +16,7 @@ use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
+class MiddlewarePipe implements ServerMiddlewareInterface
 {
     public function pipe(
         string|callable|InteropMiddlewareInterface|ServerRequestInterface $path,
@@ -24,10 +24,10 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     );
 
     public function __invoke(
-        ServerRequestInterface,
-        ResponseInterface $response,
-        callable $out = null
-    ) :  ResponseInterface;
+        Psr\Http\Message\ServerRequestInterface $request,
+        Psr\Http\Message\ResponseInterface $response,
+        $delegate
+    ) :  Psr\Http\Message\ResponseInterface;
 
     public function process(
         ServerRequestInterface $request,
@@ -49,21 +49,9 @@ The `MiddlewarePipe` is itself middleware, and can be executed in stacks that
 expect the `__invoke()` signature (via the `__invoke()` signature), or stacks
 expecting http-interop middleware signatures (via the `process()` method).
 
-When executing the `MiddlewarePipe` via its `__invoke()` method, if `$out` is
-not provided, an instance of `Zend\Stratigility\FinalHandler` will be created
-and used in the event that the pipe stack is exhausted (`MiddlewarePipe` passes
-the `$response` instance it receives to `FinalHandler` as well, so that the
-latter can determine if the response it receives is new).
 
-> ### $out is no longer optional
->
-> Starting in version 1.3.0, we now raise a deprecation notice if no argument is
-> passed for the `$out` argument to `__invoke()`; starting in version 2.0.0,
-> the argument will be required.  Always pass a `Next` instance, a
-> `Zend\Stratigility\NoopFinalHandler` instance, or a custom callback; we no
-> longer recommend the `FinalHandler` implementation.
-
-When using `__invoke()`, the callable `$out` argument should use the signature:
+When using `__invoke()`, the callable `$out` argument should either be an
+`Interop\Http\Middleware\DelegateInterface`, or use the signature:
 
 ```php
 use Psr\Http\Message\ResponseInterface;
@@ -75,16 +63,27 @@ function (
 ) : ResponseInterface
 ```
 
-Within Stratigility, `Zend\Stratigility\Next` provides such an implementation.
+Most often, you can pass an instance of `Zend\Stratigility\NoopFinalHandler` for
+`$out` if invoking a middleware pipeline manually; otherwise, a suitable
+callback will be provided for you (typically an instance of
+`Zend\Stratigility\Next`, which `MiddlewarePipe` creates internally before
+dispatching to the various middleware in its pipeline).
 
-Starting in version 1.3.0, `MiddlewarePipe` also implements the http-interop
+Middleware should either return a response, or the result of
+`$next()/DelegateInterface::process()` (which should eventually evaluate to a
+response instance).
+
+Within Stratigility, `Zend\Stratigility\Next` provides an implementation
+compatible with either usage.
+
+Starting in version 1.3.0, `MiddlewarePipe` implements the http-interop
 `ServerMiddlewareInterface`, and thus provides a `process()` method. This
 method requires a `ServerRequestInterface` instance and an
 `Interop\Http\Middleware\DelegateInterface` instance on invocation; the latter
 can be a `Next` instance, as it also implements that interface.
 
 Internally, for both `__invoke()` and `process()`, `MiddlewarePipe` creates an
-instance of `Zend\Stratigility\Next`, feeding it its queue, executes it, and
+instance of `Zend\Stratigility\Next` (feeding it its queue), executes it, and
 returns its response.
 
 ### Response prototype
@@ -113,9 +112,7 @@ is implemented both as a functor and as an `Interop\Http\Middleware\DelegateInte
 Because `Psr\Http\Message`'s interfaces are immutable, if you make changes to
 your Request and/or Response instances, you will have new instances, and will
 need to make these known to the next middleware in the chain. `Next` expects
-these arguments for every invocation. Additionally, if an error condition has
-occurred, you may pass an optional third argument, `$err`, representing the
-error condition.
+these arguments for every invocation.
 
 ```php
 class Next
@@ -127,16 +124,8 @@ class Next
 }
 ```
 
-You should **always** either capture or return the return value of `$next()` when calling it in your
-application. The expected return value is a response instance, but if it is not, you may want to
-return the response provided to you.
-
-> ### $err argument
->
-> Technically, `Next::__invoke()` accepts a third, optional argument, `$err`.
-> However, as of version 1.3.0, this argument is deprecated, and usage will
-> raise a deprecation notice during runtime. We will be removing the argument
-> entirely starting with version 2.0.0.
+You should **always** either capture or return the return value of `$next()`
+when calling it in your application, or return a response yourself.
 
 > ### $response argument
 >
@@ -175,6 +164,8 @@ you will need to:
 ### Providing an altered request:
 
 ```php
+use Interop\Http\Middleware\DelegateInterface;
+
 // Standard invokable:
 function ($request, $response, $next) use ($bodyParser)
 {
@@ -183,6 +174,33 @@ function ($request, $response, $next) use ($bodyParser)
         $request->withBodyParams($bodyParams), // Next will pass the new
         $response                              // request instance
     );
+}
+
+// http-interop invokable:
+function ($request, DelegateInterface $delegate) use ($bodyParser)
+{
+    $bodyParams = $bodyParser($request);
+
+    // Delegate will receive the new request instance:
+    return $delegate->process(
+        $request->withBodyParams($bodyParams)
+    );
+}
+```
+
+### Providing an altered request and operating on the returned response:
+
+```php
+use Interop\Http\Middleware\DelegateInterface;
+
+function ($request, $response, $next) use ($bodyParser)
+{
+    $response = $next(
+        $request->withBodyParams($bodyParser($request)),
+        $response
+    );
+
+    return $response->withAddedHeader('Cache-Control', [
 }
 
 // http-interop invokable:
@@ -220,7 +238,10 @@ function ($request, $response, $next) use ($prototype)
         'max-age=18600',
         's-maxage=18600',
     ]);
+
     return $response;
+}
+```
 }
 
 // http-interop invokable signature:
@@ -231,7 +252,6 @@ function ($request, DelegateInterface $delegate) use ($prototype)
         'max-age=18600',
         's-maxage=18600',
     ]);
-    return $response;
 }
 ```
 
@@ -259,53 +279,26 @@ result of delegation.**
 
 ### Raising an error condition
 
-- Deprecated as of 1.3.0; please use exceptions and a error handling middleware
-  such as the [ErrorHandler](error-handlers.md#handling-php-errors-and-exceptions)
-  to handle error conditions in your application instead.
+If your middleware cannot complete &mdash; perhaps a database error occurred, a
+service was unreachable, etc. &mdash; how can you report the error?
 
-To raise an error condition, pass a non-null value as the third argument to `$next()`:
+Raise an exception!
 
 ```php
-function ($request, $response, $next)
+function ($request, $response, $next) use ($service)
 {
-    try {
-        // try some operation...
-    } catch (Exception $e) {
-        return $next($request, $response, $e); // Next registered error middleware will be invoked
+    $result = $service->fetchSomething();
+    if (! $result->isSuccess()) {
+        throw new RuntimeException('Error fetching something');
     }
+
+    /* ... otherwise, complete the request ... */
 }
 ```
 
-## FinalHandler
-
-- Deprecated starting with 1.3.0. Use `Zend\Stratigility\NoopFinalHandler` or a
-  custom handler guaranteed to return a response instead.
-
-`Zend\Stratigility\FinalHandler` is a default implementation of middleware to execute when the stack
-exhausts itself. It expects three arguments when invoked: a request instance, a response instance,
-and an error condition (or `null` for no error). It returns a response.
-
-`FinalHandler` allows two optional arguments during instantiation
-
-- `$options`, an array of options with which to configure itself. These options currently include:
-  - `env`, the application environment. If set to "production", no stack traces will be provided.
-  - `onerror`, a callable to execute if an error is passed when `FinalHandler` is invoked. The
-    callable is invoked with the error (which will be `null` in the absence of an error), the request,
-    and the response, in that order.
-- `Psr\Http\Message\ResponseInterface $response`; if passed, it will compare the response passed
-  during invocation against this instance; if they are different, it will return the response from
-  the invocation, as this indicates that one or more middleware provided a new response instance.
-
-Internally, `FinalHandler` does the following on invocation:
-
-- If `$error` is non-`null`, it creates an error response from the response provided at invocation,
-  ensuring a 400 or 500 series response is returned.
-- If the response at invocation matches the response provided at instantiation, it returns it
-  without further changes. This is an indication that some middleware at some point in the execution
-  chain called `$next()` with a new response instance.
-- If the response at invocation does not match the response provided at instantiation, or if no
-  response was provided at instantiation, it creates a 404 response, as the assumption is that no
-  middleware was capable of handling the request.
+Use the [ErrorHandler middleware](error-handlers.md#handling-php-errors-and-exceptions)
+to handle exceptions thrown by your middleware and report the error condition to
+your users.
 
 ## HTTP Messages
 
