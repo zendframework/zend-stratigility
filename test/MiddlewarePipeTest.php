@@ -639,6 +639,27 @@ class MiddlewarePipeTest extends TestCase
     }
 
     /**
+     * @group http-interop
+     */
+    public function testWillNotDecorateCallableMiddlewareAsInteropMiddlewareIfResponsePrototypeIsNotPresent()
+    {
+        $pipeline = new MiddlewarePipe();
+
+        $middleware = function () {
+        };
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $test = $route->handler;
+        $this->assertNotInstanceOf(CallableMiddlewareWrapper::class, $test);
+        $this->assertInternalType('callable', $test);
+    }
+
+    /**
      * @todo Remove with 2.0.0
      */
     public function errorMiddleware()
