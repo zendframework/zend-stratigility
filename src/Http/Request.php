@@ -69,7 +69,8 @@ class Request implements ServerRequestInterface
         trigger_error(sprintf(
             '%s is now deprecated. The request passed to your method is the current '
             . 'request now. %s will no longer be available starting in Stratigility 2.0.0. '
-            . 'Please see https://docs.zendframework.com/migration/to-v2/#original-request-response-and-uri '
+            . 'Please see '
+            . 'https://docs.zendframework.com/zend-stratigility/migration/to-v2/#original-request-response-and-uri '
             . 'for full details.',
             __CLASS__,
             \Zend\Stratigility\Middleware\OriginalMessages::class,
@@ -90,7 +91,8 @@ class Request implements ServerRequestInterface
             '%s is now deprecated. Please register %s as your outermost middleware, '
             . 'and pull the original request via the request "originalRequest" '
             . 'attribute. %s will no longer be available starting in Stratigility 2.0.0. '
-            . 'Please see https://docs.zendframework.com/migration/to-v2/#original-request-response-and-uri '
+            . 'Please see '
+            . 'https://docs.zendframework.com/zend-stratigility/migration/to-v2/#original-request-response-and-uri '
             . 'for full details.',
             __CLASS__,
             \Zend\Stratigility\Middleware\OriginalMessages::class,
