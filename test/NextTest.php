@@ -910,4 +910,39 @@ class NextTest extends TestCase
 
         $this->assertTrue($triggered, 'Deprecation notice not triggered');
     }
+
+    /**
+     * @todo Remove for 2.0.0
+     * @group error-handling
+     */
+    public function testNestedNextInvocationWithAnErrorShouldDispatchErrorMiddleware()
+    {
+        $internalQueue = clone $this->queue;
+        $internalQueue->enqueue(new Route('/', function ($request, $response, $next) {
+            return $next($request, $response, 'ERROR');
+        }));
+
+        $nextDelegateQueue = clone $this->queue;
+        $nextDelegateQueue->enqueue(new Route('/', function ($err, $request, $response, $next) {
+            $response->getBody()->write('ERROR DETECTED');
+            return $response->withStatus(599);
+        }));
+
+        $finalDelegate = $this->prophesize(DelegateInterface::class);
+        $finalDelegate->process(Argument::any())->shouldNotBeCalled();
+
+        $nextDelegate = new Next($nextDelegateQueue, $finalDelegate->reveal());
+        $internalNext = new Next($internalQueue, $nextDelegate);
+
+        set_error_handler(function ($errno, $errstr) {
+            return false !== strstr($errstr, 'error middleware is deprecated');
+        }, E_USER_DEPRECATED);
+
+        $response = $internalNext($this->request, $this->response);
+
+        restore_error_handler();
+
+        $this->assertEquals(599, $response->getStatusCode());
+        $this->assertEquals('ERROR DETECTED', (string) $response->getBody());
+    }
 }
