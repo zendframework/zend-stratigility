@@ -144,6 +144,29 @@ details.
 
 - Nothing.
 
+## 1.3.1 - 2016-11-10
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- [#85](https://github.com/zendframework/zend-stratigility/pull/85) fixes an
+  issue with how the `$done` or `$nextDelegate` is invoked by `Next` when an
+  error is present. Previously, the class was detecting a `Next` instance as an
+  http-interop `DelegateInterface` instance and dropping the error; this would
+  then mean if the instance contained error middleware, it would never be
+  dispatched.
+
 ## 1.3.0 - 2016-11-10
 
 ### Added
