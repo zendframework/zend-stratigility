@@ -396,7 +396,9 @@ class Next implements DelegateInterface
         ResponseInterface $response = null,
         $err = null
     ) {
-        if ($nextDelegate instanceof DelegateInterface) {
+        if ($nextDelegate instanceof DelegateInterface
+            && (! $nextDelegate instanceof Next || $err === null)
+        ) {
             return $nextDelegate->process($request);
         }
 
