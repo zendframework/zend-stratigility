@@ -4,12 +4,12 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "d4360782cb06bbc2755e8125ae481637",
-    "content-hash": "445e9aeb845bf9c2ca2e5de752f17144",
+    "hash": "bcf7ce3c9938332204c2d37c136d5677",
+    "content-hash": "6bcdcd77c5107e4afc10ab8d0640f3be",
     "packages": [
         {
             "name": "http-interop/http-middleware",
-            "version": "0.2.1",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/http-interop/http-middleware.git",

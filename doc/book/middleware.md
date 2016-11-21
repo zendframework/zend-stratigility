@@ -143,7 +143,7 @@ Within Stratigility, middleware can be:
   [PSR-7](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-7-http-message.md)
   ServerRequest and Response (in that order), and, optionally, a callable (for
   invoking the next middleware in the queue, if any).
-- Any [http-interop 0.2.1 - middleware](https://github.com/http-interop/http-middleware/tree/0.2.1).
+- Any [http-interop 0.3.0 - middleware](https://github.com/http-interop/http-middleware/tree/0.3.0).
   `Zend\Stratigility\MiddlewarePipe` implements
   `Interop\Http\Middleware\ServerMiddlewareInterface`.
 - An object implementing `Zend\Stratigility\MiddlewareInterface`.

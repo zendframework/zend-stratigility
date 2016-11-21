@@ -155,7 +155,7 @@ To summarize:
 ## http-interop compatibility
 
 Starting in version 1.3.2, we offer compatibility with
-[http-interop middleware 0.2.1](https://github.com/http-interop/http-middleware/tree/0.2.1).
+[http-interop middleware 0.3.0](https://github.com/http-interop/http-middleware/tree/0.3.0).
 That version of the specification defines the following interfaces:
 
 ```php
