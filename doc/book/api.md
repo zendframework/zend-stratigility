@@ -11,7 +11,6 @@ has been discussed previously. Its API is:
 namespace Zend\Stratigility;
 
 use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -19,8 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
 class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
 {
     public function pipe(
-        string|callable|InteropMiddlewareInterface|ServerRequestInterface $path,
-        callable|InteropMiddlewareInterface|ServerRequestInterface $middleware = null
+        string|callable|ServerMiddlewareInterface|ServerRequestInterface $path,
+        callable|ServerMiddlewareInterface|ServerRequestInterface $middleware = null
     );
 
     public function __invoke(

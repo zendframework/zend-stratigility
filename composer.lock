@@ -4,21 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "2c7f26fd1c911205382aaf7bde89a73a",
-    "content-hash": "cbf247339c2c5e52306e4fa8f027ba09",
+    "hash": "d4360782cb06bbc2755e8125ae481637",
+    "content-hash": "445e9aeb845bf9c2ca2e5de752f17144",
     "packages": [
         {
             "name": "http-interop/http-middleware",
-            "version": "0.2.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/http-interop/http-middleware.git",
-                "reference": "ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9"
+                "reference": "08c50a4c571b2ac6c8efcdb4371cb06e1c90820c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/http-interop/http-middleware/zipball/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9",
-                "reference": "ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9",
+                "url": "https://api.github.com/repos/http-interop/http-middleware/zipball/08c50a4c571b2ac6c8efcdb4371cb06e1c90820c",
+                "reference": "08c50a4c571b2ac6c8efcdb4371cb06e1c90820c",
                 "shasum": ""
             },
             "require": {
@@ -57,7 +57,7 @@
                 "request",
                 "response"
             ],
-            "time": "2016-09-25 13:30:27"
+            "time": "2016-11-19 15:51:20"
         },
         {
             "name": "psr/http-message",
