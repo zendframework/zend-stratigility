@@ -51,7 +51,7 @@ To run tests:
 
   ```console
   $ git clone git@github.com:zendframework/zend-stratigility.git
-  $ cd
+  $ cd zend-stratigility
   ```
 
 - Install dependencies via composer:
@@ -66,7 +66,7 @@ To run tests:
 - Run the tests using the "test" command shipped in the `composer.json`:
 
   ```console
-  $ composer test
+  $ ./composer.phar test
   ```
 
 You can turn on conditional tests with the `phpunit.xml` file.
@@ -84,13 +84,13 @@ section on running tests.
 To run CS checks only:
 
 ```console
-$ composer cs-check
+$ ./composer.phar cs-check
 ```
 
 To attempt to automatically fix common CS issues:
 
 ```console
-$ composer cs-fix
+$ ./composer.phar cs-fix
 ```
 
 If the above fixes any CS issues, please re-run the tests to ensure
@@ -107,7 +107,7 @@ pull your work into the master repository. We recommend using
 3. Clone the canonical repository locally and enter it.
 
    ```console
-   $ git clone git://github.com:zendframework/zend-stratigility.git
+   $ git clone git@github.com:zendframework/zend-stratigility.git
    $ cd zend-stratigility
    ```
 
