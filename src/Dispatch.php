@@ -76,6 +76,11 @@ class Dispatch
             $this->setResponsePrototype($response);
         }
 
+        // Handle middleware pipes as callables if an $err is present
+        if ($route->handler instanceof MiddlewarePipe && null !== $err) {
+            return $this->dispatchCallableMiddleware($route->handler, $next, $request, $response, $err);
+        }
+
         if ($route->handler instanceof ServerMiddlewareInterface) {
             return $this->dispatchInteropMiddleware($route->handler, $next, $request);
         }
