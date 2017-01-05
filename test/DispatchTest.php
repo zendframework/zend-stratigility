@@ -441,9 +441,6 @@ class DispatchTest extends TestCase
         );
     }
 
-    /**
-     * @todo Remove this test for version 2.0
-     */
     public function testInvokingWithMiddlewarePipeAndErrorDispatchesNextErrorMiddleware()
     {
         $error    = new RuntimeException('expected');
@@ -486,9 +483,6 @@ class DispatchTest extends TestCase
         );
     }
 
-    /**
-     * @todo Remove this test for version 2.0
-     */
     public function testInvokingWithMiddlewarePipeAndNoErrorDispatchesAsInteropMiddleware()
     {
         $request  = $this->prophesize(ServerRequestInterface::class)->reveal();
