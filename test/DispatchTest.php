@@ -441,9 +441,20 @@ class DispatchTest extends TestCase
         );
     }
 
-    public function testInvokingWithMiddlewarePipeAndErrorDispatchesNextErrorMiddleware()
+    public function errorProvider()
     {
-        $error    = new RuntimeException('expected');
+        yield 'exception' => [new \Exception('expected')];
+        yield 'derivative-exception' => [new RuntimeException('expected')];
+        if (version_compare(\PHP_VERSION, '7.0', 'gte')) {
+            yield 'throwable' => [new \Error('expected')];
+        }
+    }
+
+    /**
+     * @dataProvider errorProvider
+     */
+    public function testInvokingWithMiddlewarePipeAndErrorDispatchesNextErrorMiddleware($error)
+    {
         $request  = $this->prophesize(ServerRequestInterface::class)->reveal();
         $response = $this->prophesize(ResponseInterface::class)->reveal();
         $expected = $this->prophesize(ResponseInterface::class)->reveal();
