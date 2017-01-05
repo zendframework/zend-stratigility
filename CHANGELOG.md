@@ -6,7 +6,7 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 1.3.2 - TBD
+## 1.3.3 - TBD
 
 ### Added
 
@@ -23,6 +23,28 @@ details.
 ### Fixed
 
 - Nothing.
+
+## 1.3.2 - 2017-01-05
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- [#95](https://github.com/zendframework/zend-stratigility/pull/95) fixes an
+  issue with how the `$err` is dealt with. Specifically, if an error arises,
+  then subsequent middlewares should be dispatched as callables. Without this
+  fix, stratigility would simply continue dispatching middlewares, ignoring
+  the failing ones.
 
 ## 1.3.1 - 2016-11-10
 
