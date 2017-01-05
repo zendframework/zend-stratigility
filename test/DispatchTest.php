@@ -442,6 +442,99 @@ class DispatchTest extends TestCase
     }
 
     /**
+     * @todo Remove this test for version 2.0
+     */
+    public function testInvokingWithMiddlewarePipeAndErrorDispatchesNextErrorMiddleware()
+    {
+        $error    = new RuntimeException('expected');
+        $request  = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+        $expected = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $next = $this->prophesize(Next::class);
+        $next->willImplement(DelegateInterface::class);
+        $next
+            ->__invoke(
+                $request,
+                $this->response->reveal(),
+                $error
+            )
+            ->willReturn($expected);
+
+        $middleware = $this->prophesize(MiddlewarePipe::class);
+        $middleware
+            ->__invoke(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(ResponseInterface::class),
+                Argument::type('callable')
+            )
+            ->shouldNotBeCalled();
+        $middleware
+            ->process(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(DelegateInterface::class)
+            )
+            ->shouldNotBeCalled();
+
+        $route = new Route('/foo', $middleware->reveal());
+
+        $dispatch = new Dispatch();
+
+        $this->assertSame(
+            $expected,
+            $dispatch($route, $error, $request, $this->response->reveal(), $next->reveal())
+        );
+    }
+
+    /**
+     * @todo Remove this test for version 2.0
+     */
+    public function testInvokingWithMiddlewarePipeAndNoErrorDispatchesAsInteropMiddleware()
+    {
+        $request  = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $next = $this->prophesize(Next::class);
+        $next->willImplement(DelegateInterface::class);
+        $next
+            ->__invoke(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(ResponseInterface::class)
+            )
+            ->shouldNotBeCalled();
+        $next
+            ->process(Argument::type(ServerRequestInterface::class))
+            ->shouldNotBeCalled();
+
+        $middleware = $this->prophesize(MiddlewarePipe::class);
+        $middleware
+            ->__invoke(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(ResponseInterface::class),
+                Argument::type('callable')
+            )
+            ->shouldNotBeCalled();
+        $middleware
+            ->hasResponsePrototype()
+            ->willReturn(true);
+        $middleware
+            ->process(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(DelegateInterface::class)
+            )
+            ->willReturn($response);
+
+        $route = new Route('/foo', $middleware->reveal());
+
+        $dispatch = new Dispatch();
+
+        $this->assertSame(
+            $response,
+            $dispatch($route, null, $request, $this->response->reveal(), $next->reveal())
+        );
+    }
+
+    /**
      * @group http-interop
      */
     public function testInvokingMemoizesResponseIfNonePreviouslyPresent()
