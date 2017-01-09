@@ -42,6 +42,17 @@ the value `/`; this is an indication that the `$middleware` should be invoked
 for any path. If `$path` is provided, the `$middleware` will only be executed
 for that path and any subpaths.
 
+> ### Request path changes when path matched
+>
+> When you pipe middleware using a path (other than '' or '/'), the middleware
+> is dispatched with a request that strips the matched segment(s) from the start
+> of the path.
+>
+> If, for example, you executed `$pipeline->pipe('/api', $api)`, and this was
+> matched via a URI with the path `/api/users/foo`, the `$api` middleware will
+> receive a request with the path `/users/foo`. This allows middleware
+> segregated by path to be re-used without changes to its own internal routing.
+
 Middleware is executed in the order in which it is piped to the
 `MiddlewarePipe` instance.
 

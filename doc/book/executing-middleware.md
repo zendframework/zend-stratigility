@@ -13,6 +13,15 @@ $app = new MiddlewarePipe();  // Middleware representing the application
 $app->pipe('/api', $api);     // API middleware attached to the path "/api"
 ```
 
+> ### Request path changes when path matched
+>
+> When you pipe middleware using a path (other than '' or '/'), the middleware
+> is dispatched with a request that strips the matched segment(s) from the start
+> of the path. Using the previous example, if the path `/api/users/foo` is
+> matched, the `$api` middleware will receive a request with the path
+> `/users/foo`. This allows middleware segregated by path to be re-used without
+> changes to its own internal routing.
+
 Another approach is to extend the `Zend\Stratigility\MiddlewarePipe` class
 itself, particularly if you want to allow attaching other middleware to your
 own middleware. In such a case, you will generally override the `process()`
