@@ -263,6 +263,16 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
 the value <code>/</code>; this is an indication that the <code>$middleware</code> should be invoked
 for any path. If <code>$path</code> is provided, the <code>$middleware</code> will only be executed
 for that path and any subpaths.</p>
+<blockquote>
+<h3 id="request-path-changes-when-path-matched">Request path changes when path matched</h3>
+<p>When you pipe middleware using a path (other than '' or '/'), the middleware
+is dispatched with a request that strips the matched segment(s) from the start
+of the path.</p>
+<p>If, for example, you executed <code>$pipeline-&gt;pipe('/api', $api)</code>, and this was
+matched via a URI with the path <code>/api/users/foo</code>, the <code>$api</code> middleware will
+receive a request with the path <code>/users/foo</code>. This allows middleware
+segregated by path to be re-used without changes to its own internal routing.</p>
+</blockquote>
 <p>Middleware is executed in the order in which it is piped to the
 <code>MiddlewarePipe</code> instance.</p>
 <p>The <code>MiddlewarePipe</code> is itself middleware, and can be executed in stacks that

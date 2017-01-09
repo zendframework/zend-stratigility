@@ -183,6 +183,8 @@
     
         <li class="main active"><a href="#executing-and-composing-middleware">Executing and composing middleware</a></li>
         
+            <li><a href="#request-path-changes-when-path-matched">Request path changes when path matched</a></li>
+        
     
     </ul>
 
@@ -223,6 +225,15 @@ $app = new MiddlewarePipe();  // Middleware representing the application
 $app-&gt;pipe('/api', $api);     // API middleware attached to the path &quot;/api&quot;</code></pre>
 
 
+<blockquote>
+<h3 id="request-path-changes-when-path-matched">Request path changes when path matched</h3>
+<p>When you pipe middleware using a path (other than '' or '/'), the middleware
+is dispatched with a request that strips the matched segment(s) from the start
+of the path. Using the previous example, if the path <code>/api/users/foo</code> is
+matched, the <code>$api</code> middleware will receive a request with the path
+<code>/users/foo</code>. This allows middleware segregated by path to be re-used without
+changes to its own internal routing.</p>
+</blockquote>
 <p>Another approach is to extend the <code>Zend\Stratigility\MiddlewarePipe</code> class
 itself, particularly if you want to allow attaching other middleware to your
 own middleware. In such a case, you will generally override the <code>process()</code>
