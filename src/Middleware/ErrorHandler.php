@@ -9,8 +9,8 @@ namespace Zend\Stratigility\Middleware;
 
 use ErrorException;
 use Exception;
-use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
@@ -63,7 +63,7 @@ use Zend\Stratigility\Exception\MissingResponseException;
  * Listeners are attached using the attachListener() method, and triggered
  * in the order attached.
  */
-final class ErrorHandler implements ServerMiddlewareInterface
+final class ErrorHandler implements InteropMiddlewareInterface
 {
     /**
      * @var callable[]

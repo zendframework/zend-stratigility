@@ -10,8 +10,8 @@
 namespace Zend\Stratigility;
 
 use Closure;
-use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use ReflectionFunction;
@@ -38,7 +38,7 @@ use Zend\Stratigility\Exception\InvalidMiddlewareException;
  *
  * @see https://github.com/sencha/connect
  */
-class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
+class MiddlewarePipe implements MiddlewareInterface, InteropMiddlewareInterface
 {
     /**
      * @var SplQueue
@@ -284,7 +284,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     private function isValidMiddleware($middleware)
     {
         return is_callable($middleware)
-            || $middleware instanceof ServerMiddlewareInterface;
+            || $middleware instanceof InteropMiddlewareInterface;
     }
 
     /**
@@ -296,7 +296,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     private function isInteropMiddleware($middleware)
     {
         return ! is_callable($middleware)
-            && $middleware instanceof ServerMiddlewareInterface;
+            && $middleware instanceof InteropMiddlewareInterface;
     }
 
     /**
@@ -314,8 +314,8 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
 
     /**
      * @param callable $middleware
-     * @return ServerMiddlewareInterface|callable Callable, if unable to
-     *     decorate the middleware; ServerMiddlewareInterface if it can.
+     * @return InteropMiddlewareInterface|callable Callable, if unable to
+     *     decorate the middleware; InteropMiddlewareInterface if it can.
      */
     private function decorateCallableMiddleware(callable $middleware)
     {

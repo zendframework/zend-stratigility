@@ -9,8 +9,8 @@
 
 namespace ZendTest\Stratigility;
 
-use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use PHPUnit_Framework_Assert as Assert;
 use PHPUnit_Framework_TestCase as TestCase;
 use Prophecy\Argument;
@@ -462,26 +462,6 @@ class NextTest extends TestCase
 
         $this->setExpectedException(Exception\MissingResponsePrototypeException::class);
         $next->process($this->request);
-    }
-
-    /**
-     * @todo Remove with 2.0.0
-     * @group http-interop
-     */
-    public function testProcessRaisesExceptionPriorToCallingDoneHandlerIfNotAServerRequest()
-    {
-        $request = $this->prophesize(RequestInterface::class);
-        $request->getUri()->shouldNotBeCalled();
-
-        $done = function ($req, $res, $err = null) {
-            Assert::fail('Reached $done handler, and should not have.');
-        };
-
-        $next = new Next($this->queue, $done);
-        $next->setResponsePrototype($this->prophesize(ResponseInterface::class)->reveal());
-
-        $this->setExpectedException(Exception\InvalidRequestTypeException::class);
-        $next->process($request->reveal());
     }
 
     /**

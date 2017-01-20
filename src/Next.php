@@ -9,7 +9,7 @@
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -163,12 +163,12 @@ class Next implements DelegateInterface
     }
 
     /**
-     * @param RequestInterface $request
+     * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception\MissingResponsePrototypeException
      * @throws Exception\InvalidRequestTypeException
      */
-    public function process(RequestInterface $request)
+    public function process(ServerRequestInterface $request)
     {
         $dispatch = $this->dispatch;
         $done     = $this->nextDelegate;
@@ -233,10 +233,10 @@ class Next implements DelegateInterface
     /**
      * Reset the path, if a segment was previously stripped
      *
-     * @param RequestInterface $request
-     * @return RequestInterface
+     * @param ServerRequestInterface $request
+     * @return ServerRequestInterface
      */
-    private function resetPath(RequestInterface $request)
+    private function resetPath(ServerRequestInterface $request)
     {
         if (! $this->removed) {
             return $request;
@@ -286,11 +286,11 @@ class Next implements DelegateInterface
     /**
      * Strip the route from the request path
      *
-     * @param RequestInterface $request
+     * @param ServerRequestInterface $request
      * @param string $route
-     * @return RequestInterface
+     * @return ServerRequestInterface
      */
-    private function stripRouteFromPath(RequestInterface $request, $route)
+    private function stripRouteFromPath(ServerRequestInterface $request, $route)
     {
         $this->removed = $route;
 
@@ -357,26 +357,6 @@ class Next implements DelegateInterface
     }
 
     /**
-     * @param RequestInterface $request
-     * @return bool
-     * @throws Exception\InvalidRequestTypeException
-     */
-    private function validateServerRequest(RequestInterface $request)
-    {
-        if ($request instanceof ServerRequestInterface) {
-            return true;
-        }
-
-        throw new Exception\InvalidRequestTypeException(sprintf(
-            'Invoking callable middleware or final handler following http-interop '
-            . 'middleware, but did not receive a %s; please ensure that your '
-            . 'middleware always calls %s::process() using one.',
-            ServerRequestInterface::class,
-            DelegateInterface::class
-        ));
-    }
-
-    /**
      * Dispatch the next delegate.
      *
      * For DelegateInterface implementations, calls the process method with
@@ -403,7 +383,6 @@ class Next implements DelegateInterface
         }
 
         $response = $response ?: $this->getResponsePrototype();
-        $this->validateServerRequest($request);
         return $nextDelegate($request, $response, $err);
     }
 

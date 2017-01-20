@@ -9,7 +9,7 @@
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Throwable;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -81,7 +81,7 @@ class Dispatch
             return $this->dispatchCallableMiddleware($route->handler, $next, $request, $response, $err);
         }
 
-        if ($route->handler instanceof ServerMiddlewareInterface) {
+        if ($route->handler instanceof InteropMiddlewareInterface) {
             return $this->dispatchInteropMiddleware($route->handler, $next, $request);
         }
 
@@ -149,7 +149,7 @@ class Dispatch
      */
     private function isNotInteropMiddleware($handler, RequestInterface $request)
     {
-        if ($handler instanceof ServerMiddlewareInterface) {
+        if ($handler instanceof InteropMiddlewareInterface) {
             return false;
         }
 
@@ -235,7 +235,7 @@ class Dispatch
     /**
      * Dispatch http-interop middleware
      *
-     * @param ServerMiddlewareInterface $middleware
+     * @param InteropMiddlewareInterface $middleware
      * @param callable $next
      * @param RequestInterface $request
      * @return ResponseInterface
@@ -245,7 +245,7 @@ class Dispatch
      *     is not a server-side request.
      */
     private function dispatchInteropMiddleware(
-        ServerMiddlewareInterface $middleware,
+        InteropMiddlewareInterface $middleware,
         callable $next,
         RequestInterface $request
     ) {
