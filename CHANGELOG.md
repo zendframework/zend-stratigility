@@ -144,6 +144,24 @@ details.
 
 - Nothing.
 
+## 1.4.0 - TBD
+
+### Added
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
 ## 1.3.3 - TBD
 
 ### Added
