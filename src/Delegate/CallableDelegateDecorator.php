@@ -18,7 +18,7 @@ use Psr\Http\Message\ServerRequestInterface;
 class CallableDelegateDecorator implements DelegateInterface
 {
     /**
-     * @var DelegateInterface
+     * @var callable
      */
     private $delegate;
 
