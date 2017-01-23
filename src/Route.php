@@ -1,14 +1,13 @@
 <?php
 /**
  * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
 
@@ -24,7 +23,7 @@ use OutOfRangeException;
 class Route
 {
     /**
-     * @var InteropMiddlewareInterface|ServerMiddlewareInterface
+     * @var ServerMiddlewareInterface
      */
     protected $handler;
 
@@ -35,24 +34,12 @@ class Route
 
     /**
      * @param string $path
-     * @param InteropMiddlewareInterface|ServerMiddlewareInterface $handler
-     * @throws Exception\InvalidMiddlewareException if the $handler provided is
-     *     not an http-interop middleare type.
+     * @param ServerMiddlewareInterface $handler
      */
-    public function __construct($path, $handler)
+    public function __construct($path, ServerMiddlewareInterface $handler)
     {
         if (! is_string($path)) {
             throw new InvalidArgumentException('Path must be a string');
-        }
-
-        if (! ($handler instanceof ServerMiddlewareInterface
-                || $handler instanceof InteropMiddlewareInterface
-            )
-        ) {
-            throw new Exception\InvalidMiddlewareException(sprintf(
-                'Middleware must implement an http-interop middleware interface; received %s',
-                is_object($handler) ? get_class($handler) : gettype($handler)
-            ));
         }
 
         $this->path    = $path;

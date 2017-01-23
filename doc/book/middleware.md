@@ -51,7 +51,7 @@ response object, and do something with it_.
 > such as Slim, Relay, Adroit, etc.
 >
 > http-interop is a project attempting to standardize middleware signatures.
-> The signature it uses for server-side middleware is:
+> The signature until the 0.4.0 series for server-side middleware is:
 >
 > ```php
 > namespace Interop\Http\Middleware;
@@ -84,9 +84,37 @@ response object, and do something with it_.
 > }
 > ```
 >
-> Stratigility allows you to implement `ServerMiddlewareInterface` to provide
-> middleware.  Additionally, you can define `callable` middleware with the
-> following signature, and it will be dispatched as http-interop middleware:
+> Starting in http-interop/http-middleware 0.4.1, these become:
+>
+> ```php
+> namespace Interop\Http\ServerMiddleware;
+>
+> use Psr\Http\Message\ResponseInterface;
+> use Psr\Http\Message\ServerRequestInterface;
+>
+> interface MiddlewareInterface
+> {
+>     public function process(
+>         ServerRequestInterface $request,
+>         DelegateInterface $delegate
+>     ) : ResponseInterface;
+> }
+>
+> interface DelegateInterface
+> {
+>     public function process(
+>         ServerRequestInterface $request
+>     ) : ResponseInterface;
+> }
+> ```
+>
+> (Note the namespace change, the change in the middleware interface name, and
+> the change in the `DelegateInterface` signature.)
+>
+> Stratigility allows you to implement the http-interop/http-middleware
+> middleware interface to provide middleware.  Additionally, you can define
+> `callable` middleware with the following signature, and it will be dispatched
+> as http-interop middleware:
 >
 > ```php
 > function(
@@ -101,9 +129,6 @@ response object, and do something with it_.
 > As such, the above example can also be written as follows:
 >
 > ```php
-> use Interop\Http\Middleware\DelegateInterface;
-> use Zend\Diactoros\Response\TextResponse;
->
 > $app->pipe('/', function ($request, DelegateInterface $delegate) {
 >     if (! in_array($req->getUri()->getPath(), ['/', ''], true)) {
 >         return $delegate->process($req);
@@ -143,9 +168,12 @@ Within Stratigility, middleware can be:
   [PSR-7](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-7-http-message.md)
   ServerRequest and Response (in that order), and, optionally, a callable (for
   invoking the next middleware in the queue, if any).
-- Any [http-interop 0.2.0 - middleware](https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9).
+- Any [http-interop 0.2.0 - middleware](https://github.com/http-interop/http-middleware/tree/0.2.0).
   `Zend\Stratigility\MiddlewarePipe` implements
-  `Interop\Http\Middleware\ServerMiddlewareInterface`.
+  `Interop\Http\Middleware\ServerMiddlewareInterface`. (Stratigility 1.3.0 series.)
+- Any [http-interop 0.4.1 - middleware](https://github.com/http-interop/http-middleware/tree/0.4.1).
+  `Zend\Stratigility\MiddlewarePipe` implements
+  `Interop\Http\Middleware\ServerMiddlewareInterface`. (Stratigility 2.0 series.)
 - An object implementing `Zend\Stratigility\MiddlewareInterface`.
   `Zend\Stratigility\MiddlewarePipe` implements this interface.
   (Legacy; this interface is deprecated starting in 1.3.0.)

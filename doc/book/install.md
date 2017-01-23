@@ -14,7 +14,9 @@ Stratigility has the following dependencies (which are managed by Composer):
   [Diactoros](https://zendframework.github.io/zend-diactoros/).
 
 - [`http-interop/http-middleware`](https://github.com/http-interop/http-middleware),
-  which provides the interfaces that will become PSR-15.
+  which provides the interfaces that will become PSR-15. In Stratigility 1.3,
+  this is pinned to the 0.2 series; in Stratigility 2.0, this is pinned to
+  0.4.1+.
 
 - `zendframework/zend-escaper`, used by the `ErrorHandler` middleware and the
   (legacy) `FinalHandler` implementation for escaping error messages prior to

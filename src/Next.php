@@ -1,13 +1,13 @@
 <?php
 /**
  * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -80,14 +80,14 @@ class Next implements DelegateInterface
     }
 
     /**
-     * @param RequestInterface $request
+     * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception\MissingResponseException If the queue is exhausted, and
      *     no "next delegate" is present.
      * @throws Exception\MissingResponseException If the middleware executed does
      *     not return a response.
      */
-    public function process(RequestInterface $request)
+    public function process(ServerRequestInterface $request)
     {
         $request  = $this->resetPath($request);
 
@@ -152,10 +152,10 @@ class Next implements DelegateInterface
     /**
      * Reset the path, if a segment was previously stripped
      *
-     * @param RequestInterface $request
-     * @return RequestInterface
+     * @param ServerRequestInterface $request
+     * @return ServerRequestInterface
      */
-    private function resetPath(RequestInterface $request)
+    private function resetPath(ServerRequestInterface $request)
     {
         if (! $this->removed) {
             return $request;
@@ -205,11 +205,11 @@ class Next implements DelegateInterface
     /**
      * Strip the route from the request path
      *
-     * @param RequestInterface $request
+     * @param ServerRequestInterface $request
      * @param string $route
-     * @return RequestInterface
+     * @return ServerRequestInterface
      */
-    private function stripRouteFromPath(RequestInterface $request, $route)
+    private function stripRouteFromPath(ServerRequestInterface $request, $route)
     {
         $this->removed = $route;
 
