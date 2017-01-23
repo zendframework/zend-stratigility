@@ -303,7 +303,7 @@ middleware, but we encourage its use.)</p>
 <pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
 use Zend\Diactoros\Response\TextResponse;
 
-$app-&gt;pipe('/', function ($request, DelegateInterface $delegate) {
+$app-&gt;pipe('/', function ($req, DelegateInterface $delegate) {
     if (! in_array($req-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
         return $delegate-&gt;process($req);
     }
