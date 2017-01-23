@@ -457,7 +457,7 @@ $pipeline-&gt;pipe($middleware);</code></pre>
 <p>Third, and optionally, you can make one or both of the following changes to
 your callable middleware:</p>
 <ul>
-<li>Typehint the final <code>$next</code> argument against <code>Psr\Http\Middleware\DelegateInterface</code>;
+<li>Typehint the final <code>$next</code> argument against <code>Interop\Http\Middleware\DelegateInterface</code>;
   optionally, rename it to <code>$delegate</code>. This will require a slight change to
   how you invoke the next layer as well; see below.    </li>
 <li>Remove the <code>$response</code> argument from your signature; if you do, make sure you
@@ -505,8 +505,8 @@ class PingMiddleware
 
 <p>This could be rewritten as follows:</p>
 <pre class="codehilite"><code class="language-php">use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Middleware\DelegateInterface;
-use Psr\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Zend\Diactoros\Response\JsonResponse;
 
 class PingMiddleware implements ServerMiddlewareInterface
@@ -528,8 +528,8 @@ $pipeline-&gt;pipe(function ($request, $response, $next) {
 
 <p>we could wrap this in an anonymous class instead:</p>
 <pre class="codehilite"><code class="language-php">use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Middleware\DelegateInterface;
-use Psr\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Zend\Diactoros\Response\JsonResponse;
 
 $pipeline-&gt;pipe(new class implements ServerMiddlewareInterface {
@@ -550,8 +550,8 @@ provide <code>Zend\Stratigility\Delegate\CallableDelegateDecorator</code>, which
 a <code>callable $next</code> such that it may be used as a <code>DelegateInterface</code> implementation:</p>
 <pre class="codehilite"><code class="language-php">use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Middleware\DelegateInterface;
-use Psr\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Zend\Diactoros\Response\JsonResponse;
 use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 
