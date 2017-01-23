@@ -9,7 +9,7 @@ namespace ZendTest\Stratigility\Middleware;
 
 use Closure;
 use Interop\Http\ServerMiddleware\DelegateInterface;
-use PHPUnit_Framework_TestCase as TestCase;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
