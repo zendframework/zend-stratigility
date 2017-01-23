@@ -104,7 +104,7 @@ response object, and do something with it_.
 > use Interop\Http\Middleware\DelegateInterface;
 > use Zend\Diactoros\Response\TextResponse;
 >
-> $app->pipe('/', function ($request, DelegateInterface $delegate) {
+> $app->pipe('/', function ($req, DelegateInterface $delegate) {
 >     if (! in_array($req->getUri()->getPath(), ['/', ''], true)) {
 >         return $delegate->process($req);
 >     }
