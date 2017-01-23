@@ -8,10 +8,10 @@
 namespace Zend\Stratigility\Middleware;
 
 use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as InteropMiddlewareInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class CallableInteropMiddlewareWrapper implements InteropMiddlewareInterface
+class CallableInteropMiddlewareWrapper implements ServerMiddlewareInterface
 {
     /**
      * @param callable
