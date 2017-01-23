@@ -7,8 +7,8 @@
 
 namespace Zend\Stratigility\Middleware;
 
-use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\Next;
@@ -17,7 +17,7 @@ use Zend\Stratigility\Next;
  * Decorate legacy callable middleware to make it dispatchable as server
  * middleware.
  */
-class CallableMiddlewareWrapper implements ServerMiddlewareInterface
+class CallableMiddlewareWrapper implements InteropMiddlewareInterface
 {
     /**
      * @var callable

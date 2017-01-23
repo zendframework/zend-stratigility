@@ -7,8 +7,8 @@
 
 namespace ZendTest\Stratigility\Middleware;
 
-use Interop\Http\Middleware\DelegateInterface;
-use PHPUnit\Framework\TestCase;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use PHPUnit_Framework_TestCase as TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;

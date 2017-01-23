@@ -7,8 +7,8 @@
 
 namespace ZendTest\Stratigility;
 
-use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use PHPUnit_Framework_Assert as Assert;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;

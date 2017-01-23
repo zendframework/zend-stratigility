@@ -7,7 +7,7 @@
 
 namespace ZendTest\Stratigility;
 
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
 use PHPUnit\Framework\TestCase;
