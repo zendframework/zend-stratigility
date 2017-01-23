@@ -207,7 +207,7 @@ interfaces, including the following:
 
 - The namespace changes from `Interop\Http\Middleware` to
   `Interop\Http\ServerMiddleware`, signaling a change indicating that the project
-  now only targests server-side middleware.
+  now only targets server-side middleware.
 
 - The interface `ServerMiddlewareInterface` is now more simply
   `MiddlewareInterface`, as the namespace indicates its usage in server-side
