@@ -9,7 +9,6 @@
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
@@ -37,8 +36,8 @@ class Route
 
     /**
      * @param string $path
-     * @param callable|InteropMiddlewareInterface|ServerMiddlewareInterface $handler
-     * @throws Exception\InvalidArgumentException if the $handler provided is
+     * @param callable|ServerMiddlewareInterface $handler
+     * @throws Exception\InvalidMiddlewareException if the $handler provided is
      *     neither a callable nor an http-interop implementation.
      */
     public function __construct($path, $handler)
@@ -49,7 +48,6 @@ class Route
 
         if (! (is_callable($handler)
             || $handler instanceof ServerMiddlewareInterface
-            || $handler instanceof InteropMiddlewareInterface
         )) {
             throw new Exception\InvalidMiddlewareException(sprintf(
                 'Middleware must be callable or implement an http-interop middleware interface; received %s',

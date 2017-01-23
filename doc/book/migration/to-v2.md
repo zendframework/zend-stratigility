@@ -154,8 +154,8 @@ To summarize:
 
 ## http-interop compatibility
 
-Starting in version 1.3.0, we offer compatibility with
-[http-interop middleware 0.2.0](https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9).
+Starting in version 1.3.2, we offer compatibility with
+[http-interop middleware 0.3.0](https://github.com/http-interop/http-middleware/tree/0.3.0).
 That version of the specification defines the following interfaces:
 
 ```php
@@ -168,11 +168,6 @@ use Psr\Http\Message\ServerRequestInterface;
 interface DelegateInterface
 {
     public function process(RequestInterface $request) : ResponseInterface;
-}
-
-interface MiddlewareInterface
-{
-    public function process(RequestInterface $request, DelegateInterface $delegate) : ResponseInterface;
 }
 
 interface ServerMiddlewareInterface
