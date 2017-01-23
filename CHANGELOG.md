@@ -14,14 +14,39 @@ details.
 
 ### Changed
 
-- [#67](https://github.com/zendframework/zend-stratigility/pull/67) renames the
-  `$out` argument of `Zend\Stratigility\MiddlewareInterface()` to `$next`, and
-  now *requires* the argument. Each of the following `MiddlewareInterface`
-  implementations were updated accordingly:
+- [#96](https://github.com/zendframework/zend-stratigility/pull/96) changes the
+  minimum supported http-interop/http-middleware version to 0.4.1. This impacts
+  several things:
 
-  - `Zend\Stratigility\MiddlewarePipe`
-  - `Zend\Stratigility\Middleware\ErrorHandler`
-  - `Zend\Stratigility\Middleware\NotFoundHandler`
+  - Middleware that implemented the http-interop/http-middleware 0.2.0
+    interfaces will no longer work with Stratigility. In most cases, these can
+    be updated by changing import statements. As an example:
+
+    ```php
+    // http-middleware 0.2.0:
+    use Interop\Http\Middleware\DelegateInterface;
+    use Interop\Http\Middleware\ServerMiddlewareInterface;
+
+    // Becomes the following under 0.4.1:
+    use Interop\Http\ServerMiddleware\DelegateInterface;
+    use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+    ```
+
+  - The various classes under `Zend\Stratigility\Middleware` now implement the
+    new interfaces, which could affect extending classes.
+
+  - `Zend\Stratigility\Next` and `Zend\Stratigility\Delegate\CallableDelegateDecorator`
+    have signature changes due to changes in the `DelegateInterface`; again,
+    these changes should only affect those extending the classes.
+
+  - `Interop\Http\Middleware\MiddlewareInterface` (which was intended for
+    implementation by client-side middleware) no longer exists, which means
+    it is also no longer supported within Stratigility.
+
+- [#67](https://github.com/zendframework/zend-stratigility/pull/67) updates each
+  of `Zend\Stratigility\MiddlewarePipe`, `Zend\Stratigility\Middleware\ErrorHandler`,
+  and `Zend\Stratigility\Middleware\NotFoundHandler` to require all arguments
+  (none are optional).
 
 - [#67](https://github.com/zendframework/zend-stratigility/pull/67) modifies
   the internals of `Zend\Stratigility\MiddlewarePipe`'s `__invoke()` method.
@@ -41,26 +66,26 @@ details.
   `Zend\Stratigility\Http\*` variants, as these have been removed.
 
 - [#76](https://github.com/zendframework/zend-stratigility/pull/76) updates
-  `MiddlewarePipe` to implement only the http-interop
-  `ServerMiddlewareInterface`, and not the Stratigility-specific
+  `MiddlewarePipe` to implement only the http-interop/http-middleware
+  server-side middleware interface, and not the Stratigility-specific
   `MiddlewareInterface` (which was removed).
 
 - [#76](https://github.com/zendframework/zend-stratigility/pull/76) updates
-  `Zend\Stratigility\Middleware\ErrorHandler` to implement the http-interop
-  `ServerMiddlewareInterface` instead of the Stratigility-specific
-  `MiddlewareInterface` (which was removed).
+  `Zend\Stratigility\Middleware\ErrorHandler` to implement the
+  http-interop/http-middleware server-side middleware interface instead of the
+  Stratigility-specific `MiddlewareInterface` (which was removed).
 
 - [#76](https://github.com/zendframework/zend-stratigility/pull/76) updates
-  `Zend\Stratigility\Middleware\NotFoundHandler` to implement the http-interop
-  `ServerMiddlewareInterface` instead of the Stratigility-specific
-  `MiddlewareInterface` (which was removed).
+  `Zend\Stratigility\Middleware\NotFoundHandler` to implement the
+  http-interop/http-middleware server-side middleware interface instead of the
+  Stratigility-specific `MiddlewareInterface` (which was removed).
 
 - [#76](https://github.com/zendframework/zend-stratigility/pull/76) updates
   `MiddlewarePipe::__invoke()` to require a third argument, now named
   `$delegate`, and no longer type-hinted. If a callable not implementing
-  http-interop `DelegateInterface` is provided, it is wrapped in the
-  `CallableDelegateDecorator` (introduced in 1.3.0). The method then calls its
-  own `process()` method with the request and delegate. This method should
+  http-interop/http-middleware `DelegateInterface` is provided, it is wrapped in
+  the `CallableDelegateDecorator` (introduced in 1.3.0). The method then calls
+  its own `process()` method with the request and delegate. This method should
   typically only be used as an entry point for an application.
 
 - [#76](https://github.com/zendframework/zend-stratigility/pull/76) updates
@@ -70,7 +95,7 @@ details.
 
 - [#76](https://github.com/zendframework/zend-stratigility/pull/76) updates
   the constructor of `Next` to rename the `$done` argument to `$nextDelegate`
-  and typehint it against the http-interop `DelegateInterface`.
+  and typehint it against the http-interop/http-middleware `DelegateInterface`.
 
 - [#76](https://github.com/zendframework/zend-stratigility/pull/76) updates
   `Next::__invoke()` to remove all arguments except the `$request` argument; the
