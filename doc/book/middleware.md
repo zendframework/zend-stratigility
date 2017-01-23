@@ -84,7 +84,7 @@ response object, and do something with it_.
 > }
 > ```
 >
-> Starting in http-interop/http-middleware, these becomes:
+> Starting in http-interop/http-middleware 0.4.1, these become:
 >
 > ```php
 > namespace Interop\Http\ServerMiddleware;
