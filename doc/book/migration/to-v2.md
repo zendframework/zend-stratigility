@@ -273,7 +273,7 @@ $pipeline->pipe($middleware);
 Third, and optionally, you can make one or both of the following changes to
 your callable middleware:
 
-- Typehint the final `$next` argument against `Psr\Http\Middleware\DelegateInterface`;
+- Typehint the final `$next` argument against `Interop\Http\Middleware\DelegateInterface`;
   optionally, rename it to `$delegate`. This will require a slight change to
   how you invoke the next layer as well; see below.    
 - Remove the `$response` argument from your signature; if you do, make sure you
@@ -331,8 +331,8 @@ This could be rewritten as follows:
 
 ```php
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Middleware\DelegateInterface;
-use Psr\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Zend\Diactoros\Response\JsonResponse;
 
 class PingMiddleware implements ServerMiddlewareInterface
@@ -358,8 +358,8 @@ we could wrap this in an anonymous class instead:
 
 ```php
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Middleware\DelegateInterface;
-use Psr\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Zend\Diactoros\Response\JsonResponse;
 
 $pipeline->pipe(new class implements ServerMiddlewareInterface {
@@ -381,8 +381,8 @@ a `callable $next` such that it may be used as a `DelegateInterface` implementat
 ```php
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Middleware\DelegateInterface;
-use Psr\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Zend\Diactoros\Response\JsonResponse;
 use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 
