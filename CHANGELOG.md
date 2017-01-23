@@ -185,7 +185,9 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#86](https://github.com/zendframework/zend-stratigility/pull/86) fixes the
+  links to documentation in several exception messages to ensure they will be
+  useful to developers.
 
 ## 1.3.2 - 2017-01-05
 
