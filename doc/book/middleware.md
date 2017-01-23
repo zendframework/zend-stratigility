@@ -130,8 +130,8 @@ response object, and do something with it_.
 >
 > ```php
 > $app->pipe('/', function ($request, DelegateInterface $delegate) {
->     if (! in_array($req->getUri()->getPath(), ['/', ''], true)) {
->         return $delegate->process($req);
+>     if (! in_array($request->getUri()->getPath(), ['/', ''], true)) {
+>         return $delegate->process($request);
 >     }
 >     return new TextResponse('Hello world!');
 > });
