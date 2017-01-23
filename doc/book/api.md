@@ -10,24 +10,23 @@ has been discussed previously. Its API is:
 ```php
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class MiddlewarePipe implements ServerMiddlewareInterface
 {
     public function pipe(
-        string|callable|InteropMiddlewareInterface|ServerRequestInterface $path,
-        callable|InteropMiddlewareInterface|ServerRequestInterface $middleware = null
+        string|callable|ServerMiddlewareInterface $path,
+        callable|ServerMiddlewareInterface $middleware = null
     );
 
     public function __invoke(
-        Psr\Http\Message\ServerRequestInterface $request,
-        Psr\Http\Message\ResponseInterface $response,
+        ServerRequestInterface $request,
+        ResponseInterface $response,
         $delegate
-    ) :  Psr\Http\Message\ResponseInterface;
+    ) : ResponseInterface;
 
     public function process(
         ServerRequestInterface $request,
@@ -87,11 +86,11 @@ response instance).
 Within Stratigility, `Zend\Stratigility\Next` provides an implementation
 compatible with either usage.
 
-Starting in version 1.3.0, `MiddlewarePipe` implements the http-interop
-`ServerMiddlewareInterface`, and thus provides a `process()` method. This
-method requires a `ServerRequestInterface` instance and an
-`Interop\Http\Middleware\DelegateInterface` instance on invocation; the latter
-can be a `Next` instance, as it also implements that interface.
+Starting in version 1.3.0, `MiddlewarePipe` implements the
+http-interop/http-middleware server-side middleware interface, and thus provides
+a `process()` method. This method requires a `ServerRequestInterface` instance
+and an http-interop/http-middleware `DelegateInterface` instance on invocation;
+the latter can be a `Next` instance, as it also implements that interface.
 
 Internally, for both `__invoke()` and `process()`, `MiddlewarePipe` creates an
 instance of `Zend\Stratigility\Next` (feeding it its queue), executes it, and
@@ -116,7 +115,8 @@ $pipeline->setResponsePrototype(new Response());
 
 `Zend\Stratigility\Next` is primarily an implementation detail of middleware,
 and exists to allow delegating to middleware registered later in the stack. It
-is implemented both as a functor and as an `Interop\Http\Middleware\DelegateInterface`.
+is implemented both as a functor and as an http-interop/http-middleware
+`DelegateInterface`.
 
 ### Functor invocation
 
@@ -175,8 +175,6 @@ you will need to:
 ### Providing an altered request:
 
 ```php
-use Interop\Http\Middleware\DelegateInterface;
-
 // Standard invokable:
 function ($request, $response, $next) use ($bodyParser)
 {
@@ -202,8 +200,6 @@ function ($request, DelegateInterface $delegate) use ($bodyParser)
 ### Providing an altered request and operating on the returned response:
 
 ```php
-use Interop\Http\Middleware\DelegateInterface;
-
 function ($request, $response, $next) use ($bodyParser)
 {
     $response = $next(
@@ -236,9 +232,6 @@ a new response, or providing your middleware with a response prototype; this
 will ensure that the response is specific for your context.
 
 ```php
-use Interop\Http\Middleware\DelegateInterface;
-use Zend\Diactoros\Response;
-
 $prototype = new Response();
 
 // Standard invokable signature:
@@ -251,8 +244,6 @@ function ($request, $response, $next) use ($prototype)
     ]);
 
     return $response;
-}
-```
 }
 
 // http-interop invokable signature:
@@ -387,9 +378,9 @@ for more details.
 
 ## Middleware Decorators
 
-Starting in version 1.3.0, we offer the ability to work with http-interop
-middleware. Internally, if a response prototype is composed in the
-`MiddlewarePipe`, callable middleware piped to the `MiddlewarePipe` will be
+Starting in version 1.3.0, we offer the ability to work with
+http-interop/http-middleware. Internally, if a response prototype is composed in
+the `MiddlewarePipe`, callable middleware piped to the `MiddlewarePipe` will be
 wrapped in one of these decorators.
 
 Two versions exist:
@@ -402,8 +393,8 @@ Two versions exist:
   ```
 
 - `Zend\Stratigility\Middleware\CallableMiddlewareWrapper` will wrap a callable
-  that defines exactly two arguments, with the second type-hinting on
-  `Interop\Http\Middleware\DelegateInterface`:
+  that defines exactly two arguments, with the second type-hinting on the
+  http-interop/http-middleware `DelegateInterface`:
 
   ```php
   $middleware = new CallableMiddlewareWrapper(
@@ -421,18 +412,25 @@ using the legacy middleware signature.
 ## Delegates
 
 In addition to `Zend\Stratigility\Next`, Stratigility provides another
-`Interop\Http\Middleware\DelegateInterface` implementation,
+http-interop/http-middleware `DelegateInterface` implementation,
 `Zend\Stratigility\Delegate\CallableDelegateDecorator`.
 
-This class can be used to wrap a callable `$next` instance for use in passing
-to a `ServerMiddlewareInterface::process()` method as a delegate; the primary
-use case is adapting functor middleware to work as http-interop middleware.
+This class can be used to wrap a callable `$next` instance for use in passing to
+an http-interop/http-middleware middleware interface `process()` method as a
+delegate; the primary use case is adapting functor middleware to work as
+http-interop middleware.
 
 As an example:
 
 ```php
+// http-interop/http-middleware 0.2:
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
+
+// http-interop/http-middleware 0.4.1:
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\Delegate\CallableDelegateDecorator;

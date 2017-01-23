@@ -48,13 +48,9 @@ method to perform any additional logic you have, and then call on the parent in
 order to iterate through your stack of middleware:
 
 ```php
-use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
-use Psr\Http\Message\ServerRequestInterface as Request;
-
 class CustomMiddleware extends MiddlewarePipe
 {
-    public function process(Request $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
         // perform some work...
 
