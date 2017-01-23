@@ -312,7 +312,7 @@ $pipeline->pipe($middleware);
 Third, and optionally, you can make one or both of the following changes to
 your callable middleware:
 
-- Typehint the final `$next` argument against `Psr\Http\Middleware\DelegateInterface`;
+- Typehint the final `$next` argument against `Interop\Http\Middleware\DelegateInterface`;
   optionally, rename it to `$delegate`. This will require a slight change to
   how you invoke the next layer as well; see below.    
 - Remove the `$response` argument from your signature; if you do, make sure you
