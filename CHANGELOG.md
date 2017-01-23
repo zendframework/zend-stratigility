@@ -169,7 +169,7 @@ details.
 
 - Nothing.
 
-## 1.3.3 - TBD
+## 1.3.3 - 2017-01-23
 
 ### Added
 
