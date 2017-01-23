@@ -157,7 +157,7 @@ To summarize:
 ### http-middleware 0.2.0 and Stratigility 1.3
 
 Starting in version 1.3.0, we offer compatibility with
-[http-interop middleware 0.2.0](https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9).
+[http-interop/http-middleware 0.2.0](https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9).
 That version of the specification defines the following interfaces:
 
 ```php
@@ -202,11 +202,11 @@ prototype will be passed to the callable for the response argument.
 
 ### http-middleware 0.4.1 and Stratigility 2.0
 
-http-middleware 0.4.1 introduces breaking changes in the interfaces, including
-the following:
+http-interop/http-middleware 0.4.1 introduces breaking changes in the
+interfaces, including the following:
 
 - The namespace changes from `Interop\Http\Middleware` to
-  `Iterop\Http\ServerMiddleware`, signaling a change indicating that the project
+  `Interop\Http\ServerMiddleware`, signaling a change indicating that the project
   now only targests server-side middleware.
 
 - The interface `ServerMiddlewareInterface` is now more simply
@@ -223,12 +223,13 @@ accommodate, and could have been imported in parallel to the 0.2.0 interfaces.
 However, the second represents a signature change, which has necessitated a
 major version bump in Stratigility in order to remain compatible.
 
-Stratigility 2.0.0 therefor targets http-middleware 0.4.1, and that version
-(and compatible versions) only.
+Stratigility 2.0.0 therefor targets http-interop/http-middleware 0.4.1, and that
+version (and compatible versions) only.
 
 Additionally, starting in version 2.0.0, `MiddlewarePipe` *will no longer implement
-`Zend\Stratigility\MiddlewareInterface`, and only implement the http-interop
-`MiddlewareInterface`*. This has several repercussions.
+`Zend\Stratigility\MiddlewareInterface`, and only implement the
+http-interop/http-middleware `MiddlewareInterface`*. This has several
+repercussions.
 
 ### Callable middleware in version 1.3.0
 
@@ -238,7 +239,7 @@ recommend updating your code to prepare for version 2.0.0.
 First, **we recommend *never* using the `$response` argument provided to
 middleware.**
 
-The reason for this recommendation is two-fold. First, the http-interop
+The reason for this recommendation is two-fold. First, the http-interop/http-middleware
 interfaces do not provide it, and, as such, using it within your middleware
 makes your middleware incompatible. Second, and more importantly, is due to the
 reason why http-interop does not include the argument: usage can lead to
@@ -285,12 +286,12 @@ results.
 Second, either wrap your middleware in `CallableMiddlewareWrapper`, or ensure
 your pipeline composes a *response prototype* (doing so will implicitly
 decorate callable middleware). Either of these will ensure your middleware will
-work with http-interop delegators.
+work with http-interop/http-middleware delegators.
 
 ```php
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 
-// Manually decorating callable middleware for use with http-interop:
+// Manually decorating callable middleware for use with http-middleware:
 $pipeline->pipe(new CallableMiddlewareWrapper($middleware, $response));
 
 // Auto-decorate middleware by providing a response prototype:
@@ -301,7 +302,7 @@ $pipeline->pipe($middleware);
 > ### CallableMiddlewareWrapper and Stratigility 2.0
 >
 > As noted above, version 2 of Stratigility is incompatible with version 1.3 due
-> to signature changes in the http-interop project. However, if you wrap your
+> to signature changes in the http-middleware project. However, if you wrap your
 > callable middleware using `CallableMiddlewareWrapper`, you will need to make
 > no changes in your application to make it forwards compatible.
 >
@@ -351,7 +352,7 @@ which simply proxies to the middleware when processed.
 > rewrite your middleware to implement the http-middleware 0.4.1 interfaces.
 
 Finally, if you are so inclined, you can rewrite your middleware to
-specifically implement one or the other of the http-interop middleware
+specifically implement one or the other of the http-interop/http-middleware
 interfaces. This is particularly relevant for class-based middleware, but can
 also be accomplished by using PHP 7 anonymous classes.
 
@@ -420,10 +421,11 @@ $pipeline->pipe(new class implements ServerMiddlewareInterface {
 > Using anonymous classes is likely overkill, as both v1.3.0 and v2.0.0 support
 > piping closures.
 
-If you want your middleware to work with either http-interop or with the
-pre-1.3.0 middleware signature, you can do that as well. To accomplish this, we
-provide `Zend\Stratigility\Delegate\CallableDelegateDecorator`, which will wrap
-a `callable $next` such that it may be used as a `DelegateInterface` implementation:
+If you want your middleware to work with either http-interop/http-middleware or
+with the pre-1.3.0 middleware signature, you can do that as well. To accomplish
+this, we provide `Zend\Stratigility\Delegate\CallableDelegateDecorator`, which
+will wrap a `callable $next` such that it may be used as a `DelegateInterface`
+implementation:
 
 ```php
 use Interop\Http\Middleware\DelegateInterface;
@@ -476,23 +478,27 @@ To summarize:
 
 - Never work with the provided `$response` argument, but instead manipulate the
   response returned from calling `$next`.
-- Ensure your pipeline can decorate callable middleware as http-interop
-  middleware. Do this by injecting a response prototype in the pipeline prior
-  to piping any middleware. (*Note: this is not necessary if all callable
-  middleware defines exactly two parameters, with the second type-hinting on
-  the http-interop `DelegateInterface`*.)
+
+- Ensure your pipeline can decorate callable middleware as http-interop/http-middleware.
+  Do this by injecting a response prototype in the pipeline prior to piping any
+  middleware. (*Note: this is not necessary if all callable middleware defines
+  exactly two parameters, with the second type-hinting on the http-interop
+  `DelegateInterface`*.)
+
 - Consider adapting your callable middleware to follow the http-interop middleware
   signature (`function (ServerRequestInterface $request, DelegateInterface $delegate)`);
   this will make it forward-compatible. (Be aware that this may require changes
   in import statements between Stratigility 1.3 and 2.0.)
-- Consider updating your class-based middleware to implement one of the
-  http-interop middleware interfaces, potentially keeping the `__invoke()` method
-  for interoperability with existing callable-based middleware runners. (Be
-  aware that this may require changes in import statements between Stratigility
+
+- Consider updating your class-based middleware to implement the
+  http-interop/http-middleware server middleware interface, potentially keeping
+  the `__invoke()` method for interoperability with existing callable-based
+  middleware runners. (Be aware that this may require changes in import
+  statements between Stratigility
   1.3 and 2.0.)
 
 The first and last suggestions in this list are strongly recommended to ensure
-forwards compatibility with http-interop, and to ensure your middleware works
+forwards compatibility with http-middleware, and to ensure your middleware works
 properly across middleware stacks.
 
 ### Callable middleware in version 2.0.0
@@ -524,7 +530,7 @@ pipeline, you must do one of the following:
     ```php
     $pipeline->pipe(new CallableMiddlewareWrapper($middleware, $response));
     // or CallableInteropMiddlewareWrapper, if your middleware implements
-    // the http-interop signature already.
+    // the http-middleware signature already.
     ```
 
 ### Invoking MiddlewarePipe instances in version 2.0.0
@@ -603,7 +609,7 @@ The following classes, methods, and arguments are removed starting in version
 - `Zend\Stratigility\ErrorMiddlewareInterface` (class)
 - `Zend\Stratigility\FinalHandler` (class)
 - `Zend\Stratigility\MiddlewareInterface`. Define your middleware as callables,
-  or using http-interop middleware interfaces instead.
+  or using http-interop/http-middleware interfaces instead.
 - `Zend\Stratigility\Utils::getArity()` (static method); no longer used
   internally.
 - The `$err` argument to `Zend\Stratigility\Next`'s `__invoke()` method. If
@@ -615,4 +621,4 @@ The following classes, methods, and arguments are removed starting in version
   [section on callable middleware](callable-middleware-in-version-1.3.0)
   for details, and adapt your middleware to no longer use the argument.
   While the legacy callable signature will continue to work, we recommend
-  implementing an http-interop middleware interface.
+  implementing an http-interop/http-middleware interface.
