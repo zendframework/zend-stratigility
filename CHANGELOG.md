@@ -6,7 +6,7 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 2.0.0 - TBD
+## 2.0.0 - 2017-01-24
 
 ### Added
 
@@ -119,6 +119,9 @@ details.
   the `raiseThrowables()` method of each of `MiddlewarePipe` and `Next`.
 
 ### Removed
+
+- `Zend\Stratigility\Exception\MiddlewareException` was removed as it is no
+  longer thrown.
 
 - [#67](https://github.com/zendframework/zend-stratigility/pull/67) removes
   `Zend\Stratigility\FinalHandler`. Use `Zend\Stratigility\NoopFinalHandler`
