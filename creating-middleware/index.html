@@ -183,8 +183,6 @@
     
         <li class="main active"><a href="#creating-middleware">Creating Middleware</a></li>
         
-            <li><a href="#legacy-error-middleware">Legacy error middleware</a></li>
-        
     
     </ul>
 
@@ -249,25 +247,6 @@ request, it returns processing to the next middleware.</p>
 </ul>
 <p>In all cases, if you wish to implement typehinting, the signature is:</p>
 <pre class="codehilite"><code class="language-php">function (
-    Psr\Http\Message\ServerRequestInterface $request,
-    Psr\Http\Message\ResponseInterface $response,
-    callable $next
-) : Psr\Http\Message\ResponseInterface</code></pre>
-
-
-<h3 id="legacy-error-middleware">Legacy error middleware</h3>
-<ul>
-<li>Deprecated since 1.3.0; to be removed in version 2.0.0. Please use the the
-  <code>NotFoundHandler</code> and <code>ErrorHandler</code> detailed in the
-  <a href="../error-handlers/">error handling chapter</a>, or equivalents.</li>
-</ul>
-<p>The implementation Stratigility offers also allows you to write specialized
-error handler middleware. The signature is the same as for normal middleware,
-except that it expects an additional argument prepended to the signature,
-<code>$error</code>.  (Alternately, you can implement <code>Zend\Stratigility\ErrorMiddlewareInterface</code>.)
-The signature is:</p>
-<pre class="codehilite"><code class="language-php">function (
-    $error, // Can be any type
     Psr\Http\Message\ServerRequestInterface $request,
     Psr\Http\Message\ResponseInterface $response,
     callable $next

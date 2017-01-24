@@ -248,8 +248,8 @@ $app-&gt;pipe(new NotFoundHandler(new Response());
 a response, no deeper nested layers will execute once it has been invoked.</p>
 <p>If you would like a templated response, you will need to write your own
 middleware; such middleware might look like the following:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+<pre class="codehilite"><code class="language-php">use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

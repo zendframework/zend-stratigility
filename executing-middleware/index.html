@@ -185,6 +185,10 @@
         
             <li><a href="#request-path-changes-when-path-matched">Request path changes when path matched</a></li>
         
+            <li><a href="#handling-errors">Handling errors</a></li>
+        
+            <li><a href="#extending-the-middlewarepipe">Extending the MiddlewarePipe</a></li>
+        
     
     </ul>
 
@@ -234,19 +238,28 @@ matched, the <code>$api</code> middleware will receive a request with the path
 <code>/users/foo</code>. This allows middleware segregated by path to be re-used without
 changes to its own internal routing.</p>
 </blockquote>
+<h2 id="handling-errors">Handling errors</h2>
+<p>While the above will give you a basic application, it has no error handling
+whatsoever. We recommend adding an initial middleware layer using the
+<code>Zend\Stratigility\Middleware\ErrorHandler</code> class:</p>
+<pre class="codehilite"><code class="language-php">use Zend\Diactoros\Response;
+use Zend\Stratigility\Middleware\ErrorHandler;
+
+$app-&gt;pipe(new ErrorHandler(new Response());
+// Add more middleware...</code></pre>
+
+
+<p>You can learn how to customize the error handler to your needs in the
+<a href="../error-handlers/">chapter on error handlers</a>.</p>
+<h2 id="extending-the-middlewarepipe">Extending the MiddlewarePipe</h2>
 <p>Another approach is to extend the <code>Zend\Stratigility\MiddlewarePipe</code> class
 itself, particularly if you want to allow attaching other middleware to your
 own middleware. In such a case, you will generally override the <code>process()</code>
 method to perform any additional logic you have, and then call on the parent in
 order to iterate through your stack of middleware:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
-use Zend\Stratigility\MiddlewarePipe;
-
-class CustomMiddleware extends MiddlewarePipe
+<pre class="codehilite"><code class="language-php">class CustomMiddleware extends MiddlewarePipe
 {
-    public function process(Request $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
         // perform some work...
 

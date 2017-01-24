@@ -191,6 +191,10 @@
         
             <li><a href="#deprecated-functionality">Deprecated functionality</a></li>
         
+            <li><a href="#interfacesignature-changes">Interface/signature changes</a></li>
+        
+            <li><a href="#removed-functionality">Removed functionality</a></li>
+        
     
     </ul>
 
@@ -224,7 +228,7 @@
 </ol>
 
 <h1 id="migrating-to-version-2">Migrating to version 2</h1>
-<p>Version 2 of Stratigility will be making several breaking changes to the API in
+<p>Version 2 of Stratigility makes several breaking changes to the API in
 order to provide more flexibility, promote interoperability, and reduce
 complexity.</p>
 <p>To help you prepare your code for version 2, version 1.3.0 provides several
@@ -271,7 +275,7 @@ instead of the decorated instance.</p>
 <p>Finally, if you are creating an <code>onerror</code> handler for the <code>FinalHandler</code>, update
 your typehints to refer to the PSR-7 request and response interfaces instead of
 the Stratigility decorators, if you aren't already.</p>
-<p>The <code>Zend\Stratigility\Http</code> classes, interfaces, and namespace will be removed
+<p>The <code>Zend\Stratigility\Http</code> classes, interfaces, and namespace are removed
 in version 2.0.0.</p>
 <h2 id="error-handling">Error handling</h2>
 <p>Prior to version 1.3, the recommended way to handle errors was via
@@ -314,10 +318,10 @@ middleware you drop in place of them), the <code>FinalHandler</code> implementat
 most of its meaning, as you are now handling errors and 404 conditions as
 middleware layers.</p>
 <p>However, you still need to ensure that the pipeline returns a response,
-regardless of how the pipeline is setup, and for that we still need some form
-of "final" handler that can do so. (In fact, starting in version 2, the <code>$out</code>
-argument will be renamed to <code>$delegate</code>, and will be a required argument for
-invoking the <code>MiddlewarePipe</code>.)</p>
+regardless of how the pipeline is setup, and for that we still need some form of
+"final" handler that can do so. (In fact, starting in version 2, the <code>$out</code>
+argument is renamed to <code>$delegate</code>, and is a <em>required</em> argument of the
+<code>MiddlewarePipe</code>.)</p>
 <p>Starting in version 1.3, we now offer a <code>Zend\Stratigility\NoopFinalHandler</code>
 implementation, which simply returns the response passed to it. You can compose
 it in your application in one of two ways:</p>
@@ -354,8 +358,9 @@ request and a response, and be guaranteed to return a response instance.)</p>
   dispatching your application pipeline.</li>
 </ul>
 <h2 id="http-interop-compatibility">http-interop compatibility</h2>
+<h3 id="http-middleware-020-and-stratigility-13">http-middleware 0.2.0 and Stratigility 1.3</h3>
 <p>Starting in version 1.3.0, we offer compatibility with
-<a href="https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9">http-interop middleware 0.2.0</a>.
+<a href="https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9">http-interop/http-middleware 0.2.0</a>.
 That version of the specification defines the following interfaces:</p>
 <pre class="codehilite"><code class="language-php">namespace Interop\Http\Middleware;
 
@@ -395,15 +400,43 @@ middleware piped to the pipeline will be wrapped in a
 <code>Zend\Stratigility\Middleware\CallableMiddlewareWrapper</code> instance, which
 converts it into an http-interop middleware type; when processed, the response
 prototype will be passed to the callable for the response argument.</p>
-<p>Starting in version 2.0.0, <code>MiddlewarePipe</code> <em>will no longer implement
-<code>Zend\Stratigility\MiddlewareInterface</code>, and only implement the http-interop
-<code>ServerMiddlewareInterface</code></em>. This has several repercussions.</p>
+<h3 id="http-middleware-041-and-stratigility-20">http-middleware 0.4.1 and Stratigility 2.0</h3>
+<p>http-interop/http-middleware 0.4.1 introduces breaking changes in the
+interfaces, including the following:</p>
+<ul>
+<li>
+<p>The namespace changes from <code>Interop\Http\Middleware</code> to
+  <code>Interop\Http\ServerMiddleware</code>, signaling a change indicating that the project
+  now only targets server-side middleware.</p>
+</li>
+<li>
+<p>The interface <code>ServerMiddlewareInterface</code> is now more simply
+  <code>MiddlewareInterface</code>, as the namespace indicates its usage in server-side
+  applications. <code>Interop\Http\Middleware\MiddlewareInterface</code>, which targeted
+  client-side middleware, was removed entirely.</p>
+</li>
+<li>
+<p>The method <code>DelegateInterface::process</code> now accepts specifically a
+  <code>Psr\Http\Message\ServerRequestInterface</code>, and not the more general
+  <code>RequestInterface</code>.</p>
+</li>
+</ul>
+<p>The first two changes required only a change in import statements to
+accommodate, and could have been imported in parallel to the 0.2.0 interfaces.
+However, the second represents a signature change, which has necessitated a
+major version bump in Stratigility in order to remain compatible.</p>
+<p>Stratigility 2.0.0 therefor targets http-interop/http-middleware 0.4.1, and that
+version (and compatible versions) only.</p>
+<p>Additionally, starting in version 2.0.0, <code>MiddlewarePipe</code> <em>will no longer implement
+<code>Zend\Stratigility\MiddlewareInterface</code>, and only implement the
+http-interop/http-middleware <code>MiddlewareInterface</code></em>. This has several
+repercussions.</p>
 <h3 id="callable-middleware-in-version-130">Callable middleware in version 1.3.0</h3>
 <p>Callable middleware can be used without change in version 1.3.0. However, we
 recommend updating your code to prepare for version 2.0.0.</p>
 <p>First, <strong>we recommend <em>never</em> using the <code>$response</code> argument provided to
 middleware.</strong></p>
-<p>The reason for this recommendation is two-fold. First, the http-interop
+<p>The reason for this recommendation is two-fold. First, the http-interop/http-middleware
 interfaces do not provide it, and, as such, using it within your middleware
 makes your middleware incompatible. Second, and more importantly, is due to the
 reason why http-interop does not include the argument: usage can lead to
@@ -443,10 +476,10 @@ results.</p>
 <p>Second, either wrap your middleware in <code>CallableMiddlewareWrapper</code>, or ensure
 your pipeline composes a <em>response prototype</em> (doing so will implicitly
 decorate callable middleware). Either of these will ensure your middleware will
-work with http-interop delegators.</p>
+work with http-interop/http-middleware delegators.</p>
 <pre class="codehilite"><code class="language-php">use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 
-// Manually decorating callable middleware for use with http-interop:
+// Manually decorating callable middleware for use with http-middleware:
 $pipeline-&gt;pipe(new CallableMiddlewareWrapper($middleware, $response));
 
 // Auto-decorate middleware by providing a response prototype:
@@ -454,6 +487,15 @@ $pipeline-&gt;setResponsePrototype($response);
 $pipeline-&gt;pipe($middleware);</code></pre>
 
 
+<blockquote>
+<h3 id="callablemiddlewarewrapper-and-stratigility-20">CallableMiddlewareWrapper and Stratigility 2.0</h3>
+<p>As noted above, version 2 of Stratigility is incompatible with version 1.3 due
+to signature changes in the http-middleware project. However, if you wrap your
+callable middleware using <code>CallableMiddlewareWrapper</code>, you will need to make
+no changes in your application to make it forwards compatible.</p>
+<p>We recommend using this strategy if you need to do a stepped transition to
+Stratigility 2.0.</p>
+</blockquote>
 <p>Third, and optionally, you can make one or both of the following changes to
 your callable middleware:</p>
 <ul>
@@ -482,8 +524,17 @@ your callable middleware:</p>
 When you pipe such callable middleware to <code>MiddlewarePipeline</code>, it will be
 wrapped in a <code>Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper</code>,
 which simply proxies to the middleware when processed.</p>
+<blockquote>
+<h3 id="delegateinterface-and-stratigility-20">DelegateInterface and Stratigility 2.0</h3>
+<p>Since the namespace within http-interop/http-middleware changes between
+version 0.2.0 and 0.4.1, the above strategy will require making changes
+multiple times: once when upgrading to Stratigility 1.3, and another when
+upgrading to 2.0. As such, we recommend instead decorating your callable
+middleware using the <code>CallableMiddlewareWrapper</code>, until such time as you can
+rewrite your middleware to implement the http-middleware 0.4.1 interfaces.</p>
+</blockquote>
 <p>Finally, if you are so inclined, you can rewrite your middleware to
-specifically implement one or the other of the http-interop middleware
+specifically implement one or the other of the http-interop/http-middleware
 interfaces. This is particularly relevant for class-based middleware, but can
 also be accomplished by using PHP 7 anonymous classes.</p>
 <p>As an example, consider the following middleware class:</p>
@@ -504,9 +555,9 @@ class PingMiddleware
 
 
 <p>This could be rewritten as follows:</p>
-<pre class="codehilite"><code class="language-php">use Psr\Http\Message\ServerRequestInterface;
-use Interop\Http\Middleware\DelegateInterface;
+<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\JsonResponse;
 
 class PingMiddleware implements ServerMiddlewareInterface
@@ -527,9 +578,9 @@ $pipeline-&gt;pipe(function ($request, $response, $next) {
 
 
 <p>we could wrap this in an anonymous class instead:</p>
-<pre class="codehilite"><code class="language-php">use Psr\Http\Message\ServerRequestInterface;
-use Interop\Http\Middleware\DelegateInterface;
+<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\JsonResponse;
 
 $pipeline-&gt;pipe(new class implements ServerMiddlewareInterface {
@@ -544,14 +595,15 @@ $pipeline-&gt;pipe(new class implements ServerMiddlewareInterface {
 <p>Using anonymous classes is likely overkill, as both v1.3.0 and v2.0.0 support
 piping closures.</p>
 </blockquote>
-<p>If you want your middleware to work with either http-interop or with the
-pre-1.3.0 middleware signature, you can do that as well. To accomplish this, we
-provide <code>Zend\Stratigility\Delegate\CallableDelegateDecorator</code>, which will wrap
-a <code>callable $next</code> such that it may be used as a <code>DelegateInterface</code> implementation:</p>
-<pre class="codehilite"><code class="language-php">use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Interop\Http\Middleware\DelegateInterface;
+<p>If you want your middleware to work with either http-interop/http-middleware or
+with the pre-1.3.0 middleware signature, you can do that as well. To accomplish
+this, we provide <code>Zend\Stratigility\Delegate\CallableDelegateDecorator</code>, which
+will wrap a <code>callable $next</code> such that it may be used as a <code>DelegateInterface</code>
+implementation:</p>
+<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\JsonResponse;
 use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 
@@ -572,24 +624,54 @@ class PingMiddleware implements ServerMiddlewareInterface
 }</code></pre>
 
 
+<blockquote>
+<h3 id="implementing-http-interop-between-stratigility-13-and-20">Implementing http-interop between Stratigility 1.3 and 2.0</h3>
+<p>While you <em>can</em> write your middleware to implement the
+http-interop/http-middleware middleware interface, please be aware that if you
+do so, you will need to take additional steps when upgrading from 1.3 to 2.0.</p>
+<p>In most cases, you should be able to simply change the import statements
+within your class file. As an example, if you have the following in your
+Stratigility 1.3-based project:</p>
+<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;</code></pre>
+
+
+<p>The imports would become:</p>
+<pre class="codehilite"><code class="language-php">use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;</code></pre>
+
+
+</blockquote>
 <p>To summarize:</p>
 <ul>
-<li>Never work with the provided <code>$response</code> argument, but instead manipulate the
-  response returned from calling <code>$next</code>.</li>
-<li>Ensure your pipeline can decorate callable middleware as http-interop
-  middleware. Do this by injecting a response prototype in the pipeline prior
-  to piping any middleware. (<em>Note: this is not necessary if all callable
-  middleware defines exactly two parameters, with the second type-hinting on
-  the http-interop <code>DelegateInterface</code></em>.)</li>
-<li>Consider adapting your callable middleware to follow the http-interop middleware
+<li>
+<p>Never work with the provided <code>$response</code> argument, but instead manipulate the
+  response returned from calling <code>$next</code>.</p>
+</li>
+<li>
+<p>Ensure your pipeline can decorate callable middleware as http-interop/http-middleware.
+  Do this by injecting a response prototype in the pipeline prior to piping any
+  middleware. (<em>Note: this is not necessary if all callable middleware defines
+  exactly two parameters, with the second type-hinting on the http-interop
+  <code>DelegateInterface</code></em>.)</p>
+</li>
+<li>
+<p>Consider adapting your callable middleware to follow the http-interop middleware
   signature (<code>function (ServerRequestInterface $request, DelegateInterface $delegate)</code>);
-  this will make it forward-compatible.</li>
-<li>Consider updating your class-based middleware to implement one of the
-  http-interop middleware interfaces, potentially keeping the <code>__invoke()</code> method
-  for interoperability with existing callable-based middleware runners.</li>
+  this will make it forward-compatible. (Be aware that this may require changes
+  in import statements between Stratigility 1.3 and 2.0.)</p>
+</li>
+<li>
+<p>Consider updating your class-based middleware to implement the
+  http-interop/http-middleware server middleware interface, potentially keeping
+  the <code>__invoke()</code> method for interoperability with existing callable-based
+  middleware runners. (Be aware that this may require changes in import
+  statements between Stratigility
+  1.3 and 2.0.)</p>
+</li>
 </ul>
 <p>The first and last suggestions in this list are strongly recommended to ensure
-forwards compatibility with http-interop, and to ensure your middleware works
+forwards compatibility with http-middleware, and to ensure your middleware works
 properly across middleware stacks.</p>
 <h3 id="callable-middleware-in-version-200">Callable middleware in version 2.0.0</h3>
 <p>Callable middleware may still be used; however, in order to pipe it to the
@@ -618,7 +700,7 @@ $pipeline-&gt;setCallableMiddlewareDecorator($factory);</code></pre>
 <p>Manually decorate your middleware prior to passing it to the pipeline:</p>
 <pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(new CallableMiddlewareWrapper($middleware, $response));
 // or CallableInteropMiddlewareWrapper, if your middleware implements
-// the http-interop signature already.</code></pre>
+// the http-middleware signature already.</code></pre>
 
 
 </li>
@@ -673,11 +755,38 @@ $response = $pipeline-&gt;process($request, new CallableDelegateDecorator(
 <li><code>Zend\Stratigility\Http\Request</code> (class)</li>
 <li><code>Zend\Stratigility\Http\ResponseInterface</code> (interface)</li>
 <li><code>Zend\Stratigility\Http\Response</code> (class)</li>
+</ul>
+<h2 id="interfacesignature-changes">Interface/signature changes</h2>
+<p>The following signature changes were made with the 2.0.0 release:</p>
+<ul>
+<li><code>Zend\Stratigility\Next</code>:</li>
+<li>The <code>$done</code> constructor argument was renamed to <code>$nextDelegate</code>, and now
+    allows either <code>callable</code> or <code>Interop\Http\ServerMiddleware\DelegateInterface</code>
+    arguments.</li>
+<li>The <code>$response</code> argument to <code>__invoke()</code> was removed.</li>
+<li>The (optional) <code>$err</code> argument to <code>__invoke()</code> was removed.</li>
+</ul>
+<h2 id="removed-functionality">Removed functionality</h2>
+<p>The following classes, methods, and arguments are removed starting in version
+2.0.0.</p>
+<ul>
+<li><code>Zend\Stratigility\Dispatch</code> (class)</li>
+<li><code>Zend\Stratigility\ErrorMiddlewareInterface</code> (class)</li>
+<li><code>Zend\Stratigility\FinalHandler</code> (class)</li>
+<li><code>Zend\Stratigility\MiddlewareInterface</code>. Define your middleware as callables,
+  or using http-interop/http-middleware interfaces instead.</li>
+<li><code>Zend\Stratigility\Utils::getArity()</code> (static method); no longer used
+  internally.</li>
+<li>The <code>$err</code> argument to <code>Zend\Stratigility\Next</code>'s <code>__invoke()</code> method. If
+  passed, it will now be ignored.</li>
+<li><code>Zend\Stratigility\Http\Request</code> (class)</li>
+<li><code>Zend\Stratigility\Http\ResponseInterface</code> (interface)</li>
+<li><code>Zend\Stratigility\Http\Response</code> (class)</li>
 <li>The <code>$response</code> argument to middleware is deprecated; please see the
   <a href="../callable-middleware-in-version-1.3.0">section on callable middleware</a>
   for details, and adapt your middleware to no longer use the argument.
   While the legacy callable signature will continue to work, we recommend
-  implementing an http-interop middleware interface.</li>
+  implementing an http-interop/http-middleware interface.</li>
 </ul>
 
 <hr />
