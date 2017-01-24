@@ -1,19 +1,17 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace Zend\Stratigility;
 
 use Closure;
-use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use ReflectionFunction;
 use ReflectionMethod;
 use SplQueue;
@@ -25,33 +23,25 @@ use Zend\Stratigility\Exception\InvalidMiddlewareException;
  * This class implements a pipeline of middleware, which can be attached using
  * the `pipe()` method, and is itself middleware.
  *
- * The request and response objects are decorated using the Zend\Stratigility\Http
- * variants in this package, ensuring that the request may store arbitrary
- * properties, and the response exposes the convenience `write()`, `end()`, and
- * `isComplete()` methods.
- *
  * It creates an instance of `Next` internally, invoking it with the provided
- * request and response instances; if no `$out` argument is provided, it will
- * create a `FinalHandler` instance and pass that to `Next` as well.
+ * request and response instances, passing the original request and the returned
+ * response to the `$next` argument when complete.
  *
  * Inspired by Sencha Connect.
  *
  * @see https://github.com/sencha/connect
  */
-class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
+class MiddlewarePipe implements ServerMiddlewareInterface
 {
+    /**
+     * @var Middleware\CallableMiddlewareWrapperFactory
+     */
+    private $callableMiddlewareDecorator;
+
     /**
      * @var SplQueue
      */
     protected $pipeline;
-
-    /**
-     * Whether or not exceptions thrown by middleware or invocation of
-     * middleware using the $err argument should bubble up as exceptions.
-     *
-     * @var bool
-     */
-    private $raiseThrowables = false;
 
     /**
      * @var Response
@@ -74,43 +64,26 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
      * Takes the pipeline, creates a Next handler, and delegates to the
      * Next handler.
      *
-     * If $out is a callable, it is used as the "final handler" when
-     * $next has exhausted the pipeline; otherwise, a FinalHandler instance
-     * is created and passed to $next during initialization.
+     * $delegate will be invoked if the internal queue is exhausted without
+     * returning a response; in such situations, $delegate will then be
+     * responsible for creating and returning the final response.
      *
-     * @todo Make $out required for 2.0.0.
-     * @todo Remove trigger of deprecation notice when preparing for 2.0.0.
-     * @todo Remove raiseThrowables logic for 2.0.0.
+     * $delegate may be either a DelegateInterface instance, or a callable
+     * accepting at least a request instance (in such cases, the delegate
+     * will be decorated using Delegate\CallableDelegateDecorator).
+     *
      * @param Request $request
      * @param Response $response
-     * @param callable $out
+     * @param callable|DelegateInterface $delegate
      * @return Response
      */
-    public function __invoke(Request $request, Response $response, callable $out = null)
+    public function __invoke(Request $request, Response $response, $delegate)
     {
-        $request  = $this->decorateRequest($request);
-        $response = $this->decorateResponse($response);
-
-        if (null === $out) {
-            trigger_error(sprintf(
-                'The third argument to %s() ($out) will be required starting with '
-                . 'Stratigility version 2; please see '
-                . 'https://docs.zendframework.com/zend-stratigility/migration/to-v2/ for '
-                . 'more details on how to update your application to remove this message.',
-                __CLASS__
-            ), E_USER_DEPRECATED);
+        if (! $delegate instanceof DelegateInterface && is_callable($delegate)) {
+            $delegate = new Delegate\CallableDelegateDecorator($delegate, $response);
         }
 
-        $done   = $out ?: new FinalHandler([], $response);
-        $next   = new Next($this->pipeline, $done);
-        $next->setResponsePrototype($response);
-        if ($this->raiseThrowables) {
-            $next->raiseThrowables();
-        }
-
-        $result = $next($request, $response);
-
-        return ($result instanceof Response ? $result : $response);
+        return $this->process($request, $delegate);
     }
 
     /**
@@ -125,19 +98,8 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
      */
     public function process(Request $request, DelegateInterface $delegate)
     {
-        $response = $this->responsePrototype;
-
         $next = new Next($this->pipeline, $delegate);
-        if ($response) {
-            $next->setResponsePrototype($response);
-        }
-        if ($this->raiseThrowables) {
-            $next->raiseThrowables();
-        }
-
-        $result = $next->process($request);
-
-        return ($result instanceof Response ? $result : $response);
+        return $next->process($request);
     }
 
     /**
@@ -151,12 +113,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
      *
      * A handler CAN implement MiddlewareInterface, but MUST be callable.
      *
-     * Handlers with arity >= 4 or those implementing ErrorMiddlewareInterface
-     * are considered error handlers, and will be executed when a handler calls
-     * $next with an error or raises an exception.
-     *
      * @see MiddlewareInterface
-     * @see ErrorMiddlewareInterface
      * @see Next
      * @param string|callable|object $path Either a URI path prefix, or middleware.
      * @param null|callable|object $middleware Middleware
@@ -165,7 +122,7 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     public function pipe($path, $middleware = null)
     {
         if (null === $middleware
-            && $this->isValidMiddleware($path)
+            && ($path instanceof ServerMiddlewareInterface || is_callable($path))
         ) {
             $middleware = $path;
             $path       = '/';
@@ -175,13 +132,12 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
         // a response prototype present.
         if (is_callable($middleware)
             && ! $this->isInteropMiddleware($middleware)
-            && ! $this->isErrorMiddleware($middleware)
         ) {
             $middleware = $this->decorateCallableMiddleware($middleware);
         }
 
         // Ensure we have a valid handler
-        if (! $this->isValidMiddleware($middleware)) {
+        if (! $middleware instanceof ServerMiddlewareInterface) {
             throw InvalidMiddlewareException::fromValue($middleware);
         }
 
@@ -195,14 +151,24 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     }
 
     /**
+     * Inject a factory for decorating callable middleware.
+     *
+     * @param Middleware\CallableMiddlewareWrapperFactory $decorator
+     * @return void
+     */
+    public function setCallableMiddlewareDecorator(Middleware\CallableMiddlewareWrapperFactory $decorator)
+    {
+        $this->callableMiddlewareDecorator = $decorator;
+    }
+
+    /**
      * Enable the "raise throwables" flag.
      *
-     * @todo Deprecate this starting in 2.0.0
+     * @deprecated Since 2.0.0; this feature is now a no-op.
      * @return void
      */
     public function raiseThrowables()
     {
-        $this->raiseThrowables = true;
     }
 
     /**
@@ -246,45 +212,58 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     }
 
     /**
-     * Decorate the Request instance
-     *
-     * @param Request $request
-     * @return Http\Request
+     * @param callable $middleware
+     * @return ServerMiddlewareInterface|callable Callable, if unable to
+     *     decorate the middleware; ServerMiddlewareInterface if it can.
      */
-    private function decorateRequest(Request $request)
+    private function decorateCallableMiddleware(callable $middleware)
     {
-        if ($request instanceof Http\Request) {
-            return $request;
+        $r = $this->getReflectionFunction($middleware);
+        $paramsCount = $r->getNumberOfParameters();
+
+        if ($paramsCount !== 2) {
+            return $this->getCallableMiddlewareDecorator()
+                ->decorateCallableMiddleware($middleware);
         }
 
-        return new Http\Request($request);
+        $params = $r->getParameters();
+        $type = $params[1]->getClass();
+        if (! $type || $type->getName() !== DelegateInterface::class) {
+            return $this->getCallableMiddlewareDecorator()
+                ->decorateCallableMiddleware($middleware);
+        }
+
+        return new Middleware\CallableInteropMiddlewareWrapper($middleware);
     }
 
     /**
-     * Decorate the Response instance
-     *
-     * @param Response $response
-     * @return Http\Response
+     * @return Middleware\CallableMiddlewareWrapperFactory
+     * @throws Exception\MissingResponsePrototypeException if no middleware
+     *     decorator and no response prototype are present.
      */
-    private function decorateResponse(Response $response)
+    private function getCallableMiddlewareDecorator()
     {
-        if ($response instanceof Http\Response) {
-            return $response;
+        if ($this->callableMiddlewareDecorator) {
+            return $this->callableMiddlewareDecorator;
         }
 
-        return new Http\Response($response);
-    }
+        if (! $this->responsePrototype) {
+            throw new Exception\MissingResponsePrototypeException(sprintf(
+                'Cannot wrap callable middleware; no %s or %s instances composed '
+                . 'in middleware pipeline; use setCallableMiddlewareDecorator() or '
+                . 'setResponsePrototype() on your %s instance to provide one or the '
+                . 'other, or decorate callable middleware manually before piping.',
+                Middleware\CallableMiddlewareWrapperFactory::class,
+                Response::class,
+                get_class($this)
+            ));
+        }
 
-    /**
-     * Is the provided middleware argument valid middleware?
-     *
-     * @param mixed $middleware
-     * @return bool
-     */
-    private function isValidMiddleware($middleware)
-    {
-        return is_callable($middleware)
-            || $middleware instanceof ServerMiddlewareInterface;
+        $this->setCallableMiddlewareDecorator(
+            new Middleware\CallableMiddlewareWrapperFactory($this->responsePrototype)
+        );
+
+        return $this->callableMiddlewareDecorator;
     }
 
     /**
@@ -297,46 +276,6 @@ class MiddlewarePipe implements MiddlewareInterface, ServerMiddlewareInterface
     {
         return ! is_callable($middleware)
             && $middleware instanceof ServerMiddlewareInterface;
-    }
-
-    /**
-     * Is the middleware error middleware?
-     *
-     * @todo Remove for 2.0.0
-     * @param mixed $middleware
-     * @return bool
-     */
-    private function isErrorMiddleware($middleware)
-    {
-        return $middleware instanceof ErrorMiddlewareInterface
-            || Utils::getArity($middleware) >= 4;
-    }
-
-    /**
-     * @param callable $middleware
-     * @return ServerMiddlewareInterface|callable Callable, if unable to
-     *     decorate the middleware; ServerMiddlewareInterface if it can.
-     */
-    private function decorateCallableMiddleware(callable $middleware)
-    {
-        $r = $this->getReflectionFunction($middleware);
-        $paramsCount = $r->getNumberOfParameters();
-
-        if ($paramsCount !== 2) {
-            return $this->responsePrototype
-                ? new Middleware\CallableMiddlewareWrapper($middleware, $this->responsePrototype)
-                : $middleware;
-        }
-
-        $params = $r->getParameters();
-        $type = $params[1]->getClass();
-        if (! $type || $type->getName() !== DelegateInterface::class) {
-            return $this->responsePrototype
-                ? new Middleware\CallableMiddlewareWrapper($middleware, $this->responsePrototype)
-                : $middleware;
-        }
-
-        return new Middleware\CallableInteropMiddlewareWrapper($middleware);
     }
 
     /**

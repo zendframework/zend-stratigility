@@ -1,24 +1,30 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace ZendTest\Stratigility;
 
-use PHPUnit_Framework_TestCase as TestCase;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use InvalidArgumentException;
+use OutOfRangeException;
+use PHPUnit\Framework\TestCase;
 use Zend\Stratigility\Route;
 
 class RouteTest extends TestCase
 {
+    public function createEmptyMiddleware()
+    {
+        return $this->prophesize(ServerMiddlewareInterface::class)->reveal();
+    }
+
     public function testPathAndHandlerAreAccessibleAfterInstantiation()
     {
         $path = '/foo';
-        $handler = function () {
-        };
+        $handler = $this->createEmptyMiddleware();
+
         $route = new Route($path, $handler);
         $this->assertSame($path, $route->path);
         $this->assertSame($handler, $route->handler);
@@ -38,20 +44,20 @@ class RouteTest extends TestCase
 
     /**
      * @dataProvider nonStringPaths
+     *
+     * @param mixed $path
      */
     public function testDoesNotAllowNonStringPaths($path)
     {
-        $this->setExpectedException('InvalidArgumentException');
-        $route = new Route($path, function () {
-        });
+        $this->expectException(InvalidArgumentException::class);
+        $route = new Route($path, $this->createEmptyMiddleware());
     }
 
     public function testExceptionIsRaisedIfUndefinedPropertyIsAccessed()
     {
-        $route = new Route('/foo', function () {
-        });
+        $route = new Route('/foo', $this->createEmptyMiddleware());
 
-        $this->setExpectedException('OutOfRangeException');
+        $this->expectException(OutOfRangeException::class);
         $foo = $route->foo;
     }
 }

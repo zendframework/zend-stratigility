@@ -1,16 +1,13 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @see       http://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
+ * @link      https://github.com/zendframework/zend-stratigility for the canonical source repository
+ * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://framework.zend.com/license New BSD License
  */
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Middleware\MiddlewareInterface as InteropMiddlewareInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
 
@@ -26,7 +23,7 @@ use OutOfRangeException;
 class Route
 {
     /**
-     * @var callable
+     * @var ServerMiddlewareInterface
      */
     protected $handler;
 
@@ -37,24 +34,12 @@ class Route
 
     /**
      * @param string $path
-     * @param callable|InteropMiddlewareInterface|ServerMiddlewareInterface $handler
-     * @throws Exception\InvalidArgumentException if the $handler provided is
-     *     neither a callable nor an http-interop implementation.
+     * @param ServerMiddlewareInterface $handler
      */
-    public function __construct($path, $handler)
+    public function __construct($path, ServerMiddlewareInterface $handler)
     {
         if (! is_string($path)) {
             throw new InvalidArgumentException('Path must be a string');
-        }
-
-        if (! (is_callable($handler)
-            || $handler instanceof ServerMiddlewareInterface
-            || $handler instanceof InteropMiddlewareInterface
-        )) {
-            throw new Exception\InvalidMiddlewareException(sprintf(
-                'Middleware must be callable or implement an http-interop middleware interface; received %s',
-                is_object($handler) ? get_class($handler) : gettype($handler)
-            ));
         }
 
         $this->path    = $path;
