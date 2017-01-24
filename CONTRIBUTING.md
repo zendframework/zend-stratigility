@@ -50,7 +50,7 @@ To run tests:
 - Clone the repository:
 
   ```console
-  $ git clone git@github.com:zendframework/zend-stratigility.git
+  $ git clone git://github.com/zendframework/zend-stratigility.git
   $ cd
   ```
 
@@ -58,7 +58,7 @@ To run tests:
 
   ```console
   $ curl -sS https://getcomposer.org/installer | php --
-  $ ./composer.phar install
+  $ composer install
   ```
 
   If you don't have `curl` installed, you can also download `composer.phar` from https://getcomposer.org/
@@ -96,6 +96,18 @@ $ composer cs-fix
 If the above fixes any CS issues, please re-run the tests to ensure
 they pass, and make sure you add and commit the changes after verification.
 
+## Running License Checks
+
+File-level docblocks should follow the format demonstrated in `.docheader`. To
+check for conformity, use:
+
+```console
+$ composer license-check
+```
+
+This will flag files that are incorrect, which you can then update. Re-run the
+tool to verify your changes.
+
 ## Recommended Workflow for Contributions
 
 Your first step is to establish a public repository from which we can
@@ -107,7 +119,7 @@ pull your work into the master repository. We recommend using
 3. Clone the canonical repository locally and enter it.
 
    ```console
-   $ git clone git://github.com:zendframework/zend-stratigility.git
+   $ git clone git://github.com/zendframework/zend-stratigility.git
    $ cd zend-stratigility
    ```
 
