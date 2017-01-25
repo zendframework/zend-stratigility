@@ -51,7 +51,7 @@ To run tests:
 
   ```console
   $ git clone git://github.com/zendframework/zend-stratigility.git
-  $ cd
+  $ cd zend-stratigility
   ```
 
 - Install dependencies via composer:
