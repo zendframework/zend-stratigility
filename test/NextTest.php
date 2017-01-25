@@ -58,7 +58,7 @@ class NextTest extends TestCase
         $this->request->withUri(new Uri('http://local.example.com/bar'));
 
         $next = new Next($this->queue);
-        $next($this->request, $this->response);
+        $next($this->request);
         $this->assertTrue($triggered);
     }
 
@@ -84,7 +84,7 @@ class NextTest extends TestCase
         $this->request->withUri(new Uri('http://local.example.com/foobar'));
 
         $next = new Next($this->queue);
-        $next($this->request, $this->response);
+        $next($this->request);
         $this->assertTrue($triggered);
     }
 
@@ -103,7 +103,7 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
 
         $next = new Next($this->queue);
-        $next($request, $this->response);
+        $next($request);
         $this->assertTrue($triggered);
     }
 
@@ -123,7 +123,7 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
 
         $next = new Next($this->queue);
-        $next($request, $this->response);
+        $next($request);
         $this->assertEquals('/bar', $triggered);
     }
 
@@ -152,7 +152,7 @@ class NextTest extends TestCase
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
         $next = new Next($this->queue);
-        $next($request, $this->response);
+        $next($request);
         $this->assertEquals('done', (string) $this->response->getBody());
     }
 
@@ -182,7 +182,7 @@ class NextTest extends TestCase
 
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $next = new Next($this->queue);
-        $result = $next($request, $this->response);
+        $result = $next($request);
         $this->assertSame($this->response, $result);
     }
 
@@ -208,7 +208,7 @@ class NextTest extends TestCase
         $this->queue->enqueue($route2);
 
         $next = new Next($this->queue);
-        $next($request, $this->response);
+        $next($request);
     }
 
     public function testNextShouldRaiseExceptionIfMiddlewareDoesNotReturnResponse()
@@ -232,7 +232,7 @@ class NextTest extends TestCase
         $next    = new Next($this->queue);
 
         $this->expectException(Exception\MissingResponseException::class);
-        $next($request, $this->response);
+        $next($request);
     }
 
     /**
