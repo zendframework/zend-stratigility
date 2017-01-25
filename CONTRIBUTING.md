@@ -57,11 +57,10 @@ To run tests:
 - Install dependencies via composer:
 
   ```console
-  $ curl -sS https://getcomposer.org/installer | php --
   $ composer install
   ```
 
-  If you don't have `curl` installed, you can also download `composer.phar` from https://getcomposer.org/
+  If you don't have `composer` installed, please download it from https://getcomposer.org/download/
 
 - Run the tests using the "test" command shipped in the `composer.json`:
 
