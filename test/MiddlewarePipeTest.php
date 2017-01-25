@@ -518,4 +518,19 @@ class MiddlewarePipeTest extends TestCase
         $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
     }
+
+    public function testPipeShouldNotWrapMiddlewarePipeInstancesAsCallableMiddleware()
+    {
+        $nested = new MiddlewarePipe();
+        $pipeline = new MiddlewarePipe();
+
+        $pipeline->pipe($nested);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $this->assertSame($nested, $route->handler);
+    }
 }

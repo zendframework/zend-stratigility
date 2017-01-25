@@ -24,7 +24,7 @@ details.
 
 - Nothing.
 
-## 2.0.1 - TBD
+## 2.0.1 - 2017-01-25
 
 ### Added
 
@@ -40,7 +40,10 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#98](https://github.com/zendframework/zend-stratigility/pull/98) fixes how
+  `Middleware::pipe()` handles `MiddlewarePipe` instances passed to it;
+  previously it was incorrectly wrapping them in `CallableMiddlewareWrapper`
+  instances; it now pipes them as-is.
 
 ## 2.0.0 - 2017-01-24
 

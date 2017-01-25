@@ -128,10 +128,9 @@ class MiddlewarePipe implements ServerMiddlewareInterface
             $path       = '/';
         }
 
-        // Decorate callable middleware as http-interop middleware if we have
-        // a response prototype present.
+        // Decorate callable middleware as http-interop middleware
         if (is_callable($middleware)
-            && ! $this->isInteropMiddleware($middleware)
+            && ! $middleware instanceof ServerMiddlewareInterface
         ) {
             $middleware = $this->decorateCallableMiddleware($middleware);
         }
@@ -264,18 +263,6 @@ class MiddlewarePipe implements ServerMiddlewareInterface
         );
 
         return $this->callableMiddlewareDecorator;
-    }
-
-    /**
-     * Is the provided middleware argument http-interop middleware?
-     *
-     * @param mixed $middleware
-     * @return bool
-     */
-    private function isInteropMiddleware($middleware)
-    {
-        return ! is_callable($middleware)
-            && $middleware instanceof ServerMiddlewareInterface;
     }
 
     /**
