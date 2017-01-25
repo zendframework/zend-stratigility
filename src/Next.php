@@ -30,15 +30,6 @@ class Next implements DelegateInterface
     private $queue;
 
     /**
-     * Flag indicating whether or not the dispatcher should raise throwables
-     * when encountered, and whether or not $err arguments should raise them;
-     * defaults false.
-     *
-     * @var bool
-     */
-    private $raiseThrowables = false;
-
-    /**
      * @var string
      */
     private $removed = '';

@@ -440,9 +440,6 @@ class MiddlewarePipeTest extends TestCase
         $pipeline = new MiddlewarePipe();
         $pipeline->pipe($middleware->reveal());
 
-        $done = function () {
-        };
-
         $this->assertSame($response->reveal(), $pipeline->process($this->request, $delegate));
     }
 
