@@ -87,9 +87,6 @@ after_script:
 after_success:
   - if [[ $DEPLOY_DOCS == "true" ]]; then echo "Preparing to build and deploy documentation" ; ./zf-mkdoc-theme/deploy.sh ; echo "Completed deploying documentation" ; fi
 
-after_script:
-  - if [[ $TEST_COVERAGE == 'true' ]]; then travis_retry composer upload-coverage ; fi
-
 notifications:
   irc: "irc.freenode.org#zftalk.dev"
   email: false
