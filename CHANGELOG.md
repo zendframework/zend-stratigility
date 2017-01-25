@@ -6,7 +6,7 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 2.0.1 - TBD
+## 2.0.1 - 2017-01-25
 
 ### Added
 
@@ -22,7 +22,10 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#98](https://github.com/zendframework/zend-stratigility/pull/98) fixes how
+  `Middleware::pipe()` handles `MiddlewarePipe` instances passed to it;
+  previously it was incorrectly wrapping them in `CallableMiddlewareWrapper`
+  instances; it now pipes them as-is.
 
 ## 2.0.0 - 2017-01-24
 
