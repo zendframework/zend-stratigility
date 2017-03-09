@@ -21,6 +21,7 @@ use Zend\Diactoros\Uri;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
 use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
+use Zend\Stratigility\MiddlewareInterface;
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
 
@@ -532,5 +533,29 @@ class MiddlewarePipeTest extends TestCase
 
         $route = $queue->dequeue();
         $this->assertSame($nested, $route->handler);
+    }
+
+    public function testGetPipedPathsReturnsPaths()
+    {
+        $piped = $this->prophesize(MiddlewareInterface::class)->reveal();
+        $this->middleware->pipe($piped);
+        $this->middleware->pipe('/first', $piped);
+        $this->middleware->pipe('/second', $piped);
+        $this->middleware->pipe($piped);
+
+        $actual = $this->middleware->getPipedPaths();
+        $this->assertEquals(['/first', '/second'], $actual);
+    }
+
+    public function testGetPipedPathsIncludesRoot()
+    {
+        $piped = $this->prophesize(MiddlewareInterface::class)->reveal();
+        $this->middleware->pipe($piped);
+        $this->middleware->pipe('/first', $piped);
+        $this->middleware->pipe('/second', $piped);
+        $this->middleware->pipe($piped);
+
+        $actual = $this->middleware->getPipedPaths(true);
+        $this->assertEquals(['/', '/first', '/second', '/'], $actual);
     }
 }
