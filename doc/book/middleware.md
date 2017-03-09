@@ -8,11 +8,14 @@ response or pass delegation on to the next middleware in the queue.
 
 ```php
 use Zend\Stratigility\MiddlewarePipe;
+use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$app    = new MiddlewarePipe();
+$app = new MiddlewarePipe();
+$app->setResponsePrototype(new Response());
+
 $server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
 
 // Landing page
