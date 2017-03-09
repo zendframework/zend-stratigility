@@ -218,12 +218,15 @@
 <p>Middleware is code that exists between the request and response, and which can
 take the incoming request, perform actions based on it, and either complete the
 response or pass delegation on to the next middleware in the queue.</p>
-<pre class="codehilite"><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
+<pre class="codehilite"><code class="language-php linenums">use Zend\Stratigility\MiddlewarePipe;
+use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$app    = new MiddlewarePipe();
+$app = new MiddlewarePipe();
+$app-&gt;setResponsePrototype(new Response());
+
 $server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
 
 // Landing page
@@ -243,7 +246,6 @@ $app-&gt;pipe('/foo', function ($req, $res, $next) {
 
 $server-&gt;listen();</code></pre>
 
-
 <p>In the above example, we have two examples of middleware. The first is a
 landing page, and listens at the root path. If the request path is empty or
 <code>/</code>, it completes the response. If it is not, it delegates to the next
@@ -260,7 +262,7 @@ middleware, which is also widely used across other middleware frameworks
 such as Slim, Relay, Adroit, etc.</p>
 <p>http-interop is a project attempting to standardize middleware signatures.
 The signature until the 0.4.0 series for server-side middleware is:</p>
-<pre class="codehilite"><code class="language-php">namespace Interop\Http\Middleware;
+<pre class="codehilite"><code class="language-php linenums">namespace Interop\Http\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -273,9 +275,8 @@ interface ServerMiddlewareInterface
     ) : ResponseInterface;
 }</code></pre>
 
-
 <p>where <code>DelegateInterface</code> is defined as:</p>
-<pre class="codehilite"><code class="language-php">namespace Interop\Http\Middleware;
+<pre class="codehilite"><code class="language-php linenums">namespace Interop\Http\Middleware;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -287,9 +288,8 @@ interface DelegateInterface
     ) : ResponseInterface;
 }</code></pre>
 
-
 <p>Starting in http-interop/http-middleware 0.4.1, these become:</p>
-<pre class="codehilite"><code class="language-php">namespace Interop\Http\ServerMiddleware;
+<pre class="codehilite"><code class="language-php linenums">namespace Interop\Http\ServerMiddleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -309,29 +309,26 @@ interface DelegateInterface
     ) : ResponseInterface;
 }</code></pre>
 
-
 <p>(Note the namespace change, the change in the middleware interface name, and
 the change in the <code>DelegateInterface</code> signature.)</p>
 <p>Stratigility allows you to implement the http-interop/http-middleware
 middleware interface to provide middleware.  Additionally, you can define
 <code>callable</code> middleware with the following signature, and it will be dispatched
 as http-interop middleware:</p>
-<pre class="codehilite"><code class="language-php">function(
+<pre class="codehilite"><code class="language-php linenums">function(
     ServerRequestInterface $request,
     DelegateInterface $delegate
 ) : ResponseInterface;</code></pre>
 
-
 <p>(The <code>$request</code> argument does not require a typehint when defining callable
 middleware, but we encourage its use.)</p>
 <p>As such, the above example can also be written as follows:</p>
-<pre class="codehilite"><code class="language-php">$app-&gt;pipe('/', function ($request, DelegateInterface $delegate) {
+<pre class="codehilite"><code class="language-php linenums">$app-&gt;pipe('/', function ($request, DelegateInterface $delegate) {
     if (! in_array($request-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
         return $delegate-&gt;process($request);
     }
     return new TextResponse('Hello world!');
 });</code></pre>
-
 
 </blockquote>
 <p>Middleware can decide more processing can be performed by calling the <code>$next</code>
@@ -348,10 +345,9 @@ requests &mdash; for instance, you could have middleware perform the following:<
 allowing you to mix and match applications under a common domain. As an
 example, you could put API middleware next to middleware that serves its
 documentation, next to middleware that serves files, and segregate each by URI:</p>
-<pre class="codehilite"><code class="language-php">$app-&gt;pipe('/api', $apiMiddleware);
+<pre class="codehilite"><code class="language-php linenums">$app-&gt;pipe('/api', $apiMiddleware);
 $app-&gt;pipe('/docs', $apiDocMiddleware);
 $app-&gt;pipe('/files', $filesMiddleware);</code></pre>
-
 
 <p>The handlers in each middleware attached this way will see a URI with that path
 segment stripped, allowing them to be developed separately and re-used under

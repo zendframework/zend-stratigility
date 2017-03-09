@@ -218,7 +218,7 @@
 <li>Create a server, using the middleware</li>
 <li>Instruct the server to listen for a request</li>
 </ul>
-<pre class="codehilite"><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
+<pre class="codehilite"><code class="language-php linenums">use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
 use Zend\Diactoros\Server;
 
@@ -233,7 +233,6 @@ $server = Server::createServer($app,
   $_FILES
 );
 $server-&gt;listen(new NoopFinalHandler());</code></pre>
-
 
 <p>The above example is useless by itself until you pipe middleware into the application.</p>
 

@@ -221,7 +221,7 @@ argument, or return handling to the parent middleware by returning a response.</
 <p>As an example, consider the following middleware which will use an external
 router to map the incoming request path to a handler; if unable to map the
 request, it returns processing to the next middleware.</p>
-<pre class="codehilite"><code class="language-php">function ($req, $res, $next) use ($router) {
+<pre class="codehilite"><code class="language-php linenums">function ($req, $res, $next) use ($router) {
     $path = $req-&gt;getUri()-&gt;getPath();
 
     // Route the path
@@ -234,7 +234,6 @@ request, it returns processing to the next middleware.</p>
     return $handler($req, $res, $next);
 }</code></pre>
 
-
 <p>Middleware written in this way can be any of the following:</p>
 <ul>
 <li>Closures (as shown above)</li>
@@ -246,7 +245,7 @@ request, it returns processing to the next middleware.</p>
   <code>Zend\Stratigility\MiddlewarePipe</code>)</li>
 </ul>
 <p>In all cases, if you wish to implement typehinting, the signature is:</p>
-<pre class="codehilite"><code class="language-php">function (
+<pre class="codehilite"><code class="language-php linenums">function (
     Psr\Http\Message\ServerRequestInterface $request,
     Psr\Http\Message\ResponseInterface $response,
     callable $next
