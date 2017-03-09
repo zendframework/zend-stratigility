@@ -218,9 +218,10 @@
 <p>Middleware is code that exists between the request and response, and which can
 take the incoming request, perform actions based on it, and either complete the
 response or pass delegation on to the next middleware in the queue.</p>
-<pre class="codehilite"><code class="language-php linenums">use Zend\Stratigility\MiddlewarePipe;
-use Zend\Diactoros\Response;
+<pre class="codehilite"><code class="language-php linenums">use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
+use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\NoopFinalHandler;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -244,7 +245,7 @@ $app-&gt;pipe('/foo', function ($req, $res, $next) {
     return $res;
 });
 
-$server-&gt;listen();</code></pre>
+$server-&gt;listen(new NoopFinalHandler());</code></pre>
 
 <p>In the above example, we have two examples of middleware. The first is a
 landing page, and listens at the root path. If the request path is empty or
