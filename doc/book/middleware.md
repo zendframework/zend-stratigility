@@ -7,9 +7,10 @@ take the incoming request, perform actions based on it, and either complete the
 response or pass delegation on to the next middleware in the queue.
 
 ```php
-use Zend\Stratigility\MiddlewarePipe;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
+use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\NoopFinalHandler;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -33,7 +34,7 @@ $app->pipe('/foo', function ($req, $res, $next) {
     return $res;
 });
 
-$server->listen();
+$server->listen(new NoopFinalHandler());
 ```
 
 In the above example, we have two examples of middleware. The first is a
