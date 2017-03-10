@@ -27,7 +27,7 @@
   },
   "require-dev": {
     "zendframework/zend-diactoros": "^1.0",
-    "phpunit/phpunit": "^5.7",
+    "phpunit/phpunit": "^6.0.8 || ^5.7.15",
     "zendframework/zend-coding-standard": "~1.0.0",
     "malukenho/docheader": "^0.1.5"
   },
