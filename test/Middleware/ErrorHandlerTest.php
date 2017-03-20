@@ -43,9 +43,6 @@ class ErrorHandlerTest extends TestCase
     public function testReturnsResponseFromDelegateWhenNoProblemsOccur()
     {
         $expectedResponse = $this->prophesize(ResponseInterface::class)->reveal();
-        $innerMiddleware = function ($req) use ($expectedResponse) {
-            return $expectedResponse;
-        };
 
         $this->delegate
             ->process(Argument::type(ServerRequestInterface::class))
