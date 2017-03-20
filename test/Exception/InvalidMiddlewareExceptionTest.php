@@ -8,6 +8,7 @@
 namespace ZendTest\Stratigility\Exception;
 
 use PHPUnit\Framework\TestCase;
+use stdClass;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
 class InvalidMiddlewareExceptionTest extends TestCase
@@ -23,7 +24,7 @@ class InvalidMiddlewareExceptionTest extends TestCase
             'int'          => [1, 'integer'],
             'float'        => [1.1, 'double'],
             'array'        => [['not', 'callable'], 'array'],
-            'object'       => [(object) ['not', 'callable'], 'stdClass'],
+            'object'       => [(object) ['not', 'callable'], stdClass::class],
         ];
     }
 

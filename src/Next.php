@@ -9,12 +9,10 @@ namespace Zend\Stratigility;
 
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use InvalidArgumentException;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use SplQueue;
-use Throwable;
 
 /**
  * Iterate a queue of middlewares and execute them.
@@ -30,15 +28,6 @@ class Next implements DelegateInterface
      * @var SplQueue
      */
     private $queue;
-
-    /**
-     * Flag indicating whether or not the dispatcher should raise throwables
-     * when encountered, and whether or not $err arguments should raise them;
-     * defaults false.
-     *
-     * @var bool
-     */
-    private $raiseThrowables = false;
 
     /**
      * @var string
