@@ -188,6 +188,25 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     }
 
     /**
+     * Returns array of path names that have been passed to `pipe()`
+     *
+     * @param bool $includeRoot  If true, '/' path(s) will be included
+     * @return array
+     */
+    public function getPipedPaths($includeRoot = false)
+    {
+        $paths = [];
+        /* @var Route $route */
+        foreach ($this->pipeline as $route) {
+            if ($route->path != '/' || $includeRoot) {
+                $paths[] = $route->path;
+            }
+        };
+
+        return $paths;
+    }
+
+    /**
      * Normalize a path used when defining a pipe
      *
      * Strips trailing slashes, and prepends a slash.
