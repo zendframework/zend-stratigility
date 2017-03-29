@@ -90,5 +90,14 @@ after_success:
   - if [[ $DEPLOY_DOCS == "true" ]]; then echo "Preparing to build and deploy documentation" ; ./zf-mkdoc-theme/deploy.sh ; echo "Completed deploying documentation" ; fi
 
 notifications:
-  irc: "irc.freenode.org#zftalk.dev"
   email: false
+  irc:
+    channels:
+      - "irc.freenode.org#zftalk.dev"
+    on_success: change
+    on_failure: always
+  slack:
+    rooms:
+      - secure: "Vll4mUzenIQN/WlPwl3F3T3WEnpGwdVXhZADQcvNpf3npPtOF+Z9X7BzbxqQ4ol2qMqv8Prvw0THuenFmGB1CrXee05q2ochQ7CJMaPGG9kXEWiNrZ0QVlAGCHdZOzMWCpWSKWqwPKmfcb0Yqy5roLx0m31LgLNLmj6crSXxrFke3iCcxQ5O7qCW2z3CZfoCCuSyEWCUY2wU53HbJq9FjK8hMiOntV9SDE2cZfqz6wdMAmbF+wrL/E+7cxZp5v23xXoicolnNV7kNWKQA3Ebk0jTkdAS06MY0/cXbnjKAUOm8teL5r7sY8aTCiVfTfVOKgASQ0O71nz76AiiSxT0fq5yUbmMidOLu+0b2RDeFovqXDTxIvoJ6F2RsgpOXSfLmSWlVosFMT+k7NHjSPxjEICyN3rmVYeCCHtrKukI7P4ijDTw50JsGZs0THP8vjGYCZuxJ4Ybc+74MG/fgtH5TUeopiB1t2FaWae8CmOcEWnkFRzgGqwNFuUOonhvBcC6PoJMXdun15BNp7BGXv9WjcyV4vVdGMUchkSAxpLUoryZsQK/pI+ZIfNgc+rWWh2x/9Musv9t5rmnWr1/kqd93vBnpabGd3kgnuXvoCYGw839A2LRq/jTiFAyTE9Nrv3sILrxjpRcX/8MDap8E9pHKaPi+IkU6C2tqzW4w0HYZeI="
+    on_success: change
+    on_failure: always
