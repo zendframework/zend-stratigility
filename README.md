@@ -5,7 +5,7 @@
 
 > From "Strata", Latin for "layer", and "agility".
 
-This package supercedes and replaces [phly/conduit](https://github.com/phly/conduit).
+This package supersedes and replaces [phly/conduit](https://github.com/phly/conduit).
 
 Stratigility is a port of [Sencha Connect](https://github.com/senchalabs/connect)
 to PHP. It allows you to create and dispatch middleware pipelines.
