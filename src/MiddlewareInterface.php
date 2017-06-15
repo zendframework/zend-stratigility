@@ -13,7 +13,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 /**
  * Middleware.
  *
- * Middleware accepts a request and a response, and optionally a
+ * Middleware accepts a request and a response, and a
  * callback `$next` (called if the middleware wants to allow the *next*
  * middleware to process the incoming request, or to delegate output to another
  * process).
