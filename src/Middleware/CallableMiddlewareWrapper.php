@@ -7,8 +7,8 @@
 
 namespace Zend\Stratigility\Middleware;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\Next;
@@ -17,7 +17,7 @@ use Zend\Stratigility\Next;
  * Decorate legacy callable middleware to make it dispatchable as server
  * middleware.
  */
-class CallableMiddlewareWrapper implements ServerMiddlewareInterface
+class CallableMiddlewareWrapper implements MiddlewareInterface
 {
     /**
      * @var callable
@@ -35,26 +35,26 @@ class CallableMiddlewareWrapper implements ServerMiddlewareInterface
      */
     public function __construct(callable $middleware, ResponseInterface $prototype)
     {
-        $this->middleware = $middleware;
+        $this->middleware        = $middleware;
         $this->responsePrototype = $prototype;
     }
 
     /**
      * Proxies to underlying middleware, using composed response prototype.
      *
-     * Also decorates the $delegator using the CallableMiddlewareWrapper.
+     * Also decorates the $handler using the CallableMiddlewareWrapper.
      *
      * {@inheritDocs}
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
     {
         $middleware = $this->middleware;
-        $delegate = $delegate instanceof Next
-            ? $delegate
-            : function ($request) use ($delegate) {
-                return $delegate->process($request);
+        $handler    = $handler instanceof Next
+            ? $handler
+            : function ($request) use ($handler) {
+                return $handler->handle($request);
             };
 
-        return $middleware($request, $this->responsePrototype, $delegate);
+        return $middleware($request, $this->responsePrototype, $handler);
     }
 }

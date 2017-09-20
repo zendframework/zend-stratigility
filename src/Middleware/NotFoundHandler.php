@@ -7,13 +7,13 @@
 
 namespace Zend\Stratigility\Middleware;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Stratigility\Delegate\CallableDelegateDecorator;
+use Zend\Stratigility\Handler\CallableHandlerDecorator;
 
-class NotFoundHandler implements ServerMiddlewareInterface
+class NotFoundHandler implements MiddlewareInterface
 {
     /**
      * @var ResponseInterface
@@ -33,7 +33,7 @@ class NotFoundHandler implements ServerMiddlewareInterface
      * Proxy to process()
      *
      * Proxies to process, after first wrapping the `$next` argument using the
-     * CallableDelegateDecorator.
+     * CallableHandlerDecorator.
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
@@ -42,17 +42,17 @@ class NotFoundHandler implements ServerMiddlewareInterface
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
-        return $this->process($request, new CallableDelegateDecorator($next, $response));
+        return $this->process($request, new CallableHandlerDecorator($next, $response));
     }
 
     /**
      * Creates and returns a 404 response.
      *
      * @param ServerRequestInterface $request Ignored.
-     * @param DelegateInterface $delegate Ignored.
+     * @param RequestHandlerInterface $handler Ignored.
      * @return ResponseInterface
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
     {
         $response = $this->responsePrototype
             ->withStatus(404);
@@ -61,6 +61,7 @@ class NotFoundHandler implements ServerMiddlewareInterface
             $request->getMethod(),
             (string) $request->getUri()
         ));
+
         return $response;
     }
 }

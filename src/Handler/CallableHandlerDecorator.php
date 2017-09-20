@@ -5,9 +5,9 @@
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
-namespace Zend\Stratigility\Delegate;
+namespace Zend\Stratigility\Handler;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -15,7 +15,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * Decorate callable delegates as http-interop delegates in order to process
  * incoming requests.
  */
-class CallableDelegateDecorator implements DelegateInterface
+class CallableHandlerDecorator implements RequestHandlerInterface
 {
     /**
      * @var callable
@@ -42,9 +42,10 @@ class CallableDelegateDecorator implements DelegateInterface
      *
      * {@inheritDoc}
      */
-    public function process(ServerRequestInterface $request)
+    public function handle(ServerRequestInterface $request)
     {
         $delegate = $this->delegate;
+
         return $delegate($request, $this->response);
     }
 }

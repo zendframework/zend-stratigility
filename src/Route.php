@@ -7,7 +7,7 @@
 
 namespace Zend\Stratigility;
 
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
 
@@ -23,9 +23,9 @@ use OutOfRangeException;
 class Route
 {
     /**
-     * @var ServerMiddlewareInterface
+     * @var MiddlewareInterface
      */
-    protected $handler;
+    protected $middleware;
 
     /**
      * @var string
@@ -34,20 +34,21 @@ class Route
 
     /**
      * @param string $path
-     * @param ServerMiddlewareInterface $handler
+     * @param MiddlewareInterface $middleware
      */
-    public function __construct($path, ServerMiddlewareInterface $handler)
+    public function __construct($path, MiddlewareInterface $middleware)
     {
         if (! is_string($path)) {
             throw new InvalidArgumentException('Path must be a string');
         }
 
-        $this->path    = $path;
-        $this->handler = $handler;
+        $this->path = $path;
+        $this->middleware = $middleware;
     }
 
     /**
      * @param mixed $name
+     *
      * @return mixed
      * @throws OutOfRangeException for invalid properties
      */
@@ -56,6 +57,7 @@ class Route
         if (! property_exists($this, $name)) {
             throw new OutOfRangeException('Only the path and handler may be accessed from a Route instance');
         }
+
         return $this->{$name};
     }
 }
