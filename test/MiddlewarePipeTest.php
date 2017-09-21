@@ -7,8 +7,8 @@
 
 namespace ZendTest\Stratigility;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\RequestInterface;
@@ -26,6 +26,10 @@ use Zend\Stratigility\NoopFinalHandler;
 
 class MiddlewarePipeTest extends TestCase
 {
+    private $request;
+    private $response;
+    private $middleware;
+
     public function setUp()
     {
         $this->request    = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
@@ -93,7 +97,7 @@ class MiddlewarePipeTest extends TestCase
         $this->assertContains('Third', $body);
     }
 
-    public function testInvokesDelegateWhenQueueIsExhausted()
+    public function testInvokesHandlerWhenQueueIsExhausted()
     {
         $expected = $this->prophesize(ResponseInterface::class)->reveal();
         $this->middleware->setResponsePrototype($expected);
@@ -110,10 +114,10 @@ class MiddlewarePipeTest extends TestCase
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
 
-        $delegate = $this->prophesize(DelegateInterface::class);
-        $delegate->process($request)->willReturn($expected);
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+        $handler->handle($request)->willReturn($expected);
 
-        $result = $this->middleware->__invoke($request, $this->response, $delegate->reveal());
+        $result = $this->middleware->__invoke($request, $this->response, $handler->reveal());
 
         $this->assertSame($expected, $result);
     }
@@ -180,31 +184,31 @@ class MiddlewarePipeTest extends TestCase
 
     public function testNestedMiddlewareMayInvokeDoneToInvokeNextOfParent()
     {
-        $childMiddleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $childMiddleware = $this->prophesize(MiddlewareInterface::class);
         $childMiddleware
-            ->process(Argument::type(ServerRequestInterface::class), Argument::type(DelegateInterface::class))
+            ->process(Argument::type(ServerRequestInterface::class), Argument::type(RequestHandlerInterface::class))
             ->will(function ($args) {
                 $request = $args[0];
                 $next = $args[1];
-                return $next->process($request);
+                return $next->handle($request);
             });
 
         $childPipeline = new MiddlewarePipe();
         $childPipeline->pipe('/', $childMiddleware->reveal());
 
-        $outerMiddleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $outerMiddleware = $this->prophesize(MiddlewareInterface::class);
         $outerMiddleware
-            ->process(Argument::type(ServerRequestInterface::class), Argument::type(DelegateInterface::class))
+            ->process(Argument::type(ServerRequestInterface::class), Argument::type(RequestHandlerInterface::class))
             ->will(function ($args) {
                 $request = $args[0];
                 $next = $args[1];
-                return $next->process($request);
+                return $next->handle($request);
             });
 
         $expected = $this->prophesize(ResponseInterface::class)->reveal();
-        $innerMiddleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $innerMiddleware = $this->prophesize(MiddlewareInterface::class);
         $innerMiddleware
-            ->process(Argument::type(ServerRequestInterface::class), Argument::type(DelegateInterface::class))
+            ->process(Argument::type(ServerRequestInterface::class), Argument::type(RequestHandlerInterface::class))
             ->willReturn($expected);
 
         $pipeline = $this->middleware;
@@ -214,8 +218,8 @@ class MiddlewarePipeTest extends TestCase
         $pipeline->pipe($innerMiddleware->reveal());
 
         $request = new Request([], [], 'http://local.example.com/test', 'GET', 'php://memory');
-        $final = $this->prophesize(DelegateInterface::class);
-        $final->process(Argument::any())->shouldNotBeCalled();
+        $final = $this->prophesize(RequestHandlerInterface::class);
+        $final->handle(Argument::any())->shouldNotBeCalled();
 
         $result = $pipeline->process($request, $final->reveal());
         $this->assertSame($expected, $result);
@@ -429,18 +433,18 @@ class MiddlewarePipeTest extends TestCase
      */
     public function testCanPipeInteropMiddleware()
     {
-        $delegate = $this->prophesize(DelegateInterface::class)->reveal();
+        $handler = $this->prophesize(RequestHandlerInterface::class)->reveal();
 
         $response = $this->prophesize(ResponseInterface::class);
-        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $middleware = $this->prophesize(MiddlewareInterface::class);
         $middleware
-            ->process(Argument::type(RequestInterface::class), Argument::type(DelegateInterface::class))
+            ->process(Argument::type(RequestInterface::class), Argument::type(RequestHandlerInterface::class))
             ->will([$response, 'reveal']);
 
         $pipeline = new MiddlewarePipe();
         $pipeline->pipe($middleware->reveal());
 
-        $this->assertSame($response->reveal(), $pipeline->process($this->request, $delegate));
+        $this->assertSame($response->reveal(), $pipeline->process($this->request, $handler));
     }
 
     /**
@@ -460,18 +464,18 @@ class MiddlewarePipeTest extends TestCase
         $queue = $r->getValue($pipeline);
 
         $route = $queue->dequeue();
-        $test = $route->handler;
+        $test = $route->middleware;
         $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
         $this->assertAttributeSame($this->response, 'responsePrototype', $test);
     }
 
-    public function testWillDecorateACallableDefiningADelegateArgumentUsingAlternateDecorator()
+    public function testWillDecorateACallableDefiningAHandlerArgumentUsingAlternateDecorator()
     {
         $pipeline = new MiddlewarePipe();
         $pipeline->setResponsePrototype($this->response);
 
-        $middleware = function ($request, DelegateInterface $delegate) {
+        $middleware = function ($request, RequestHandlerInterface $handler) {
         };
         $pipeline->pipe($middleware);
 
@@ -480,7 +484,7 @@ class MiddlewarePipeTest extends TestCase
         $queue = $r->getValue($pipeline);
 
         $route = $queue->dequeue();
-        $test = $route->handler;
+        $test = $route->middleware;
         $this->assertInstanceOf(CallableInteropMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
     }
@@ -511,7 +515,7 @@ class MiddlewarePipeTest extends TestCase
         $queue = $r->getValue($pipeline);
 
         $route = $queue->dequeue();
-        $test = $route->handler;
+        $test = $route->middleware;
         $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
     }
@@ -528,6 +532,6 @@ class MiddlewarePipeTest extends TestCase
         $queue = $r->getValue($pipeline);
 
         $route = $queue->dequeue();
-        $this->assertSame($nested, $route->handler);
+        $this->assertSame($nested, $route->middleware);
     }
 }

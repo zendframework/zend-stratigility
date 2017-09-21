@@ -113,8 +113,8 @@ class Next implements RequestHandlerInterface
             $request = $this->stripRouteFromPath($request, $route);
         }
 
-        $middleware = $layer->handler;
-        $response   = $middleware->handle($request, $this);
+        $middleware = $layer->middleware;
+        $response   = $middleware->process($request, $this);
 
         if (! $response instanceof ResponseInterface) {
             throw new Exception\MissingResponseException(sprintf(
@@ -170,7 +170,7 @@ class Next implements RequestHandlerInterface
         // Normalize to remove double-slashes
         $resetPath = str_replace('//', '/', $resetPath);
 
-        $new           = $uri->withPath($resetPath);
+        $new = $uri->withPath($resetPath);
         $this->removed = '';
 
         return $request->withUri($new);

@@ -55,7 +55,7 @@ class Route
     public function __get($name)
     {
         if (! property_exists($this, $name)) {
-            throw new OutOfRangeException('Only the path and handler may be accessed from a Route instance');
+            throw new OutOfRangeException('Only the path and middleware may be accessed from a Route instance');
         }
 
         return $this->{$name};

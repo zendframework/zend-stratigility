@@ -7,7 +7,7 @@
 
 namespace ZendTest\Stratigility\Middleware;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,16 +17,16 @@ class CallableInteropMiddlewareWrapperTest extends TestCase
 {
     public function testWrapperDecoratesAndProxiesToCallableInteropMiddleware()
     {
-        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
-        $delegate = $this->prophesize(DelegateInterface::class)->reveal();
+        $request  = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $handler  = $this->prophesize(RequestHandlerInterface::class)->reveal();
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
         $decorator = new CallableInteropMiddlewareWrapper(
-            function ($request, DelegateInterface $delegate) use ($response) {
+            function ($request, RequestHandlerInterface $handler) use ($response) {
                 return $response;
             }
         );
 
-        $this->assertSame($response, $decorator->process($request, $delegate));
+        $this->assertSame($response, $decorator->process($request, $handler));
     }
 }

@@ -7,7 +7,7 @@
 
 namespace ZendTest\Stratigility\Middleware;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,7 +33,7 @@ class NotFoundHandlerTest extends TestCase
 
         $this->assertSame(
             $response->reveal(),
-            $middleware->process($request->reveal(), $this->prophesize(DelegateInterface::class)->reveal())
+            $middleware->process($request->reveal(), $this->prophesize(RequestHandlerInterface::class)->reveal())
         );
     }
 }

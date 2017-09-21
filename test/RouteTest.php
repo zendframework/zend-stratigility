@@ -7,7 +7,7 @@
 
 namespace ZendTest\Stratigility;
 
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
 use PHPUnit\Framework\TestCase;
@@ -17,17 +17,17 @@ class RouteTest extends TestCase
 {
     public function createEmptyMiddleware()
     {
-        return $this->prophesize(ServerMiddlewareInterface::class)->reveal();
+        return $this->prophesize(MiddlewareInterface::class)->reveal();
     }
 
     public function testPathAndHandlerAreAccessibleAfterInstantiation()
     {
-        $path = '/foo';
-        $handler = $this->createEmptyMiddleware();
+        $path       = '/foo';
+        $middleware = $this->createEmptyMiddleware();
 
-        $route = new Route($path, $handler);
+        $route = new Route($path, $middleware);
         $this->assertSame($path, $route->path);
-        $this->assertSame($handler, $route->handler);
+        $this->assertSame($middleware, $route->middleware);
     }
 
     public function nonStringPaths()
