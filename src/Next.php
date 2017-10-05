@@ -7,12 +7,15 @@
 
 namespace Zend\Stratigility;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
 use InvalidArgumentException;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use SplQueue;
+use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
+
+use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
 /**
  * Iterate a queue of middlewares and execute them.
@@ -69,6 +72,30 @@ class Next implements DelegateInterface
     }
 
     /**
+     * Proxy to handle method.
+     * It is needed to support http-interop/http-middleware 0.1.1.
+     *
+     * @param RequestInterface $request
+     * @return ResponseInterface
+     */
+    public function next(RequestInterface $request)
+    {
+        return $this->handle($request);
+    }
+
+    /**
+     * Proxy to handle method.
+     * It is needed to support http-interop/http-middleware 0.2-0.4.1.
+     *
+     * @param ServerRequestInterface $request
+     * @return ResponseInterface
+     */
+    public function process(ServerRequestInterface $request)
+    {
+        return $this->handle($request);
+    }
+
+    /**
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception\MissingResponseException If the queue is exhausted, and
@@ -76,14 +103,14 @@ class Next implements DelegateInterface
      * @throws Exception\MissingResponseException If the middleware executed does
      *     not return a response.
      */
-    public function process(ServerRequestInterface $request)
+    public function handle(ServerRequestInterface $request)
     {
         $request  = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
             if ($this->nextDelegate) {
-                return $this->nextDelegate->process($request);
+                return $this->nextDelegate->{HANDLER_METHOD}($request);
             }
 
             throw new Exception\MissingResponseException(sprintf(

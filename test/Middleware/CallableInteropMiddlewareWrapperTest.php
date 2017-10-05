@@ -7,7 +7,7 @@
 
 namespace ZendTest\Stratigility\Middleware;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

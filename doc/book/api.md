@@ -60,8 +60,9 @@ expect the `__invoke()` signature (via the `__invoke()` signature), or stacks
 expecting http-interop middleware signatures (via the `process()` method).
 
 
-When using `__invoke()`, the callable `$out` argument should either be an
-`Interop\Http\Middleware\DelegateInterface`, or use the signature:
+When using `__invoke()`, the callable `$out` argument should either implement
+delegator/request handler interface from `http-interop/http-middleware`
+(depends on version you are using), or use the signature:
 
 ```php
 use Psr\Http\Message\ResponseInterface;
@@ -80,8 +81,8 @@ callback will be provided for you (typically an instance of
 dispatching to the various middleware in its pipeline).
 
 Middleware should either return a response, or the result of
-`$next()/DelegateInterface::process()` (which should eventually evaluate to a
-response instance).
+`$next()/DelegateInterface::process()/RequestHandlerInterface::handle()`
+(which should eventually evaluate to a response instance).
 
 Within Stratigility, `Zend\Stratigility\Next` provides an implementation
 compatible with either usage.
