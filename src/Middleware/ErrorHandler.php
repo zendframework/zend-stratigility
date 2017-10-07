@@ -9,12 +9,12 @@ namespace Zend\Stratigility\Middleware;
 
 use ErrorException;
 use Exception;
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
-use Zend\Stratigility\Delegate\CallableDelegateDecorator;
+use Zend\Stratigility\Handler\CallableHandlerDecorator;
 use Zend\Stratigility\Exception\MissingResponseException;
 
 /**
@@ -63,7 +63,7 @@ use Zend\Stratigility\Exception\MissingResponseException;
  * Listeners are attached using the attachListener() method, and triggered
  * in the order attached.
  */
-final class ErrorHandler implements ServerMiddlewareInterface
+final class ErrorHandler implements MiddlewareInterface
 {
     /**
      * @var callable[]
@@ -105,7 +105,7 @@ final class ErrorHandler implements ServerMiddlewareInterface
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
-        return $this->process($request, new CallableDelegateDecorator($next, $response));
+        return $this->process($request, new CallableHandlerDecorator($next, $response));
     }
 
     /**
@@ -146,15 +146,15 @@ final class ErrorHandler implements ServerMiddlewareInterface
      * used.
      *
      * @param ServerRequestInterface $request
-     * @param DelegateInterface $delegate
+     * @param RequestHandlerInterface $handler
      * @return ResponseInterface
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
     {
         set_error_handler($this->createErrorHandler());
 
         try {
-            $response = $delegate->process($request);
+            $response = $handler->handle($request);
 
             if (! $response instanceof ResponseInterface) {
                 throw new MissingResponseException('Application did not return a response');
@@ -184,8 +184,9 @@ final class ErrorHandler implements ServerMiddlewareInterface
     private function handleThrowable($e, ServerRequestInterface $request)
     {
         $generator = $this->responseGenerator;
-        $response = $generator($e, $request, $this->responsePrototype);
+        $response  = $generator($e, $request, $this->responsePrototype);
         $this->triggerListeners($e, $request, $response);
+
         return $response;
     }
 

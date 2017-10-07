@@ -7,7 +7,7 @@
 
 namespace ZendTest\Stratigility\Middleware;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\ResponseInterface;
@@ -22,10 +22,10 @@ class ErrorHandlerTest extends TestCase
 {
     public function setUp()
     {
-        $this->response = $this->prophesize(ResponseInterface::class);
-        $this->request = $this->prophesize(ServerRequestInterface::class);
-        $this->body = $this->prophesize(StreamInterface::class);
-        $this->delegate = $this->prophesize(DelegateInterface::class);
+        $this->response       = $this->prophesize(ResponseInterface::class);
+        $this->request        = $this->prophesize(ServerRequestInterface::class);
+        $this->body           = $this->prophesize(StreamInterface::class);
+        $this->handler        = $this->prophesize(RequestHandlerInterface::class);
         $this->errorReporting = error_reporting();
     }
 
@@ -37,6 +37,7 @@ class ErrorHandlerTest extends TestCase
     public function createMiddleware($isDevelopmentMode = false)
     {
         $generator = new ErrorResponseGenerator($isDevelopmentMode);
+
         return new ErrorHandler($this->response->reveal(), $generator);
     }
 
@@ -44,22 +45,22 @@ class ErrorHandlerTest extends TestCase
     {
         $expectedResponse = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+        $this->handler
+            ->handle(Argument::type(ServerRequestInterface::class))
             ->willReturn($expectedResponse);
 
         $this->response->withStatus(Argument::any())->shouldNotBeCalled();
 
         $middleware = $this->createMiddleware();
-        $result = $middleware->process($this->request->reveal(), $this->delegate->reveal());
+        $result     = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($expectedResponse, $result);
     }
 
     public function testReturnsErrorResponseIfDelegateDoesNotReturnAResponse()
     {
-        $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+        $this->handler
+            ->handle(Argument::type(ServerRequestInterface::class))
             ->willReturn(null);
 
         $this->body->write('Unknown Error')->shouldBeCalled();
@@ -69,7 +70,7 @@ class ErrorHandlerTest extends TestCase
         $this->response->getBody()->will([$this->body, 'reveal']);
 
         $middleware = $this->createMiddleware();
-        $result = $middleware->process($this->request->reveal(), $this->delegate->reveal());
+        $result     = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($this->response->reveal(), $result);
     }
@@ -77,8 +78,8 @@ class ErrorHandlerTest extends TestCase
     public function testReturnsErrorResponseIfDelegateRaisesAnErrorInTheErrorMask()
     {
         error_reporting(E_USER_DEPRECATED);
-        $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+        $this->handler
+            ->handle(Argument::type(ServerRequestInterface::class))
             ->will(function () {
                 trigger_error('Deprecated', E_USER_DEPRECATED);
             });
@@ -90,7 +91,7 @@ class ErrorHandlerTest extends TestCase
         $this->response->getBody()->will([$this->body, 'reveal']);
 
         $middleware = $this->createMiddleware();
-        $result = $middleware->process($this->request->reveal(), $this->delegate->reveal());
+        $result     = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($this->response->reveal(), $result);
     }
@@ -101,10 +102,11 @@ class ErrorHandlerTest extends TestCase
         error_reporting($originalMask & ~E_USER_DEPRECATED);
 
         $expectedResponse = $this->prophesize(ResponseInterface::class)->reveal();
-        $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+        $this->handler
+            ->handle(Argument::type(ServerRequestInterface::class))
             ->will(function () use ($expectedResponse) {
                 trigger_error('Deprecated', E_USER_DEPRECATED);
+
                 return $expectedResponse;
             });
 
@@ -113,15 +115,15 @@ class ErrorHandlerTest extends TestCase
         $this->response->withStatus(Argument::any())->shouldNotBeCalled();
 
         $middleware = $this->createMiddleware();
-        $result = $middleware->process($this->request->reveal(), $this->delegate->reveal());
+        $result     = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($expectedResponse, $result);
     }
 
     public function testReturnsErrorResponseIfDelegateRaisesAnException()
     {
-        $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+        $this->handler
+            ->handle(Argument::type(ServerRequestInterface::class))
             ->willThrow(new RuntimeException('Exception raised', 503));
 
         $this->body->write('Unknown Error')->shouldBeCalled();
@@ -131,7 +133,7 @@ class ErrorHandlerTest extends TestCase
         $this->response->getBody()->will([$this->body, 'reveal']);
 
         $middleware = $this->createMiddleware();
-        $result = $middleware->process($this->request->reveal(), $this->delegate->reveal());
+        $result     = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($this->response->reveal(), $result);
     }
@@ -139,20 +141,20 @@ class ErrorHandlerTest extends TestCase
     public function testResponseErrorMessageIncludesStackTraceIfDevelopmentModeIsEnabled()
     {
         $exception = new RuntimeException('Exception raised', 503);
-        $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+        $this->handler
+            ->handle(Argument::type(ServerRequestInterface::class))
             ->willThrow($exception);
 
         $this->body
             ->write((new Escaper())
-            ->escapeHtml((string) $exception))->shouldBeCalled();
+                ->escapeHtml((string) $exception))->shouldBeCalled();
         $this->response->getStatusCode()->willReturn(200);
         $this->response->withStatus(503)->will([$this->response, 'reveal']);
         $this->response->getReasonPhrase()->willReturn('');
         $this->response->getBody()->will([$this->body, 'reveal']);
 
         $middleware = $this->createMiddleware(true);
-        $result = $middleware->process($this->request->reveal(), $this->delegate->reveal());
+        $result     = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($this->response->reveal(), $result);
     }
@@ -160,8 +162,8 @@ class ErrorHandlerTest extends TestCase
     public function testErrorHandlingTriggersListeners()
     {
         $exception = new RuntimeException('Exception raised', 503);
-        $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+        $this->handler
+            ->handle(Argument::type(ServerRequestInterface::class))
             ->willThrow($exception);
 
         $this->body->write('Unknown Error')->shouldBeCalled();
@@ -170,7 +172,7 @@ class ErrorHandlerTest extends TestCase
         $this->response->getReasonPhrase()->willReturn('');
         $this->response->getBody()->will([$this->body, 'reveal']);
 
-        $listener = function ($error, $request, $response) use ($exception) {
+        $listener  = function ($error, $request, $response) use ($exception) {
             $this->assertSame($exception, $error, 'Listener did not receive same exception as was raised');
             $this->assertSame($this->request->reveal(), $request, 'Listener did not receive same request');
             $this->assertSame($this->response->reveal(), $response, 'Listener did not receive same response');
@@ -181,7 +183,7 @@ class ErrorHandlerTest extends TestCase
         $middleware->attachListener($listener);
         $middleware->attachListener($listener2);
 
-        $result = $middleware->process($this->request->reveal(), $this->delegate->reveal());
+        $result = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($this->response->reveal(), $result);
     }
@@ -191,11 +193,12 @@ class ErrorHandlerTest extends TestCase
         $generator = function ($e, $request, $response) {
             $response = $response->withStatus(400);
             $response->getBody()->write('The client messed up');
+
             return $response;
         };
 
-        $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+        $this->handler
+            ->handle(Argument::type(ServerRequestInterface::class))
             ->willThrow(new RuntimeException('Exception raised', 503));
 
         $this->response->withStatus(400)->will([$this->response, 'reveal']);
@@ -203,7 +206,7 @@ class ErrorHandlerTest extends TestCase
         $this->body->write('The client messed up')->shouldBeCalled();
 
         $middleware = new ErrorHandler($this->response->reveal(), $generator);
-        $result = $middleware->process($this->request->reveal(), $this->delegate->reveal());
+        $result     = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($this->response->reveal(), $result);
     }

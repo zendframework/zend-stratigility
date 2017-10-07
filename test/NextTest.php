@@ -7,8 +7,8 @@
 
 namespace ZendTest\Stratigility;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
@@ -253,11 +253,11 @@ class NextTest extends TestCase
     /**
      * @group http-interop
      */
-    public function testNextImplementsDelegateInterface()
+    public function testNextImplementsRequestHandlerInterface()
     {
         $next = new Next($this->queue);
 
-        $this->assertInstanceOf(DelegateInterface::class, $next);
+        $this->assertInstanceOf(RequestHandlerInterface::class, $next);
     }
 
     /**
@@ -269,7 +269,7 @@ class NextTest extends TestCase
 
         $this->expectException(Exception\MissingResponseException::class);
         $this->expectExceptionMessage('exhausted');
-        $next->process($this->request);
+        $next->handle($this->request);
     }
 
     /**
@@ -281,7 +281,7 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://local.example.com/bar'));
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $first = $this->prophesize(ServerMiddlewareInterface::class);
+        $first = $this->prophesize(MiddlewareInterface::class);
         $first
             ->process($request, Argument::type(Next::class))
             ->will(function () {
@@ -290,7 +290,7 @@ class NextTest extends TestCase
             });
         $this->queue->enqueue(new Route('/foo', $first->reveal()));
 
-        $second = $this->prophesize(ServerMiddlewareInterface::class);
+        $second = $this->prophesize(MiddlewareInterface::class);
         $second
             ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
             ->willReturn($response);
@@ -298,7 +298,7 @@ class NextTest extends TestCase
 
         $next = new Next($this->queue);
 
-        $this->assertSame($response, $next->process($request));
+        $this->assertSame($response, $next->handle($request));
     }
 
     /**
@@ -310,7 +310,7 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://local.example.com/foobar'));
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $first = $this->prophesize(ServerMiddlewareInterface::class);
+        $first = $this->prophesize(MiddlewareInterface::class);
         $first
             ->process($request, Argument::type(Next::class))
             ->will(function () {
@@ -319,14 +319,14 @@ class NextTest extends TestCase
             });
         $this->queue->enqueue(new Route('/foo', $first->reveal()));
 
-        $second = $this->prophesize(ServerMiddlewareInterface::class);
+        $second = $this->prophesize(MiddlewareInterface::class);
         $second
             ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
             ->willReturn($response);
         $this->queue->enqueue(new Route('/foobar', $second->reveal()));
 
         $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
+        $this->assertSame($response, $next->handle($request));
     }
 
     /**
@@ -337,14 +337,14 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $middleware = $this->prophesize(MiddlewareInterface::class);
         $middleware
             ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
             ->willReturn($response);
         $this->queue->enqueue(new Route('/foo', $middleware->reveal()));
 
         $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
+        $this->assertSame($response, $next->handle($request));
     }
 
     /**
@@ -357,7 +357,7 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
+        $middleware = $this->prophesize(MiddlewareInterface::class);
         $middleware
             ->process(Argument::that(function ($arg) {
                 Assert::assertInstanceOf(RequestInterface::class, $arg);
@@ -368,7 +368,7 @@ class NextTest extends TestCase
         $this->queue->enqueue(new Route('/foo', $middleware->reveal()));
 
         $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
+        $this->assertSame($response, $next->handle($request));
     }
 
     /**
@@ -379,23 +379,23 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route1 = $this->prophesize(MiddlewareInterface::class);
         $route1
             ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
             ->will(function ($args) {
                 $request = $args[0];
                 $next = $args[1];
-                return $next->process($request);
+                return $next->handle($request);
             });
         $this->queue->enqueue(new Route('/foo', $route1->reveal()));
 
-        $route2 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route2 = $this->prophesize(MiddlewareInterface::class);
         $route2
             ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
             ->shouldNotBeCalled();
         $this->queue->enqueue(new Route('/foo/bar', $route2->reveal()));
 
-        $route3 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route3 = $this->prophesize(MiddlewareInterface::class);
         $route3
             ->process(Argument::that(function ($arg) {
                 Assert::assertEquals('/bat', $arg->getUri()->getPath());
@@ -405,7 +405,7 @@ class NextTest extends TestCase
         $this->queue->enqueue(new Route('/foo/baz', $route3->reveal()));
 
         $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
+        $this->assertSame($response, $next->handle($request));
     }
 
     /**
@@ -416,7 +416,7 @@ class NextTest extends TestCase
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route1 = $this->prophesize(MiddlewareInterface::class);
         $route1
             ->process(Argument::that(function ($arg) {
                 Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
@@ -425,14 +425,14 @@ class NextTest extends TestCase
             ->willReturn($response);
         $this->queue->enqueue(new Route('/foo', $route1->reveal()));
 
-        $route2 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route2 = $this->prophesize(MiddlewareInterface::class);
         $route2
             ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
             ->shouldNotBeCalled();
         $this->queue->enqueue(new Route('/foo/bar', $route2->reveal()));
 
         $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
+        $this->assertSame($response, $next->handle($request));
     }
 
     /**
@@ -442,7 +442,7 @@ class NextTest extends TestCase
     {
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
 
-        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route1 = $this->prophesize(MiddlewareInterface::class);
         $route1
             ->process(Argument::that(function ($arg) {
                 Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
@@ -454,6 +454,6 @@ class NextTest extends TestCase
         $next = new Next($this->queue);
 
         $this->expectException(Exception\MissingResponseException::class);
-        $next->process($request);
+        $next->handle($request);
     }
 }

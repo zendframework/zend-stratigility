@@ -8,7 +8,7 @@
 namespace ZendTest\Stratigility\Middleware;
 
 use Closure;
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -19,63 +19,65 @@ class CallableMiddlewareWrapperTest extends TestCase
 {
     public function testWrapperDecoratesAndProxiesToCallableMiddleware()
     {
-        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
-        $delegate = $this->prophesize(DelegateInterface::class)->reveal();
+        $request  = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $handler  = $this->prophesize(RequestHandlerInterface::class)->reveal();
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
         $decorator = new CallableMiddlewareWrapper(
-            function ($request, $response, $delegate) {
+            function ($request, $response, $handler) {
                 return $response;
             },
             $response
         );
 
-        $this->assertSame($response, $decorator->process($request, $delegate));
+        $this->assertSame($response, $decorator->process($request, $handler));
     }
 
     public function testWrapperDoesNotDecorateNextInstancesWhenProxying()
     {
-        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $request  = $this->prophesize(ServerRequestInterface::class)->reveal();
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $delegate = $this->prophesize(Next::class)->reveal();
+        $handler   = $this->prophesize(Next::class)->reveal();
         $decorator = new CallableMiddlewareWrapper(
-            function ($request, $response, $next) use ($delegate) {
-                $this->assertSame($delegate, $next);
+            function ($request, $response, $next) use ($handler) {
+                $this->assertSame($handler, $next);
+
                 return $response;
             },
             $response
         );
 
-        $this->assertSame($response, $decorator->process($request, $delegate));
+        $this->assertSame($response, $decorator->process($request, $handler));
     }
 
     public function testWrapperDecoratesDelegatesNotExtendingNext()
     {
-        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $request  = $this->prophesize(ServerRequestInterface::class)->reveal();
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $delegate = $this->prophesize(DelegateInterface::class)->reveal();
+        $handler   = $this->prophesize(RequestHandlerInterface::class)->reveal();
         $decorator = new CallableMiddlewareWrapper(
-            function ($request, $response, $next) use ($delegate) {
-                $this->assertNotSame($delegate, $next);
+            function ($request, $response, $next) use ($handler) {
+                $this->assertNotSame($handler, $next);
                 $this->assertInstanceOf(Closure::class, $next);
+
                 return $response;
             },
             $response
         );
 
-        $this->assertSame($response, $decorator->process($request, $delegate));
+        $this->assertSame($response, $decorator->process($request, $handler));
     }
 
     public function testDecoratedDelegateWillBeInvokedWithOnlyRequest()
     {
-        $request = $this->prophesize(ServerRequestInterface::class)->reveal();
+        $request  = $this->prophesize(ServerRequestInterface::class)->reveal();
         $response = $this->prophesize(ResponseInterface::class)->reveal();
         $expected = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $delegate = $this->prophesize(DelegateInterface::class);
-        $delegate->process($request)->willReturn($expected);
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+        $handler->handle($request)->willReturn($expected);
 
         $decorator = new CallableMiddlewareWrapper(
             function ($request, $response, $next) {
@@ -84,6 +86,6 @@ class CallableMiddlewareWrapperTest extends TestCase
             $response
         );
 
-        $this->assertSame($expected, $decorator->process($request, $delegate->reveal()));
+        $this->assertSame($expected, $decorator->process($request, $handler->reveal()));
     }
 }

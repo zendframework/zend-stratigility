@@ -7,7 +7,7 @@
 
 namespace Zend\Stratigility;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,12 +17,12 @@ use SplQueue;
 /**
  * Iterate a queue of middlewares and execute them.
  */
-class Next implements DelegateInterface
+class Next implements RequestHandlerInterface
 {
     /**
-     * @var callable|DelegateInterface
+     * @var callable|RequestHandlerInterface
      */
-    private $nextDelegate;
+    private $nextHandler;
 
     /**
      * @var SplQueue
@@ -40,15 +40,15 @@ class Next implements DelegateInterface
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param null|DelegateInterface $nextDelegate Next delegate to invoke when the
+     * @param null|RequestHandlerInterface $nextHandler Next handler to invoke when the
      *     queue is exhausted.
-     * @throws InvalidArgumentException for a non-callable, non-delegate $done
+     * @throws InvalidArgumentException for a non-callable, non-handler $done
      *     argument.
      */
-    public function __construct(SplQueue $queue, DelegateInterface $nextDelegate = null)
+    public function __construct(SplQueue $queue, RequestHandlerInterface $nextHandler = null)
     {
-        $this->queue        = clone $queue;
-        $this->nextDelegate = $nextDelegate;
+        $this->queue       = clone $queue;
+        $this->nextHandler = $nextHandler;
     }
 
     /**
@@ -59,31 +59,31 @@ class Next implements DelegateInterface
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception\MissingResponseException If the queue is exhausted, and
-     *     no "next delegate" is present.
+     *     no "next handler" is present.
      * @throws Exception\MissingResponseException If the middleware executed does
      *     not return a response.
      */
     public function __invoke(ServerRequestInterface $request)
     {
-        return $this->process($request);
+        return $this->handle($request);
     }
 
     /**
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception\MissingResponseException If the queue is exhausted, and
-     *     no "next delegate" is present.
+     *     no "next handler" is present.
      * @throws Exception\MissingResponseException If the middleware executed does
      *     not return a response.
      */
-    public function process(ServerRequestInterface $request)
+    public function handle(ServerRequestInterface $request)
     {
-        $request  = $this->resetPath($request);
+        $request = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            if ($this->nextDelegate) {
-                return $this->nextDelegate->process($request);
+            if ($this->nextHandler) {
+                return $this->nextHandler->handle($request);
             }
 
             throw new Exception\MissingResponseException(sprintf(
@@ -99,13 +99,13 @@ class Next implements DelegateInterface
 
         // Skip if layer path does not match current url
         if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
-            return $this->process($request);
+            return $this->handle($request);
         }
 
         // Skip if match is not at a border ('/', '.', or end)
         $border = $this->getBorder($path, $normalizedRoute);
         if ($border && '/' !== $border && '.' !== $border) {
-            return $this->process($request);
+            return $this->handle($request);
         }
 
         // Trim off the part of the url that matches the layer route
@@ -113,8 +113,8 @@ class Next implements DelegateInterface
             $request = $this->stripRouteFromPath($request, $route);
         }
 
-        $middleware = $layer->handler;
-        $response = $middleware->process($request, $this);
+        $middleware = $layer->middleware;
+        $response   = $middleware->process($request, $this);
 
         if (! $response instanceof ResponseInterface) {
             throw new Exception\MissingResponseException(sprintf(
@@ -170,8 +170,9 @@ class Next implements DelegateInterface
         // Normalize to remove double-slashes
         $resetPath = str_replace('//', '/', $resetPath);
 
-        $new  = $uri->withPath($resetPath);
+        $new = $uri->withPath($resetPath);
         $this->removed = '';
+
         return $request->withUri($new);
     }
 
@@ -188,6 +189,7 @@ class Next implements DelegateInterface
             return '/';
         }
         $routeLength = strlen($route);
+
         return (strlen($path) > $routeLength) ? $path[$routeLength] : '';
     }
 
