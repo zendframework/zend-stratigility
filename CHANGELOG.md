@@ -10,7 +10,11 @@ details.
 
 ### Added
 
-- Nothing.
+- [#112](https://github.com/zendframework/zend-stratigility/pull/112) adds
+  support for http-interop/http-middleware 0.5.0 via a polyfill provided by the
+  package webimpress/http-middleware-compatibility. Essentially, this means you
+  can drop this package into an application targeting either the 0.4.1 or 0.5.0
+  versions of http-middleware, and it will "just work".
 
 ### Changed
 

@@ -7,8 +7,6 @@
 
 namespace ZendTest\Stratigility;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
@@ -16,6 +14,8 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use ReflectionProperty;
 use SplQueue;
+use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
+use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;

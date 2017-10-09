@@ -7,16 +7,18 @@
 
 namespace ZendTest\Stratigility\Middleware;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
+use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 use Zend\Escaper\Escaper;
 use Zend\Stratigility\Middleware\ErrorHandler;
 use Zend\Stratigility\Middleware\ErrorResponseGenerator;
+
+use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
 class ErrorHandlerTest extends TestCase
 {
@@ -45,7 +47,7 @@ class ErrorHandlerTest extends TestCase
         $expectedResponse = $this->prophesize(ResponseInterface::class)->reveal();
 
         $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+            ->{HANDLER_METHOD}(Argument::type(ServerRequestInterface::class))
             ->willReturn($expectedResponse);
 
         $this->response->withStatus(Argument::any())->shouldNotBeCalled();
@@ -59,7 +61,7 @@ class ErrorHandlerTest extends TestCase
     public function testReturnsErrorResponseIfDelegateDoesNotReturnAResponse()
     {
         $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+            ->{HANDLER_METHOD}(Argument::type(ServerRequestInterface::class))
             ->willReturn(null);
 
         $this->body->write('Unknown Error')->shouldBeCalled();
@@ -78,7 +80,7 @@ class ErrorHandlerTest extends TestCase
     {
         error_reporting(E_USER_DEPRECATED);
         $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+            ->{HANDLER_METHOD}(Argument::type(ServerRequestInterface::class))
             ->will(function () {
                 trigger_error('Deprecated', E_USER_DEPRECATED);
             });
@@ -102,7 +104,7 @@ class ErrorHandlerTest extends TestCase
 
         $expectedResponse = $this->prophesize(ResponseInterface::class)->reveal();
         $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+            ->{HANDLER_METHOD}(Argument::type(ServerRequestInterface::class))
             ->will(function () use ($expectedResponse) {
                 trigger_error('Deprecated', E_USER_DEPRECATED);
                 return $expectedResponse;
@@ -121,7 +123,7 @@ class ErrorHandlerTest extends TestCase
     public function testReturnsErrorResponseIfDelegateRaisesAnException()
     {
         $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+            ->{HANDLER_METHOD}(Argument::type(ServerRequestInterface::class))
             ->willThrow(new RuntimeException('Exception raised', 503));
 
         $this->body->write('Unknown Error')->shouldBeCalled();
@@ -140,7 +142,7 @@ class ErrorHandlerTest extends TestCase
     {
         $exception = new RuntimeException('Exception raised', 503);
         $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+            ->{HANDLER_METHOD}(Argument::type(ServerRequestInterface::class))
             ->willThrow($exception);
 
         $this->body
@@ -161,7 +163,7 @@ class ErrorHandlerTest extends TestCase
     {
         $exception = new RuntimeException('Exception raised', 503);
         $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+            ->{HANDLER_METHOD}(Argument::type(ServerRequestInterface::class))
             ->willThrow($exception);
 
         $this->body->write('Unknown Error')->shouldBeCalled();
@@ -195,7 +197,7 @@ class ErrorHandlerTest extends TestCase
         };
 
         $this->delegate
-            ->process(Argument::type(ServerRequestInterface::class))
+            ->{HANDLER_METHOD}(Argument::type(ServerRequestInterface::class))
             ->willThrow(new RuntimeException('Exception raised', 503));
 
         $this->response->withStatus(400)->will([$this->response, 'reveal']);

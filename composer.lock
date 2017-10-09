@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "76a7f787118dd5684fc611a9aaf85ab8",
+    "content-hash": "fc0ee72dfbd4216c2ea1f909b8f5aeef",
     "packages": [
         {
             "name": "http-interop/http-middleware",
@@ -107,6 +107,46 @@
                 "response"
             ],
             "time": "2016-08-06T14:39:51+00:00"
+        },
+        {
+            "name": "webimpress/http-middleware-compatibility",
+            "version": "0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webimpress/http-middleware-compatibility.git",
+                "reference": "793d21864a0417bbe01437c33f902cac49c1788c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webimpress/http-middleware-compatibility/zipball/793d21864a0417bbe01437c33f902cac49c1788c",
+                "reference": "793d21864a0417bbe01437c33f902cac49c1788c",
+                "shasum": ""
+            },
+            "require": {
+                "http-interop/http-middleware": "^0.1.1 || ^0.2 || ^0.3 || ^0.4.1 || ^0.5",
+                "php": "^5.6 || ^7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^5.7.22 || ^6.3.1"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "autoload/http-middleware.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-2-Clause"
+            ],
+            "description": "Compatibility library for Draft PSR-15 HTTP Middleware",
+            "homepage": "https://github.com/webimpress/http-middleware-compatibility",
+            "keywords": [
+                "middleware",
+                "psr-15",
+                "webimpress"
+            ],
+            "time": "2017-10-05T15:55:30+00:00"
         },
         {
             "name": "zendframework/zend-escaper",

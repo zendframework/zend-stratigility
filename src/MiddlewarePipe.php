@@ -8,13 +8,13 @@
 namespace Zend\Stratigility;
 
 use Closure;
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use ReflectionFunction;
 use ReflectionMethod;
 use SplQueue;
+use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
+use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
 /**
