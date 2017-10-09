@@ -7,9 +7,10 @@
 
 namespace Zend\Stratigility\Delegate;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 
 /**
  * Decorate callable delegates as http-interop delegates in order to process
@@ -38,13 +39,34 @@ class CallableDelegateDecorator implements DelegateInterface
     }
 
     /**
-     * Proxies to the underlying callable delegate to process a request.
+     * Method provided for compatibility with http-interop/http-middleware 0.4.1
      *
      * {@inheritDoc}
      */
     public function process(ServerRequestInterface $request)
     {
+        return $this->handle($request);
+    }
+
+    /**
+     * Proxies to the underlying callable delegate to process a request.
+     *
+     * {@inheritDoc}
+     */
+    public function handle(ServerRequestInterface $request)
+    {
         $delegate = $this->delegate;
         return $delegate($request, $this->response);
+    }
+
+    /**
+     * Method provided for compatibility with http-interop/http-middleware 0.1.1.
+     *
+     * @param RequestInterface $request
+     * @return mixed
+     */
+    public function next(RequestInterface $request)
+    {
+        return $this->handle($request);
     }
 }

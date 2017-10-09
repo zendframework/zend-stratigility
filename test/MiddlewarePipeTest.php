@@ -7,22 +7,23 @@
 
 namespace ZendTest\Stratigility;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionProperty;
+use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
+use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
-use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
+
+use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
 class MiddlewarePipeTest extends TestCase
 {
@@ -111,7 +112,7 @@ class MiddlewarePipeTest extends TestCase
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
 
         $delegate = $this->prophesize(DelegateInterface::class);
-        $delegate->process($request)->willReturn($expected);
+        $delegate->{HANDLER_METHOD}($request)->willReturn($expected);
 
         $result = $this->middleware->__invoke($request, $this->response, $delegate->reveal());
 
@@ -215,7 +216,7 @@ class MiddlewarePipeTest extends TestCase
 
         $request = new Request([], [], 'http://local.example.com/test', 'GET', 'php://memory');
         $final = $this->prophesize(DelegateInterface::class);
-        $final->process(Argument::any())->shouldNotBeCalled();
+        $final->{HANDLER_METHOD}(Argument::any())->shouldNotBeCalled();
 
         $result = $pipeline->process($request, $final->reveal());
         $this->assertSame($expected, $result);
@@ -481,7 +482,7 @@ class MiddlewarePipeTest extends TestCase
 
         $route = $queue->dequeue();
         $test = $route->handler;
-        $this->assertInstanceOf(CallableInteropMiddlewareWrapper::class, $test);
+        $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
     }
 

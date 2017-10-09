@@ -178,5 +178,8 @@ Within Stratigility, middleware can be:
 - Any [http-interop 0.4.1 - middleware](https://github.com/http-interop/http-middleware/tree/0.4.1).
   `Zend\Stratigility\MiddlewarePipe` implements
   `Interop\Http\ServerMiddleware\MiddlewareInterface`. (Stratigility 2.0 series.)
+- Any [http-interop 0.5.0 - middleware](https://github.com/http-interop/http-middleware/tree/0.5.0).
+  `Zend\Stratigility\MiddlewarePipe` implements
+  `Interop\Http\Server\MiddlewareInterface`. (Since Stratigility 2.1)
 - An object implementing `Zend\Stratigility\MiddlewareInterface`.
   (Legacy; this interface is deprecated starting in 1.3.0.)
