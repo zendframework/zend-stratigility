@@ -33,8 +33,7 @@ Middleware written in this way can be any of the following:
 - Static class methods
 - PHP array callbacks (e.g., `[ $dispatcher, 'dispatch' ]`, where `$dispatcher` is a class instance)
 - Invokable PHP objects (i.e., instances of classes implementing `__invoke()`)
-- Objects implementing `Zend\Stratigility\MiddlewareInterface` (including
-  `Zend\Stratigility\MiddlewarePipe`)
+- Objects implementing `Zend\Stratigility\MiddlewareInterface`
 
 In all cases, if you wish to implement typehinting, the signature is:
 
