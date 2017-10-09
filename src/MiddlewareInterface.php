@@ -24,6 +24,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
  * For the purposes of Stratigility, `$next` is typically one of either an instance
  * of `Next` or an instance of `NoopFinalHandler`, and, as such, should follow
  * those calling semantics.
+ *
+ * @deprecated since 2.0.0; to be removed in 3.0.0.
  */
 interface MiddlewareInterface
 {

@@ -8,12 +8,14 @@
 namespace ZendTest\Stratigility\Middleware;
 
 use Closure;
-use Interop\Http\ServerMiddleware\DelegateInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 use Zend\Stratigility\Next;
+
+use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
 class CallableMiddlewareWrapperTest extends TestCase
 {
@@ -75,7 +77,7 @@ class CallableMiddlewareWrapperTest extends TestCase
         $expected = $this->prophesize(ResponseInterface::class)->reveal();
 
         $delegate = $this->prophesize(DelegateInterface::class);
-        $delegate->process($request)->willReturn($expected);
+        $delegate->{HANDLER_METHOD}($request)->willReturn($expected);
 
         $decorator = new CallableMiddlewareWrapper(
             function ($request, $response, $next) {
