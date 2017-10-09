@@ -6,7 +6,7 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 2.1.0 - TBD
+## 2.1.0 - 2017-10-09
 
 ### Added
 
@@ -15,6 +15,8 @@ details.
   package webimpress/http-middleware-compatibility. Essentially, this means you
   can drop this package into an application targeting either the 0.4.1 or 0.5.0
   versions of http-middleware, and it will "just work".
+
+- Adds support for PHP 7.2.
 
 ### Changed
 
@@ -26,23 +28,7 @@ details.
 
 ### Removed
 
-- Nothing.
-
-### Fixed
-
-- Nothing.
-
-## 2.0.2 - TBD
-
-### Added
-
-- Nothing.
-
-### Deprecated
-
-- Nothing.
-
-### Removed
+- Removes support for HHVM.
 
 - [#107](https://github.com/zendframework/zend-stratigility/pull/107) removes
   the unused `$raiseThrowables` property from `Zend\Stratigility\Next`.
