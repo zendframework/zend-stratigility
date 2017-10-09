@@ -22,7 +22,7 @@ use Throwable;
 class Next implements DelegateInterface
 {
     /**
-     * @var callable|DelegateInterface
+     * @var null|DelegateInterface
      */
     private $nextDelegate;
 
