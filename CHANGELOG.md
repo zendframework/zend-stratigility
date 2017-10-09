@@ -6,24 +6,6 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 2.1.0 - TBD
-
-### Added
-
-- Nothing.
-
-### Deprecated
-
-- Nothing.
-
-### Removed
-
-- Nothing.
-
-### Fixed
-
-- Nothing.
-
 ## 2.0.2 - TBD
 
 ### Added
@@ -36,7 +18,8 @@ details.
 
 ### Removed
 
-- Nothing.
+- [#107](https://github.com/zendframework/zend-stratigility/pull/107) removes
+  the unused `$raiseThrowables` property from `Zend\Stratigility\Next`.
 
 ### Fixed
 
