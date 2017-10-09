@@ -50,7 +50,7 @@ class RouteTest extends TestCase
     public function testDoesNotAllowNonStringPaths($path)
     {
         $this->expectException(InvalidArgumentException::class);
-        $route = new Route($path, $this->createEmptyMiddleware());
+        new Route($path, $this->createEmptyMiddleware());
     }
 
     public function testExceptionIsRaisedIfUndefinedPropertyIsAccessed()
@@ -58,6 +58,6 @@ class RouteTest extends TestCase
         $route = new Route('/foo', $this->createEmptyMiddleware());
 
         $this->expectException(OutOfRangeException::class);
-        $foo = $route->foo;
+        $route->foo;
     }
 }

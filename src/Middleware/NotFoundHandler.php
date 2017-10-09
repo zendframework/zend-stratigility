@@ -57,7 +57,7 @@ class NotFoundHandler implements ServerMiddlewareInterface
         $response = $this->responsePrototype
             ->withStatus(404);
         $response->getBody()->write(sprintf(
-            "Cannot %s %s",
+            'Cannot %s %s',
             $request->getMethod(),
             (string) $request->getUri()
         ));

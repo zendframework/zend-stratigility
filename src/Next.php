@@ -9,12 +9,10 @@ namespace Zend\Stratigility;
 
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use InvalidArgumentException;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use SplQueue;
-use Throwable;
 
 /**
  * Iterate a queue of middlewares and execute them.
