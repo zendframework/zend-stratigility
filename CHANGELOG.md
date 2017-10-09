@@ -12,6 +12,10 @@ details.
 
 - Nothing.
 
+### Changed
+
+- Nothing.
+
 ### Deprecated
 
 - Nothing.
@@ -36,7 +40,8 @@ details.
 
 ### Removed
 
-- Nothing.
+- [#107](https://github.com/zendframework/zend-stratigility/pull/107) removes
+  the unused `$raiseThrowables` property from `Zend\Stratigility\Next`.
 
 ### Fixed
 
