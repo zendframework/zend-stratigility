@@ -227,7 +227,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
 
         $params = $r->getParameters();
         $type = $params[1]->getClass();
-        if (! $type || $type->getName() !== DelegateInterface::class) {
+        if (! $type || ! is_a($type->getName(), DelegateInterface::class, true)) {
             return $this->getCallableMiddlewareDecorator()
                 ->decorateCallableMiddleware($middleware);
         }
