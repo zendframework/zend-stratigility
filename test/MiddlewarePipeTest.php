@@ -19,6 +19,7 @@ use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
+use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
@@ -482,7 +483,33 @@ class MiddlewarePipeTest extends TestCase
 
         $route = $queue->dequeue();
         $test = $route->handler;
-        $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
+        $this->assertInstanceOf(CallableInteropMiddlewareWrapper::class, $test);
+        $this->assertAttributeSame($middleware, 'middleware', $test);
+    }
+
+    public function testWillDecorateCallableMiddlewareAsInteropMiddleware()
+    {
+        $interface = \Interop\Http\Server\RequestHandlerInterface::class;
+
+        if (! interface_exists($interface)) {
+            $this->markTestSkipped('This tests requires http-interop/http-middleware 0.5.0');
+            return;
+        }
+
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+
+        $middleware = function ($request, \Interop\Http\Server\RequestHandlerInterface $handler) {
+        };
+        $pipeline->pipe($middleware);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $test = $route->handler;
+        $this->assertInstanceOf(CallableInteropMiddlewareWrapper::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
     }
 
