@@ -28,7 +28,7 @@ details.
 
 - Nothing.
 
-## 2.1.1 - TBD
+## 2.1.1 - 2017-10-10
 
 ### Added
 
@@ -48,7 +48,11 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#118](https://github.com/zendframework/zend-stratigility/pull/118) fixes how
+  the `MiddlewarePipe` detects if the second parameter of callable middleware is
+  a delegate/request handler when choosing whether or not to decorate it to
+  ensure that it will properly decorate it when used with
+  http-interop/http-middleware 0.5.0
 
 ## 2.1.0 - 2017-10-09
 
