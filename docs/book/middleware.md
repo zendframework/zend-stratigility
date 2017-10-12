@@ -115,7 +115,9 @@ response object, and do something with it_.
 > (Note the namespace change, the change in the middleware interface name, and
 > the change in the `DelegateInterface` signature.)
 >
-> Starting in http-interop/http-middleware 0.5.0, these become:
+> http-interop/http-middleware 0.5.0 changes the namespace, renames the delegate
+> to a request handler, and correspondingly changes the delegation method to
+> `handle()`:
 >
 > ```php
 > namespace Interop\Http\Server;
@@ -139,13 +141,13 @@ response object, and do something with it_.
 > }
 > ```
 >
-> (Note the namespace change, the change in the handler interface name, and
-> the change of handler method name.)
->
 > Stratigility allows you to implement the http-interop/http-middleware
 > middleware interface to provide middleware.  Additionally, you can define
 > `callable` middleware with the following signature, and it will be dispatched
-> as http-interop middleware (version < 0.5):
+> as http-interop middleware.
+>
+> When using http-interop/http-middleware versions prior to 0.5, callable
+> middleware will look like this:
 >
 > ```php
 > function(
@@ -154,7 +156,7 @@ response object, and do something with it_.
 > ) : ResponseInterface;
 > ```
 >
-> and when you using http-interop middleware in version 0.5.0 it becomes:
+> When using http-interop/http-middleware versions 0.5.0 and above, it becomes:
 >
 > ```php
 > function(
@@ -163,23 +165,21 @@ response object, and do something with it_.
 > ) : ResponseInterface;
 > ```
 >
-> (The `$request` argument does not require a typehint when defining callable
-> middleware, but we encourage its use.)
+> (In both examples above, the `$request` argument does not require a typehint
+> when defining callable middleware, but we encourage its use.)
 >
 > As such, the above example can also be written as follows:
 >
-> `http-interop/http-middleware` 0.4.1:
 > ```php
+> // Using http-interop/http-middleware 0.4.1:
 > $app->pipe('/', function ($request, DelegateInterface $delegate) {
 >     if (! in_array($request->getUri()->getPath(), ['/', ''], true)) {
 >         return $delegate->process($request);
 >     }
 >     return new TextResponse('Hello world!');
 > });
-> ```
 >
-> `http-interop/http-middleware` 0.5.0:
-> ```php
+> // Using http-interop/http-middleware 0.5.0:
 > $app->pipe('/', function ($request, RequestHandlerInterface $handler) {
 >     if (! in_array($request->getUri()->getPath(), ['/', ''], true)) {
 >         return $handler->handle($request);

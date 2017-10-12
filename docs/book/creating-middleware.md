@@ -47,12 +47,12 @@ function (
 
 ## http-interop middleware
 
-You can also write your middleware which implements interfaces from
-`http-interop/http-middleware`. Stratigility 2.1 supports all version of
-http-interop middlewares which are supported by
-[`webimpress/http-middleware-compatibility`](https://github.com/webimpress/http-middleware-compatibility).
+You can also write middleware which implements interfaces from
+`http-interop/http-middleware`. Stratigility 2.1 supports all versions of
+http-interop middleware that are supported by the package
+[webimpress/http-middleware-compatibility](https://github.com/webimpress/http-middleware-compatibility).
 
-Here we have an example of http-interop middleware:
+As an example of http-interop middleware:
 
 ```php
 // http-interop/http-middleware 0.2:
