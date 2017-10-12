@@ -28,6 +28,34 @@ details.
 
 - Nothing.
 
+## 2.1.2 - 2017-10-12
+
+### Added
+
+- Nothing.
+
+### Changed
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- [#119](https://github.com/zendframework/zend-stratigility/pull/119) updates to
+  webimpress/http-middleware-compatibility `^0.1.3`. This was done to ensure
+  backwards compatibilty by injecting the project `composer.json` with the
+  currently installed version of http-interop/http-middleware, and in cases
+  where that package is not yet installed, prompting the user to install it.
+  This approach provides a tiered migration path to http-middleware 0.5.0 for
+  users.
+
 ## 2.1.1 - 2017-10-10
 
 ### Added
