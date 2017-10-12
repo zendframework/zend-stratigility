@@ -476,9 +476,9 @@ http-interop/http-middleware `DelegateInterface` implementation,
 `Zend\Stratigility\Delegate\CallableDelegateDecorator`.
 
 This class can be used to wrap a callable `$next` instance for use in passing to
-an http-interop/http-middleware middleware interface `process()/handle()` method
-as a delegate; the primary use case is adapting functor middleware to work as
-http-interop middleware.
+an http-interop/http-middleware middleware interface `process()`/`handle()`
+method as a delegate; the primary use case is adapting functor middleware to
+work as http-interop middleware.
 
 As an example:
 
