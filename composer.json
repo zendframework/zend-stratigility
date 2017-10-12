@@ -6,18 +6,27 @@
   "keywords": [
     "http",
     "psr-7",
-    "middleware"
+    "middleware",
+    "zf",
+    "zendframework"
   ],
   "homepage": "https://github.com/zendframework/zend-stratigility",
   "support": {
+    "docs": "https://docs.zendframework.com/zend-stratigility/",
     "issues": "https://github.com/zendframework/zend-stratigility/issues",
-    "source": "https://github.com/zendframework/zend-stratigility"
+    "source": "https://github.com/zendframework/zend-stratigility",
+    "rss": "https://github.com/zendframework/zend-stratigility/releases.atom",
+    "slack": "https://zendframework-slack.herokuapp.com",
+    "forum": "https://discourse.zendframework.com/c/questions/expressive"
   },
   "extra": {
     "branch-alias": {
       "dev-master": "2.1.0-dev",
       "dev-develop": "2.2.0-dev"
     }
+  },
+  "config": {
+    "sort-packages": true
   },
   "require": {
     "php": "^5.6 || ^7.0",
@@ -26,10 +35,10 @@
     "zendframework/zend-escaper": "^2.3"
   },
   "require-dev": {
-    "zendframework/zend-diactoros": "^1.0",
-    "phpunit/phpunit": "^6.0.8 || ^5.7.15",
+    "malukenho/docheader": "^0.1.5",
+    "phpunit/phpunit": "^5.7.22 || ^6.4.1",
     "zendframework/zend-coding-standard": "~1.0.0",
-    "malukenho/docheader": "^0.1.5"
+    "zendframework/zend-diactoros": "^1.0"
   },
   "suggest": {
     "psr/http-message-implementation": "Please install a psr/http-message-implementation to consume Stratigility; e.g., zendframework/zend-diactoros"
@@ -50,11 +59,11 @@
       "@cs-check",
       "@test"
     ],
-    "upload-coverage": "coveralls -v",
-    "cs-check": "phpcs --colors",
-    "cs-fix": "phpcbf --colors",
+    "cs-check": "phpcs",
+    "cs-fix": "phpcbf",
     "license-check": "docheader check src/ test/",
     "test": "phpunit --colors=always",
-    "test-coverage": "phpunit --coverage-clover clover.xml"
+    "test-coverage": "phpunit --colors=always --coverage-clover clover.xml",
+    "upload-coverage": "coveralls -v"
   }
 }
