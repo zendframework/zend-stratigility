@@ -2,6 +2,30 @@
 
 The following make up the primary API of Stratigility.
 
+> ### http-middleware
+>
+> Stratigility has supported http-interop/http-middleware since version 2.0.0,
+> originally pinning to the 0.4.1 specification.
+>
+> Starting with version 2.1.0, we also support the 0.5.0 specification. In
+> operation, they work identically. However, the namespace has changed, 
+> `DelegateInterface` was renamed to `RequestHandlerInterface`, and the
+> delegate/handler's `process()` method was renamed to `handle()`.
+>
+> Internally, we use the package
+> [webimpress/http-middleware-compatility](https://github.com/webimpress/http-middleware-compatility)
+> to adapt middleware to work with any http-middleware version.  This package
+> provides polyfills for the various http-middleware versions, and a "trick" for
+> calling on the delegate/handler in a way that will work with any http-middleware
+> version that library supports.
+>
+> When you write your application, you will need to be aware of what version of
+> http-middleware you have installed, and write your middleware to target it.
+>
+> Alternately, you can use the interfaces defined in
+> webimpress/http-middleware-compatility; read that package's documentation to
+> understand how you can do so.
+
 ## Middleware
 
 `Zend\Stratigility\MiddlewarePipe` is the primary application interface, and
@@ -10,8 +34,18 @@ has been discussed previously. Its API is:
 ```php
 namespace Zend\Stratigility;
 
+// If http-interop/http-middleware 0.2 is installed:
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
+
+// If http-interop/http-middleware 0.4.1 is installed:
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+
+// If http-interop/http-middleware 0.5.0 is installed:
+use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface as DelegateInterface;
+
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -186,13 +220,24 @@ function ($request, $response, $next) use ($bodyParser)
     );
 }
 
-// http-interop invokable:
+// http-interop/http-middleware < 0.5 invokable:
 function ($request, DelegateInterface $delegate) use ($bodyParser)
 {
     $bodyParams = $bodyParser($request);
 
     // Delegate will receive the new request instance:
     return $delegate->process(
+        $request->withBodyParams($bodyParams)
+    );
+}
+
+// http-interop/http-middleware 0.5.0 invokable:
+function ($request, RequestHandlerInterface $handler) use ($bodyParser)
+{
+    $bodyParams = $bodyParser($request);
+
+    // Delegate will receive the new request instance:
+    return $handler->handle(
         $request->withBodyParams($bodyParams)
     );
 }
@@ -211,13 +256,24 @@ function ($request, $response, $next) use ($bodyParser)
     return $response->withAddedHeader('Cache-Control', [
 }
 
-// http-interop invokable:
+// http-interop/http-middleware < 0.5 invokable:
 function ($request, DelegateInterface $delegate) use ($bodyParser)
 {
     $bodyParams = $bodyParser($request);
 
     // Provide a new request instance to the delegate:
     return $delegate->process(
+        $request->withBodyParams($bodyParams)
+    );
+}
+
+// http-interop/http-middleware 0.5.0 invokable:
+function ($request, RequestHandlerInterface $handler) use ($bodyParser)
+{
+    $bodyParams = $bodyParser($request);
+
+    // Provide a new request instance to the delegate:
+    return $handler->handle(
         $request->withBodyParams($bodyParams)
     );
 }
@@ -247,8 +303,18 @@ function ($request, $response, $next) use ($prototype)
     return $response;
 }
 
-// http-interop invokable signature:
+// http-interop/http-middleware < 0.5 invokable signature:
 function ($request, DelegateInterface $delegate) use ($prototype)
+{
+    $response = $prototype->withAddedHeader('Cache-Control', [
+        'public',
+        'max-age=18600',
+        's-maxage=18600',
+    ]);
+}
+
+// http-interop/http-middleware 0.5.0 invokable signature:
+function ($request, RequestHandlerInterface $handler) use ($prototype)
 {
     $response = $prototype->withAddedHeader('Cache-Control', [
         'public',
@@ -264,21 +330,28 @@ If your middleware is not capable of returning a response, or a particular path
 in the middleware cannot return a response, return the result of executing the
 delegate.
 
-If using the legacy middleware signature, invoke the `$next` argument:
+When using the legacy middleware signature, invoke the `$next` argument:
 
 ```php
 return $next($request, $response);
 ```
 
-If using a `DelegateInterface`, invoke its `process()` method:
+If you are using `http-interop/http-middleware` in versions lower than 0.5.0,
+then the delegate implements `DelegateInterface`; invoke its `process()` method:
 
 ```php
 return $delegate->process($request);
 ```
 
+If you are using `http-interop/http-middleware` versions 0.5.0 or above, then
+the delegate implements `RequestHandlerInterface`; invoke its `handle()` method:
+
+```php
+return $handler->handle($request);
+```
+
 **Middleware should always return a response, and, if it cannot, return the
 result of delegation.**
-
 
 ### Raising an error condition
 
@@ -395,13 +468,23 @@ Two versions exist:
 
 - `Zend\Stratigility\Middleware\CallableMiddlewareWrapper` will wrap a callable
   that defines exactly two arguments, with the second type-hinting on the
-  http-interop/http-middleware `DelegateInterface`:
+  http-interop/http-middleware `DelegateInterface` (versions &lt; 0.5):
 
   ```php
   $middleware = new CallableMiddlewareWrapper(
-    function ($request, DelegateInterface $delegate) {
-        // ... 
-    }
+      function ($request, DelegateInterface $delegate) {
+          // ... 
+      }
+  );
+  ```
+
+  or `RequestHandlerInterface` (versions 0.5.0 or greater):
+
+  ```php
+  $middleware = new CallableMiddlewareWrapper(
+      function ($request, RequestHandlerInterface $handler) {
+          // ...
+      }
   );
   ```
 
@@ -417,9 +500,9 @@ http-interop/http-middleware `DelegateInterface` implementation,
 `Zend\Stratigility\Delegate\CallableDelegateDecorator`.
 
 This class can be used to wrap a callable `$next` instance for use in passing to
-an http-interop/http-middleware middleware interface `process()` method as a
-delegate; the primary use case is adapting functor middleware to work as
-http-interop middleware.
+an http-interop/http-middleware middleware interface `process()`/`handle()`
+method as a delegate; the primary use case is adapting functor middleware to
+work as http-interop middleware.
 
 As an example:
 
@@ -431,6 +514,10 @@ use Interop\Http\Middleware\ServerMiddlewareInterface;
 // http-interop/http-middleware 0.4.1:
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+
+// http-interop/http-middleware 0.5.0:
+use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface as DelegateInterface;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -450,7 +537,12 @@ class TimestampMiddleware implements ServerMiddlewareInterface
         ServerRequestInterface $request,
         DelegateInterface $delegate
     ) {
+        // http-interop/http-middleware < 0.5
         $response = $delegate->process($request);
+
+        // http-interop/http-middleware 0.5.0
+        $response = $delegate->handle($request);
+
         return $response->withHeader('X-Processed-Timestamp', time());
     }
 }
