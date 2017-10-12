@@ -1,6 +1,6 @@
 vendor/
 phpunit.xml
-doc/html/
+docs/html/
 zf-mkdoc-theme/
 clover.xml
 coveralls-upload.json
