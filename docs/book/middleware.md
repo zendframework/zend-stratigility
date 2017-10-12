@@ -115,10 +115,37 @@ response object, and do something with it_.
 > (Note the namespace change, the change in the middleware interface name, and
 > the change in the `DelegateInterface` signature.)
 >
+> Starting in http-interop/http-middleware 0.5.0, these become:
+>
+> ```php
+> namespace Interop\Http\Server;
+>
+> use Psr\Http\Message\ResponseInterface;
+> use Psr\Http\Message\ServerRequestInterface;
+>
+> interface MiddlewareInterface
+> {
+>     public function process(
+>         ServerRequestInterface $request,
+>         RequestHandlerInterface $handler
+>     ) : ResponseInterface;
+> }
+>
+> interface RequestHandlerInterface
+> {
+>     public function handle(
+>         ServerRequestInterface $request
+>     ) : ResponseInterface;
+> }
+> ```
+>
+> (Note the namespace change, the change in the handler interface name, and
+> the change of handler method name.)
+>
 > Stratigility allows you to implement the http-interop/http-middleware
 > middleware interface to provide middleware.  Additionally, you can define
 > `callable` middleware with the following signature, and it will be dispatched
-> as http-interop middleware:
+> as http-interop middleware (version < 0.5):
 >
 > ```php
 > function(
@@ -127,11 +154,21 @@ response object, and do something with it_.
 > ) : ResponseInterface;
 > ```
 >
+> and when you using http-interop middleware in version 0.5.0 it becomes:
+>
+> ```php
+> function(
+>     ServerRequestInterface $request,
+>     HandlerRequestInterface $handler
+> ) : ResponseInterface;
+> ```
+>
 > (The `$request` argument does not require a typehint when defining callable
 > middleware, but we encourage its use.)
 >
 > As such, the above example can also be written as follows:
 >
+> `http-interop/http-middleware` 0.4.1:
 > ```php
 > $app->pipe('/', function ($request, DelegateInterface $delegate) {
 >     if (! in_array($request->getUri()->getPath(), ['/', ''], true)) {
@@ -140,11 +177,22 @@ response object, and do something with it_.
 >     return new TextResponse('Hello world!');
 > });
 > ```
+>
+> `http-interop/http-middleware` 0.5.0:
+> ```php
+> $app->pipe('/', function ($request, RequestHandlerInterface $handler) {
+>     if (! in_array($request->getUri()->getPath(), ['/', ''], true)) {
+>         return $handler->handle($request);
+>     }
+>     return new TextResponse('Hello world!');
+> });
+> ```
 
 Middleware can decide more processing can be performed by calling the `$next`
-callable (or, when defining http-interop middleware, `$delegate`) passed during
-invocation. With this paradigm, you can build a workflow engine for handling
-requests &mdash; for instance, you could have middleware perform the following:
+callable (or, when defining http-interop middleware, `$delegate`/`$handler`)
+passed during invocation. With this paradigm, you can build a workflow engine
+for handling requests &mdash; for instance, you could have middleware perform
+the following:
 
 - Handle authentication details
 - Perform content negotiation
