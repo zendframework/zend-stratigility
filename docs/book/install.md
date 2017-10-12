@@ -16,7 +16,10 @@ Stratigility has the following dependencies (which are managed by Composer):
 - [`http-interop/http-middleware`](https://github.com/http-interop/http-middleware),
   which provides the interfaces that will become PSR-15. In Stratigility 1.3,
   this is pinned to the 0.2 series; in Stratigility 2.0, this is pinned to
-  0.4.1+.
+  0.4.1+. Since Stratigility 2.1 you have to explicit defined
+  `http-interop/http-middleware` dependency in your composer.json, and you can
+  use any version which is currently supported by
+  [`webimpress/http-middleware-compatibility`](https://github.com/webimpress/http-middleware-compatibility)
 
 - `zendframework/zend-escaper`, used by the `ErrorHandler` middleware and the
   (legacy) `FinalHandler` implementation for escaping error messages prior to
