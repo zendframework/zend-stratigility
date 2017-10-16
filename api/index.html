@@ -4,36 +4,15 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="zend-stratigility">  
     <link rel="shortcut icon" href="../img/favicon.ico">
 
     <title>API Reference - zend-stratigility</title>
 
-    <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/font-hack/2.018/css/hack.min.css">
-    <link href="//fonts.googleapis.com/css?family=PT+Sans:400,400italic,700,700italic&subset=latin-ext,latin" rel="stylesheet" type="text/css">
-    <link href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin" rel="stylesheet" type="text/css">
-    <link href="//fonts.googleapis.com/css?family=Libre+Baskerville:400,400italic,700&subset=latin,latin-ext" rel="stylesheet" type="text/css">
-    <link href="../css/base.css" rel="stylesheet">
-    <link href="../css/zf-web.css" rel="stylesheet">
-    <link href="../css/zf.css" rel="stylesheet">
-    <link href="../css/prism-zf.css" rel="stylesheet">
-
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-        <![endif]-->
-
-    <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
-    <script>
-    WebFont.load({
-        google: {
-            families: ['Open Sans', 'PT Sans']
-        }
-    });
-    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../css/styles-482aa2add1.css">
 
     
 </head>
@@ -57,8 +36,8 @@
 
             <!-- Main title -->
             <span class="navbar-brand">
-              <a class="logo-link" href="http://framework.zend.com" data-toggle="tooltip" data-placement="bottom" title="Zend Framework"><img src="../img/zf-logo-mark.svg" height="28" alt="Zend Framework" /></a>
-              <a href="..">zend-stratigility</a>
+                <a class="logo-link" href="https://framework.zend.com/" data-toggle="tooltip" data-placement="bottom" title="Go to the ZF homepage"><img src="../img/zf-logo-mark.svg" height="28" alt="Zend Framework" /></a>
+                <a href="..">zend-stratigility</a>
             </span>
         </div>
 
@@ -184,6 +163,8 @@
     
         <li class="main active"><a href="#api-reference">API Reference</a></li>
         
+            <li><a href="#http-middleware">http-middleware</a></li>
+        
             <li><a href="#middleware">Middleware</a></li>
         
             <li><a href="#next">Next</a></li>
@@ -213,11 +194,11 @@
         <div class="col-md-9" role="main">
 
 <ol class="breadcrumb" role="navigation" aria-label="breadcrumbs navigation">
-  <li><a href="..">zend-stratigility</a> &raquo;</li>
+  <li><a href="..">zend-stratigility</a></li>
   
     
       
-        <li>Reference &raquo;</li>
+        <li>Reference</li>
       
     
   
@@ -226,13 +207,43 @@
 
 <h1 id="api-reference">API Reference</h1>
 <p>The following make up the primary API of Stratigility.</p>
+<blockquote>
+<h3 id="http-middleware">http-middleware</h3>
+<p>Stratigility has supported http-interop/http-middleware since version 2.0.0,
+originally pinning to the 0.4.1 specification.</p>
+<p>Starting with version 2.1.0, we also support the 0.5.0 specification. In
+operation, they work identically. However, the namespace has changed, 
+<code>DelegateInterface</code> was renamed to <code>RequestHandlerInterface</code>, and the
+delegate/handler's <code>process()</code> method was renamed to <code>handle()</code>.</p>
+<p>Internally, we use the package
+<a href="https://github.com/webimpress/http-middleware-compatility">webimpress/http-middleware-compatility</a>
+to adapt middleware to work with any http-middleware version.  This package
+provides polyfills for the various http-middleware versions, and a "trick" for
+calling on the delegate/handler in a way that will work with any http-middleware
+version that library supports.</p>
+<p>When you write your application, you will need to be aware of what version of
+http-middleware you have installed, and write your middleware to target it.</p>
+<p>Alternately, you can use the interfaces defined in
+webimpress/http-middleware-compatility; read that package's documentation to
+understand how you can do so.</p>
+</blockquote>
 <h2 id="middleware">Middleware</h2>
 <p><code>Zend\Stratigility\MiddlewarePipe</code> is the primary application interface, and
 has been discussed previously. Its API is:</p>
-<pre class="codehilite"><code class="language-php linenums">namespace Zend\Stratigility;
+<pre class="codehilite"><code class="language-php">namespace Zend\Stratigility;
 
+// If http-interop/http-middleware 0.2 is installed:
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
+
+// If http-interop/http-middleware 0.4.1 is installed:
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+
+// If http-interop/http-middleware 0.5.0 is installed:
+use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface as DelegateInterface;
+
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -275,9 +286,10 @@ segregated by path to be re-used without changes to its own internal routing.</p
 <p>The <code>MiddlewarePipe</code> is itself middleware, and can be executed in stacks that
 expect the <code>__invoke()</code> signature (via the <code>__invoke()</code> signature), or stacks
 expecting http-interop middleware signatures (via the <code>process()</code> method).</p>
-<p>When using <code>__invoke()</code>, the callable <code>$out</code> argument should either be an
-<code>Interop\Http\Middleware\DelegateInterface</code>, or use the signature:</p>
-<pre class="codehilite"><code class="language-php linenums">use Psr\Http\Message\ResponseInterface;
+<p>When using <code>__invoke()</code>, the callable <code>$out</code> argument should either implement
+delegator/request handler interface from <code>http-interop/http-middleware</code>
+(depends on version you are using), or use the signature:</p>
+<pre class="codehilite"><code class="language-php">use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 function (
@@ -291,8 +303,8 @@ callback will be provided for you (typically an instance of
 <code>Zend\Stratigility\Next</code>, which <code>MiddlewarePipe</code> creates internally before
 dispatching to the various middleware in its pipeline).</p>
 <p>Middleware should either return a response, or the result of
-<code>$next()/DelegateInterface::process()</code> (which should eventually evaluate to a
-response instance).</p>
+<code>$next()/DelegateInterface::process()/RequestHandlerInterface::handle()</code>
+(which should eventually evaluate to a response instance).</p>
 <p>Within Stratigility, <code>Zend\Stratigility\Next</code> provides an implementation
 compatible with either usage.</p>
 <p>Starting in version 1.3.0, <code>MiddlewarePipe</code> implements the
@@ -310,7 +322,7 @@ will be wrapped in a decorator (see the <a href="#middleware-decorators">section
 decorators</a>, below) such that it will now conform to
 http-interop middleware interfaces.</p>
 <p>To use this functionality, inject the prototype before piping middleware:</p>
-<pre class="codehilite"><code class="language-php linenums">$pipeline = new MiddlewarePipe();
+<pre class="codehilite"><code class="language-php">$pipeline = new MiddlewarePipe();
 $pipeline-&gt;setResponsePrototype(new Response());</code></pre>
 
 <h2 id="next">Next</h2>
@@ -323,7 +335,7 @@ is implemented both as a functor and as an http-interop/http-middleware
 your Request and/or Response instances, you will have new instances, and will
 need to make these known to the next middleware in the chain. <code>Next</code> expects
 these arguments for every invocation.</p>
-<pre class="codehilite"><code class="language-php linenums">class Next
+<pre class="codehilite"><code class="language-php">class Next
 {
     public function __invoke(
         Psr\Http\Message\ServerRequestInterface $request,
@@ -348,7 +360,7 @@ following:</p>
 <li>For middleware delegating to another layer, operate on the <em>returned</em>
   response instead:</li>
 </ul>
-<pre class="codehilite"><code class="language-php linenums">$response = $next($request, $response);
+<pre class="codehilite"><code class="language-php">$response = $next($request, $response);
 return $response-&gt;withHeader('X-Foo', 'Bar');</code></pre>
 
 </blockquote>
@@ -366,7 +378,7 @@ you will need to:</p>
 <li>Operate on a response returned by invoking the delegate.</li>
 </ul>
 <h3 id="providing-an-altered-request">Providing an altered request:</h3>
-<pre class="codehilite"><code class="language-php linenums">// Standard invokable:
+<pre class="codehilite"><code class="language-php">// Standard invokable:
 function ($request, $response, $next) use ($bodyParser)
 {
     $bodyParams = $bodyParser($request);
@@ -376,7 +388,7 @@ function ($request, $response, $next) use ($bodyParser)
     );
 }
 
-// http-interop invokable:
+// http-interop/http-middleware &lt; 0.5 invokable:
 function ($request, DelegateInterface $delegate) use ($bodyParser)
 {
     $bodyParams = $bodyParser($request);
@@ -385,10 +397,21 @@ function ($request, DelegateInterface $delegate) use ($bodyParser)
     return $delegate-&gt;process(
         $request-&gt;withBodyParams($bodyParams)
     );
+}
+
+// http-interop/http-middleware 0.5.0 invokable:
+function ($request, RequestHandlerInterface $handler) use ($bodyParser)
+{
+    $bodyParams = $bodyParser($request);
+
+    // Delegate will receive the new request instance:
+    return $handler-&gt;handle(
+        $request-&gt;withBodyParams($bodyParams)
+    );
 }</code></pre>
 
 <h3 id="providing-an-altered-request-and-operating-on-the-returned-response">Providing an altered request and operating on the returned response:</h3>
-<pre class="codehilite"><code class="language-php linenums">function ($request, $response, $next) use ($bodyParser)
+<pre class="codehilite"><code class="language-php">function ($request, $response, $next) use ($bodyParser)
 {
     $response = $next(
         $request-&gt;withBodyParams($bodyParser($request)),
@@ -398,13 +421,24 @@ function ($request, DelegateInterface $delegate) use ($bodyParser)
     return $response-&gt;withAddedHeader('Cache-Control', [
 }
 
-// http-interop invokable:
+// http-interop/http-middleware &lt; 0.5 invokable:
 function ($request, DelegateInterface $delegate) use ($bodyParser)
 {
     $bodyParams = $bodyParser($request);
 
     // Provide a new request instance to the delegate:
     return $delegate-&gt;process(
+        $request-&gt;withBodyParams($bodyParams)
+    );
+}
+
+// http-interop/http-middleware 0.5.0 invokable:
+function ($request, RequestHandlerInterface $handler) use ($bodyParser)
+{
+    $bodyParams = $bodyParser($request);
+
+    // Provide a new request instance to the delegate:
+    return $handler-&gt;handle(
         $request-&gt;withBodyParams($bodyParams)
     );
 }</code></pre>
@@ -415,7 +449,7 @@ return a response.</p>
 <p>While we pass a response when using <code>Next</code> as a functor, we recommend creating
 a new response, or providing your middleware with a response prototype; this
 will ensure that the response is specific for your context.</p>
-<pre class="codehilite"><code class="language-php linenums">$prototype = new Response();
+<pre class="codehilite"><code class="language-php">$prototype = new Response();
 
 // Standard invokable signature:
 function ($request, $response, $next) use ($prototype)
@@ -429,8 +463,18 @@ function ($request, $response, $next) use ($prototype)
     return $response;
 }
 
-// http-interop invokable signature:
+// http-interop/http-middleware &lt; 0.5 invokable signature:
 function ($request, DelegateInterface $delegate) use ($prototype)
+{
+    $response = $prototype-&gt;withAddedHeader('Cache-Control', [
+        'public',
+        'max-age=18600',
+        's-maxage=18600',
+    ]);
+}
+
+// http-interop/http-middleware 0.5.0 invokable signature:
+function ($request, RequestHandlerInterface $handler) use ($prototype)
 {
     $response = $prototype-&gt;withAddedHeader('Cache-Control', [
         'public',
@@ -443,11 +487,16 @@ function ($request, DelegateInterface $delegate) use ($prototype)
 <p>If your middleware is not capable of returning a response, or a particular path
 in the middleware cannot return a response, return the result of executing the
 delegate.</p>
-<p>If using the legacy middleware signature, invoke the <code>$next</code> argument:</p>
-<pre class="codehilite"><code class="language-php linenums">return $next($request, $response);</code></pre>
+<p>When using the legacy middleware signature, invoke the <code>$next</code> argument:</p>
+<pre class="codehilite"><code class="language-php">return $next($request, $response);</code></pre>
 
-<p>If using a <code>DelegateInterface</code>, invoke its <code>process()</code> method:</p>
-<pre class="codehilite"><code class="language-php linenums">return $delegate-&gt;process($request);</code></pre>
+<p>If you are using <code>http-interop/http-middleware</code> in versions lower than 0.5.0,
+then the delegate implements <code>DelegateInterface</code>; invoke its <code>process()</code> method:</p>
+<pre class="codehilite"><code class="language-php">return $delegate-&gt;process($request);</code></pre>
+
+<p>If you are using <code>http-interop/http-middleware</code> versions 0.5.0 or above, then
+the delegate implements <code>RequestHandlerInterface</code>; invoke its <code>handle()</code> method:</p>
+<pre class="codehilite"><code class="language-php">return $handler-&gt;handle($request);</code></pre>
 
 <p><strong>Middleware should always return a response, and, if it cannot, return the
 result of delegation.</strong></p>
@@ -455,7 +504,7 @@ result of delegation.</strong></p>
 <p>If your middleware cannot complete &mdash; perhaps a database error occurred, a
 service was unreachable, etc. &mdash; how can you report the error?</p>
 <p>Raise an exception!</p>
-<pre class="codehilite"><code class="language-php linenums">function ($request, $response, $next) use ($service)
+<pre class="codehilite"><code class="language-php">function ($request, $response, $next) use ($service)
 {
     $result = $service-&gt;fetchSomething();
     if (! $result-&gt;isSuccess()) {
@@ -477,7 +526,7 @@ your users.</p>
 instance. The primary reason is to allow composing middleware such that you always have access to
 the original request instance.</p>
 <p>As an example, consider the following:</p>
-<pre class="codehilite"><code class="language-php linenums">$app1 = new Middleware();
+<pre class="codehilite"><code class="language-php">$app1 = new Middleware();
 $app1-&gt;pipe('/foo', $fooCallback);
 
 $app2 = new Middleware();
@@ -491,7 +540,7 @@ nested safely and resolve regardless of the nesting level.</p>
 <p>If you want access to the full URI — for instance, to construct a fully qualified URI to your
 current middleware — <code>Zend\Stratigility\Http\Request</code> contains a method, <code>getOriginalRequest()</code>,
 which will always return the original request provided to the application:</p>
-<pre class="codehilite"><code class="language-php linenums">function ($request, $response, $next)
+<pre class="codehilite"><code class="language-php">function ($request, $response, $next)
 {
     $location = $request-&gt;getOriginalRequest()-&gt;getUri()-&gt;getPath() . '/[:id]';
     $response = $response-&gt;setHeader('Location', $location);
@@ -536,17 +585,24 @@ wrapped in one of these decorators.</p>
 <li><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapper</code> will wrap a callable
   using the legacy interface; as such, it also requires a response instance:</li>
 </ul>
-<pre class="codehilite"><code class="language-php linenums">$middleware = new CallableMiddlewareWrapper($middleware, $response);</code></pre>
+<pre class="codehilite"><code class="language-php">$middleware = new CallableMiddlewareWrapper($middleware, $response);</code></pre>
 
 <ul>
 <li><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapper</code> will wrap a callable
   that defines exactly two arguments, with the second type-hinting on the
-  http-interop/http-middleware <code>DelegateInterface</code>:</li>
+  http-interop/http-middleware <code>DelegateInterface</code> (versions &lt; 0.5):</li>
 </ul>
-<pre class="codehilite"><code class="language-php linenums">$middleware = new CallableMiddlewareWrapper(
-  function ($request, DelegateInterface $delegate) {
-      // ... 
-  }
+<pre class="codehilite"><code class="language-php">$middleware = new CallableMiddlewareWrapper(
+    function ($request, DelegateInterface $delegate) {
+        // ... 
+    }
+);</code></pre>
+
+<p>or <code>RequestHandlerInterface</code> (versions 0.5.0 or greater):</p>
+<pre class="codehilite"><code class="language-php">$middleware = new CallableMiddlewareWrapper(
+    function ($request, RequestHandlerInterface $handler) {
+        // ...
+    }
 );</code></pre>
 
 <p>You can manually decorate callable middleware using these decorators, or simply
@@ -558,17 +614,21 @@ using the legacy middleware signature.</p>
 http-interop/http-middleware <code>DelegateInterface</code> implementation,
 <code>Zend\Stratigility\Delegate\CallableDelegateDecorator</code>.</p>
 <p>This class can be used to wrap a callable <code>$next</code> instance for use in passing to
-an http-interop/http-middleware middleware interface <code>process()</code> method as a
-delegate; the primary use case is adapting functor middleware to work as
-http-interop middleware.</p>
+an http-interop/http-middleware middleware interface <code>process()</code>/<code>handle()</code>
+method as a delegate; the primary use case is adapting functor middleware to
+work as http-interop middleware.</p>
 <p>As an example:</p>
-<pre class="codehilite"><code class="language-php linenums">// http-interop/http-middleware 0.2:
+<pre class="codehilite"><code class="language-php">// http-interop/http-middleware 0.2:
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 
 // http-interop/http-middleware 0.4.1:
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+
+// http-interop/http-middleware 0.5.0:
+use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface as DelegateInterface;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -588,7 +648,12 @@ class TimestampMiddleware implements ServerMiddlewareInterface
         ServerRequestInterface $request,
         DelegateInterface $delegate
     ) {
+        // http-interop/http-middleware &lt; 0.5
         $response = $delegate-&gt;process($request);
+
+        // http-interop/http-middleware 0.5.0
+        $response = $delegate-&gt;handle($request);
+
         return $response-&gt;withHeader('X-Processed-Timestamp', time());
     }
 }</code></pre>
@@ -617,7 +682,7 @@ class TimestampMiddleware implements ServerMiddlewareInterface
             <div class="col-lg-3">
               <p>
                 <strong>Zend Framework</strong><br />
-                <a href="http://framework.zend.com/">framework.zend.com</a><br />
+                <a href="https://framework.zend.com/">framework.zend.com</a><br />
                 <a href="https://docs.zendframework.com">docs.zendframework.com</a><br />
                 <a href="https://packages.zendframework.com">packages.zendframework.com</a><br />
                 <a href="https://apigility.org">apigility.org</a><br />
@@ -638,14 +703,15 @@ class TimestampMiddleware implements ServerMiddlewareInterface
                 <h4>Copyright</h4>
                 <div class="hline-w"></div>
 
-                <p>&copy; 2006-2016 by <a href="http://www.zend.com">Zend</a>, a <a href="http://www.roguewave.com/">Rogue Wave Company</a>.</p>
+                <p>&copy; 2006-2017 by <a href="https://www.zend.com/">Zend</a>, a <a href="https://www.roguewave.com/">Rogue Wave Company</a>.</p>
             </div>
 
             <div class="col-lg-4">
                 <h4>Contacts</h4>
                 <div class="hline-w"></div>
                 <p>
-                    <a href="irc://irc.freenode.net/zftalk" class="btn-social btn-outline" alt="IRC" title="IRC"><i class="fa fa-comment"></i></a>
+                    <a href="https://discourse.zendframework.com" class="btn-social btn-outline" alt="Forum" title="Forum"><i class="fa fa-comments"></i></a>
+                    <a href="https://zendframework-slack.herokuapp.com" class="btn-social btn-outline" alt="Slack" title="Slack"><i class="fa fa-slack"></i></a>
                     <a href="https://github.com/zendframework" class="btn-social btn-outline" alt="Github" title="Github"><i class="fa fa-github"></i></a>
                     <a href="https://twitter.com/zfdevteam" class="btn-social btn-outline" alt="Twitter" title="Twitter"><i class="fa fa-twitter"></i></a>
                 </p>
@@ -654,14 +720,11 @@ class TimestampMiddleware implements ServerMiddlewareInterface
     </div>
 </div>
 
-
-    <script src="../js/jquery-1.10.2.min.js"></script>
-    <script src="../js/bootstrap-3.0.3.min.js"></script>
-    <script src="../js/prism-zf.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/jquery@2.2.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"></script>
     <script>var base_url = '..';</script>
+    <script src="../js/scripts-0b6185f4a5.js"></script>
     <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
-    <script src="../js/base.js"></script>
 
     <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
         <div class="modal-dialog">
@@ -693,7 +756,7 @@ class TimestampMiddleware implements ServerMiddlewareInterface
     <div class="zf-components">
   <div class="zf-components-grid">
     <div class="zf-logo">
-      <a href="http://framework.zend.com" data-toggle="tooltip" data-placement="bottom" title="Go to the ZF homepage"><img src="../img/zf-logo-mark.svg" alt="Zend Framework" width="250" /></a>
+      <a href="https://framework.zend.com" data-toggle="tooltip" data-placement="bottom" title="Go to the ZF homepage"><img src="../img/zf-logo-mark.svg" alt="Zend Framework" width="250" /></a>
     </div>
 
     <div class="component-list"></div>
@@ -702,112 +765,6 @@ class TimestampMiddleware implements ServerMiddlewareInterface
   </div>
 </div>
 
-    <script>
-  // Prepare the component list dropdown for display
-  $(function () {
-    var components = $(".zf-components"),
-        componentList = components.find(".component-list"),
-        sidebar = $(".bs-sidebar.affix"),
-        sidebarInitialPos = sidebar.css("position"),
-        hidden,
-        componentToggle = $(".component-toggle"),
-        navbar = $(".navbar-fixed-top"),
-        rollUpLink = $(".zf-components-rollup a");
-
-    // Initial setup on document load
-    components.insertBefore(navbar);
-    $(".zf-logo a").tooltip();
-    componentToggle.tooltip();
-    rollUpLink.attr({ href: "#", alt: "Hide component list" });
-
-    // Cast initial sidebar position value
-    if (undefined === sidebarInitialPos) {
-      sidebarInitialPos = "fixed";
-    }
-
-    // Setup onclick events to toggle list
-    componentToggle.click(toggleComponentList);
-    rollUpLink.click(toggleComponentList);
-
-    // Toggle the component list display
-    function toggleComponentList(event) {
-      event.preventDefault();
-
-      if (hidden === undefined) {
-        // Not loaded yet; load and display.
-        loadComponentList();
-        return;
-      }
-
-      if (hidden) {
-        // Hidden; display.
-        showComponentList();
-        return;
-      }
-
-      // Currently visible; hide
-      hideComponentList();
-    }
-
-    // Show the component list
-    function showComponentList() {
-      navbar.css({position: "relative"});
-      sidebar.css({position: "relative"});
-      components
-        .css({"margin-top": "-" + components.outerHeight() + "px"})
-        .show()
-        .animate({"margin-top": 0}, {
-          complete: function () {
-            componentToggle
-              .data("placement", "top")
-              .attr("data-original-title", "Hide component list");
-            hidden = false;
-          },
-          queue: false
-        });
-    }
-
-    // Hide the component list
-    function hideComponentList() {
-      components.animate({"margin-top": "-" + components.outerHeight() + "px"}, {
-        complete: function () {
-          navbar.css({position: "fixed"});
-          sidebar.css({position: sidebarInitialPos});
-          componentToggle
-            .data("placement", "bottom")
-            .attr("data-original-title", "Show component list");
-          components.hide();
-          hidden = true;
-        },
-        queue: false
-      });
-      sidebar.animate({ top: sidebarInitialTop + "px" }, { queue: false});
-    }
-
-    // Inject a component into the componet list DOM.
-    function injectComponent(index, component) {
-      componentList.append('<div class="component"><h4><a href="' + component.url + '">' + component.name + '</a></h4><p>' + component.description + '</p></div>');
-    }
-
-    // Parse the component list, build the DOM, and display it.
-    function parseComponentList(components) {
-      $.each(components, injectComponent);
-      showComponentList();
-    }
-
-    // Fetch the component list and display it.
-    function loadComponentList () {
-      $.ajax({
-        url: "//docs.zendframework.com/zf-mkdoc-theme/scripts/zf-component-list.json",
-        dataType: "text json",
-        success: parseComponentList,
-        error: function (e) {
-          console.log("Error occurred with XHR call", e);
-        }
-      });
-    }
-  });
-</script>
-    </body>
+</body>
 
 </html>
