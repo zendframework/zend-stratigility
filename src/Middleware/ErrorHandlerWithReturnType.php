@@ -12,7 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 
-class ErrorHandlerWithReturnType implements ServerMiddlewareInterface
+final class ErrorHandlerWithReturnType implements ServerMiddlewareInterface
 {
     use ErrorHandlerTrait {
         process as processTrait;

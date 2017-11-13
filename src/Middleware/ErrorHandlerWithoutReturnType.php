@@ -11,7 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 
-class ErrorHandlerWithoutReturnType implements ServerMiddlewareInterface
+final class ErrorHandlerWithoutReturnType implements ServerMiddlewareInterface
 {
     use ErrorHandlerTrait {
         process as processTrait;
