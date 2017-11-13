@@ -18,8 +18,10 @@ use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 /**
  * Decorate legacy callable middleware to make it dispatchable as server
  * middleware.
+ *
+ * @internal
  */
-class CallableMiddlewareWrapper implements ServerMiddlewareInterface
+trait CallableMiddlewareWrapperTrait
 {
     /**
      * @var callable

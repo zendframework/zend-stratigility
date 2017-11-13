@@ -13,7 +13,10 @@ use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface
 use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 
-class NotFoundHandler implements ServerMiddlewareInterface
+/**
+ * @internal
+ */
+trait NotFoundHandlerTrait
 {
     /**
      * @var ResponseInterface

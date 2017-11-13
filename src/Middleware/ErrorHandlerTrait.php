@@ -64,8 +64,10 @@ use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
  *
  * Listeners are attached using the attachListener() method, and triggered
  * in the order attached.
+ *
+ * @internal
  */
-final class ErrorHandler implements ServerMiddlewareInterface
+trait ErrorHandlerTrait
 {
     /**
      * @var callable[]

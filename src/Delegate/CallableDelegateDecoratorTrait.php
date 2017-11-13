@@ -10,13 +10,14 @@ namespace Zend\Stratigility\Delegate;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 
 /**
  * Decorate callable delegates as http-interop delegates in order to process
  * incoming requests.
+ *
+ * @internal
  */
-class CallableDelegateDecorator implements DelegateInterface
+trait CallableDelegateDecoratorTrait
 {
     /**
      * @var callable
