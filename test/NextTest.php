@@ -211,30 +211,6 @@ class NextTest extends TestCase
         $next($request);
     }
 
-    public function testNextShouldRaiseExceptionIfMiddlewareDoesNotReturnResponse()
-    {
-        $route1 = new Route('/foo', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                // Explicitly not returning a value
-                $next($req, $res);
-            }
-        ));
-        $route2 = new Route('/foo/bar', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                return $res;
-            }
-        ));
-
-        $this->queue->enqueue($route1);
-        $this->queue->enqueue($route2);
-
-        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-        $next    = new Next($this->queue);
-
-        $this->expectException(Exception\MissingResponseException::class);
-        $next($request);
-    }
-
     /**
      * @group 25
      */
@@ -433,27 +409,5 @@ class NextTest extends TestCase
 
         $next = new Next($this->queue);
         $this->assertSame($response, $next->handle($request));
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testProcessRaisesExceptionIfNoResponseReturnedByMiddleware()
-    {
-        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-
-        $route1 = $this->prophesize(MiddlewareInterface::class);
-        $route1
-            ->process(Argument::that(function ($arg) {
-                Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
-                return true;
-            }), Argument::type(Next::class))
-            ->willReturn('foobar');
-        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
-
-        $next = new Next($this->queue);
-
-        $this->expectException(Exception\MissingResponseException::class);
-        $next->handle($request);
     }
 }
