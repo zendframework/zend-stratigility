@@ -11,6 +11,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 
+/**
+ * @internal
+ */
 class CallableMiddlewareWrapperWithoutReturnType implements ServerMiddlewareInterface
 {
     use CallableMiddlewareWrapperTrait {

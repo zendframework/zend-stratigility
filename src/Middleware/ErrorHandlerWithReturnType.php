@@ -12,6 +12,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 
+/**
+ * @internal
+ */
 final class ErrorHandlerWithReturnType implements ServerMiddlewareInterface
 {
     use ErrorHandlerTrait {

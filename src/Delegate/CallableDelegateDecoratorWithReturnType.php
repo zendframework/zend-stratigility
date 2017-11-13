@@ -11,6 +11,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 
+/**
+ * @internal
+ */
 class CallableDelegateDecoratorWithReturnType implements DelegateInterface
 {
     use CallableDelegateDecoratorTrait {
