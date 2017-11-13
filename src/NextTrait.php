@@ -19,8 +19,10 @@ use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
 /**
  * Iterate a queue of middlewares and execute them.
+ *
+ * @internal
  */
-class Next implements DelegateInterface
+trait NextTrait
 {
     /**
      * @var null|DelegateInterface
@@ -141,7 +143,11 @@ class Next implements DelegateInterface
         }
 
         $middleware = $layer->handler;
-        $response = $middleware->process($request, $this);
+        try {
+            $response = $middleware->process($request, $this);
+        } catch (\TypeError $e) {
+            $response = null;
+        }
 
         if (! $response instanceof ResponseInterface) {
             throw new Exception\MissingResponseException(sprintf(

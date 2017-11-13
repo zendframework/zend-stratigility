@@ -4,60 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "d06efb434935f2b83caf9691f7abcb2b",
+    "content-hash": "0bc4bc532c751b23881954a6e5a65e3f",
     "packages": [
-        {
-            "name": "http-interop/http-middleware",
-            "version": "0.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/http-interop/http-middleware.git",
-                "reference": "9a801fe60e70d5d608b61d56b2dcde29516c81b9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/http-interop/http-middleware/zipball/9a801fe60e70d5d608b61d56b2dcde29516c81b9",
-                "reference": "9a801fe60e70d5d608b61d56b2dcde29516c81b9",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0",
-                "psr/http-message": "^1.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.0.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Interop\\Http\\ServerMiddleware\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PHP-FIG",
-                    "homepage": "http://www.php-fig.org/"
-                }
-            ],
-            "description": "Common interface for HTTP server-side middleware",
-            "keywords": [
-                "factory",
-                "http",
-                "middleware",
-                "psr",
-                "psr-17",
-                "psr-7",
-                "request",
-                "response"
-            ],
-            "time": "2017-01-14T15:23:42+00:00"
-        },
         {
             "name": "psr/http-message",
             "version": "1.0.1",
@@ -110,16 +58,16 @@
         },
         {
             "name": "webimpress/composer-extra-dependency",
-            "version": "0.2.0",
+            "version": "dev-feature/dependency-or",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webimpress/composer-extra-dependency.git",
-                "reference": "97c241b2c80628a2cd1002cece3fc54c419b1776"
+                "reference": "0a17a77a364dbafe923b0277f4e95c8243a764d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webimpress/composer-extra-dependency/zipball/97c241b2c80628a2cd1002cece3fc54c419b1776",
-                "reference": "97c241b2c80628a2cd1002cece3fc54c419b1776",
+                "url": "https://api.github.com/repos/webimpress/composer-extra-dependency/zipball/0a17a77a364dbafe923b0277f4e95c8243a764d9",
+                "reference": "0a17a77a364dbafe923b0277f4e95c8243a764d9",
                 "shasum": ""
             },
             "require": {
@@ -152,35 +100,37 @@
                 "dependency",
                 "webimpress"
             ],
-            "time": "2017-10-11T22:05:48+00:00"
+            "time": "2017-11-13T07:36:32+00:00"
         },
         {
             "name": "webimpress/http-middleware-compatibility",
-            "version": "0.1.3",
+            "version": "dev-feature/http-server-middleware",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webimpress/http-middleware-compatibility.git",
-                "reference": "5839f5abf54346eafa6617434bd5f618c0cc7adb"
+                "reference": "b39b3554a974969c159046fa4c4694030b5bf414"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webimpress/http-middleware-compatibility/zipball/5839f5abf54346eafa6617434bd5f618c0cc7adb",
-                "reference": "5839f5abf54346eafa6617434bd5f618c0cc7adb",
+                "url": "https://api.github.com/repos/webimpress/http-middleware-compatibility/zipball/b39b3554a974969c159046fa4c4694030b5bf414",
+                "reference": "b39b3554a974969c159046fa4c4694030b5bf414",
                 "shasum": ""
             },
             "require": {
-                "http-interop/http-middleware": "^0.1.1 || ^0.2 || ^0.3 || ^0.4.1 || ^0.5",
                 "php": "^5.6 || ^7.0",
-                "webimpress/composer-extra-dependency": "^0.2"
+                "webimpress/composer-extra-dependency": "dev-feature/dependency-or as 0.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^5.7.22 || ^6.3.1"
+                "phpunit/phpunit": "^5.7.23 || ^6.4.4"
             },
             "type": "library",
             "extra": {
-                "dependency": [
-                    "http-interop/http-middleware"
-                ]
+                "dependency-or": {
+                    "What middleware package would you like to use?": [
+                        "http-interop/http-middleware",
+                        "http-interop/http-server-middleware"
+                    ]
+                }
             },
             "autoload": {
                 "files": [
@@ -198,7 +148,7 @@
                 "psr-15",
                 "webimpress"
             ],
-            "time": "2017-10-11T22:13:48+00:00"
+            "time": "2017-11-12T22:07:52+00:00"
         },
         {
             "name": "zendframework/zend-escaper",
@@ -2178,9 +2128,18 @@
             "time": "2017-01-23T04:53:24+00:00"
         }
     ],
-    "aliases": [],
-    "minimum-stability": "stable",
-    "stability-flags": [],
+    "aliases": [
+        {
+            "alias": "0.2",
+            "alias_normalized": "0.2.0.0",
+            "version": "dev-feature/http-server-middleware",
+            "package": "webimpress/http-middleware-compatibility"
+        }
+    ],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "webimpress/http-middleware-compatibility": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

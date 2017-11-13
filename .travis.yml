@@ -10,12 +10,14 @@ env:
   global:
     - COMPOSER_ARGS="--no-interaction --no-plugins"
     - COVERAGE_DEPS="satooshi/php-coveralls"
+    - HTTP_INTEROP_MIDDLEWARE="http-interop/http-middleware:^0.5"
 
 matrix:
   include:
     - php: 5.6
       env:
         - DEPS=lowest
+        - HTTP_INTEROP_MIDDLEWARE="http-interop/http-middleware:^0.4.1"
     - php: 5.6
       env:
         - LEGACY_DEPS="phpunit/phpunit"
@@ -26,6 +28,7 @@ matrix:
     - php: 7
       env:
         - DEPS=lowest
+        - HTTP_INTEROP_MIDDLEWARE="http-interop/http-middleware:^0.4.1"
     - php: 7
       env:
         - DEPS=locked
@@ -35,26 +38,29 @@ matrix:
     - php: 7
       env:
         - DEPS=latest
+        - HTTP_INTEROP_MIDDLEWARE="http-interop/http-server-middleware:^1.0.1"
     - php: 7.1
       env:
         - DEPS=lowest
+        - HTTP_INTEROP_MIDDLEWARE="http-interop/http-middleware:^0.4.1"
     - php: 7.1
       env:
         - DEPS=locked
     - php: 7.1
       env:
         - DEPS=latest
+        - HTTP_INTEROP_MIDDLEWARE="http-interop/http-server-middleware:^1.0.1"
     - php: 7.2
       env:
         - DEPS=lowest
+        - HTTP_INTEROP_MIDDLEWARE="http-interop/http-middleware:^0.4.1"
     - php: 7.2
       env:
         - DEPS=locked
     - php: 7.2
       env:
         - DEPS=latest
-  allow_failures:
-    - php: 7.2
+        - HTTP_INTEROP_MIDDLEWARE="http-interop/http-server-middleware:^1.0.1"
 
 before_install:
   - if [[ $TEST_COVERAGE != 'true' && "$(php --version | grep xdebug -ci)" -ge 1 ]]; then phpenv config-rm xdebug.ini || return 0 ; fi
@@ -66,6 +72,7 @@ install:
   - if [[ $DEPS == 'latest' ]]; then travis_retry composer update $COMPOSER_ARGS ; fi
   - if [[ $DEPS == 'lowest' ]]; then travis_retry composer update --prefer-lowest --prefer-stable $COMPOSER_ARGS ; fi
   - if [[ $TEST_COVERAGE == 'true' ]]; then travis_retry composer require --dev $COMPOSER_ARGS $COVERAGE_DEPS ; fi
+  - travis_retry composer require $COMPOSER_ARGS $HTTP_INTEROP_MIDDLEWARE
   - stty cols 120 && composer show
 
 script:
