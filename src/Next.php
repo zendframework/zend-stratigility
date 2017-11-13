@@ -130,16 +130,6 @@ class Next implements RequestHandlerInterface
     }
 
     /**
-     * Toggle the "raise throwables" flag on.
-     *
-     * @deprecated Since 2.0.0; this functionality is now a no-op.
-     * @return void
-     */
-    public function raiseThrowables()
-    {
-    }
-
-    /**
      * Reset the path, if a segment was previously stripped
      *
      * @param ServerRequestInterface $request

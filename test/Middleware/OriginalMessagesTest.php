@@ -7,6 +7,7 @@
 
 namespace ZendTest\Stratigility\Middleware;
 
+use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\ResponseInterface;
@@ -20,20 +21,6 @@ class OriginalMessagesTest extends TestCase
     {
         $this->uri = $this->prophesize(UriInterface::class);
         $this->request = $this->prophesize(ServerRequestInterface::class);
-        $this->response = $this->prophesize(ResponseInterface::class);
-    }
-
-    public function testNotPassingNextArgumentReturnsResponseVerbatim()
-    {
-        $middleware = new OriginalMessages();
-
-        $this->request->getUri()->shouldNotBeCalled();
-        $response = $middleware(
-            $this->request->reveal(),
-            $this->response->reveal()
-        );
-
-        $this->assertSame($this->response->reveal(), $response);
     }
 
     public function testNextReceivesRequestWithNewAttributes()
@@ -41,9 +28,8 @@ class OriginalMessagesTest extends TestCase
         $middleware = new OriginalMessages();
         $expected   = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $next = function ($request, $response) use ($expected) {
-            return $expected;
-        };
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+        $handler->handle($this->request->reveal())->willReturn($expected);
 
         $this->request->getUri()->will([$this->uri, 'reveal']);
         $this->request->withAttribute(
@@ -62,19 +48,7 @@ class OriginalMessagesTest extends TestCase
             })
         )->will([$this->request, 'reveal']);
 
-        $this->request->withAttribute(
-            'originalResponse',
-            Argument::that(function ($arg) {
-                $this->assertSame($this->response->reveal(), $arg);
-                return $arg;
-            })
-        )->will([$this->request, 'reveal']);
-
-        $response = $middleware(
-            $this->request->reveal(),
-            $this->response->reveal(),
-            $next
-        );
+        $response = $middleware->process($this->request->reveal(), $handler->reveal());
 
         $this->assertSame($expected, $response);
     }

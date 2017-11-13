@@ -8,7 +8,7 @@
 namespace Zend\Stratigility;
 
 use Closure;
-use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface;
 use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ResponseInterface;
@@ -32,7 +32,7 @@ use Zend\Stratigility\Exception\InvalidMiddlewareException;
  *
  * @see https://github.com/sencha/connect
  */
-class MiddlewarePipe implements ServerMiddlewareInterface
+class MiddlewarePipe implements MiddlewareInterface
 {
     /**
      * @var Middleware\CallableMiddlewareWrapperFactory
@@ -97,7 +97,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      * @param RequestHandlerInterface $handler
      * @return Response
      */
-    public function process(Request $request, RequestHandlerInterface $handler) : ResponseInterface
+    public function process(Request $request, RequestHandlerInterface $handler) : Response
     {
         $next = new Next($this->pipeline, $handler);
         return $next->handle($request);
@@ -114,7 +114,6 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      *
      * A handler CAN implement MiddlewareInterface, but MUST be callable.
      *
-     * @see MiddlewareInterface
      * @see Next
      * @param string|callable|object $path Either a URI path prefix, or middleware.
      * @param null|callable|object $middleware Middleware
@@ -123,7 +122,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     public function pipe($path, $middleware = null)
     {
         if (null === $middleware
-            && ($path instanceof ServerMiddlewareInterface || is_callable($path))
+            && ($path instanceof MiddlewareInterface || is_callable($path))
         ) {
             $middleware = $path;
             $path       = '/';
@@ -131,13 +130,13 @@ class MiddlewarePipe implements ServerMiddlewareInterface
 
         // Decorate callable middleware as http-interop middleware
         if (is_callable($middleware)
-            && ! $middleware instanceof ServerMiddlewareInterface
+            && ! $middleware instanceof MiddlewareInterface
         ) {
             $middleware = $this->decorateCallableMiddleware($middleware);
         }
 
         // Ensure we have a valid handler
-        if (! $middleware instanceof ServerMiddlewareInterface) {
+        if (! $middleware instanceof MiddlewareInterface) {
             throw InvalidMiddlewareException::fromValue($middleware);
         }
 
@@ -159,16 +158,6 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     public function setCallableMiddlewareDecorator(Middleware\CallableMiddlewareWrapperFactory $decorator)
     {
         $this->callableMiddlewareDecorator = $decorator;
-    }
-
-    /**
-     * Enable the "raise throwables" flag.
-     *
-     * @deprecated Since 2.0.0; this feature is now a no-op.
-     * @return void
-     */
-    public function raiseThrowables()
-    {
     }
 
     /**
@@ -213,8 +202,8 @@ class MiddlewarePipe implements ServerMiddlewareInterface
 
     /**
      * @param callable $middleware
-     * @return ServerMiddlewareInterface|callable Callable, if unable to
-     *     decorate the middleware; ServerMiddlewareInterface if it can.
+     * @return MiddlewareInterface|callable Callable, if unable to
+     *     decorate the middleware; MiddlewareInterface if it can.
      */
     private function decorateCallableMiddleware(callable $middleware)
     {
