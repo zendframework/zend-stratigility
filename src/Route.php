@@ -9,7 +9,7 @@ namespace Zend\Stratigility;
 
 use InvalidArgumentException;
 use OutOfRangeException;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
 
 /**
  * Value object representing route-based middleware

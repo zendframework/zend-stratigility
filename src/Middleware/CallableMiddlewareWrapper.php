@@ -7,19 +7,17 @@
 
 namespace Zend\Stratigility\Middleware;
 
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 use Zend\Stratigility\Next;
-
-use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
 /**
  * Decorate legacy callable middleware to make it dispatchable as server
  * middleware.
  */
-class CallableMiddlewareWrapper implements ServerMiddlewareInterface
+class CallableMiddlewareWrapper implements MiddlewareInterface
 {
     /**
      * @var callable
@@ -44,19 +42,19 @@ class CallableMiddlewareWrapper implements ServerMiddlewareInterface
     /**
      * Proxies to underlying middleware, using composed response prototype.
      *
-     * Also decorates the $delegator using the CallableMiddlewareWrapper.
+     * Also decorates the $handler using the CallableMiddlewareWrapper.
      *
      * {@inheritDocs}
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
         $middleware = $this->middleware;
-        $delegate = $delegate instanceof Next
-            ? $delegate
-            : function ($request) use ($delegate) {
-                return $delegate->{HANDLER_METHOD}($request);
+        $handler = $handler instanceof Next
+            ? $handler
+            : function ($request) use ($handler) {
+                return $handler->handle($request);
             };
 
-        return $middleware($request, $this->responsePrototype, $delegate);
+        return $middleware($request, $this->responsePrototype, $handler);
     }
 }

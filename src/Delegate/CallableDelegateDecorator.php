@@ -7,21 +7,20 @@
 
 namespace Zend\Stratigility\Delegate;
 
-use Psr\Http\Message\RequestInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 
 /**
  * Decorate callable delegates as http-interop delegates in order to process
  * incoming requests.
  */
-class CallableDelegateDecorator implements DelegateInterface
+class CallableDelegateDecorator implements RequestHandlerInterface
 {
     /**
      * @var callable
      */
-    private $delegate;
+    private $handler;
 
     /**
      * @var ResponseInterface
@@ -29,23 +28,13 @@ class CallableDelegateDecorator implements DelegateInterface
     private $response;
 
     /**
-     * @param callable $delegate
+     * @param callable $handler
      * @param ResponseInterface $response
      */
-    public function __construct(callable $delegate, ResponseInterface $response)
+    public function __construct(callable $handler, ResponseInterface $response)
     {
-        $this->delegate = $delegate;
+        $this->handler = $handler;
         $this->response = $response;
-    }
-
-    /**
-     * Method provided for compatibility with http-interop/http-middleware 0.4.1
-     *
-     * {@inheritDoc}
-     */
-    public function process(ServerRequestInterface $request)
-    {
-        return $this->handle($request);
     }
 
     /**
@@ -53,20 +42,9 @@ class CallableDelegateDecorator implements DelegateInterface
      *
      * {@inheritDoc}
      */
-    public function handle(ServerRequestInterface $request)
+    public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        $delegate = $this->delegate;
-        return $delegate($request, $this->response);
-    }
-
-    /**
-     * Method provided for compatibility with http-interop/http-middleware 0.1.1.
-     *
-     * @param RequestInterface $request
-     * @return mixed
-     */
-    public function next(RequestInterface $request)
-    {
-        return $this->handle($request);
+        $handler = $this->handler;
+        return $handler($request, $this->response);
     }
 }

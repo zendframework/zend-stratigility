@@ -7,11 +7,12 @@
 
 namespace Zend\Stratigility\Middleware;
 
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 
-class CallableInteropMiddlewareWrapper implements ServerMiddlewareInterface
+class CallableInteropMiddlewareWrapper implements MiddlewareInterface
 {
     /**
      * @param callable
@@ -29,9 +30,9 @@ class CallableInteropMiddlewareWrapper implements ServerMiddlewareInterface
     /**
      * {@inheritDocs}
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
         $middleware = $this->middleware;
-        return $middleware($request, $delegate);
+        return $middleware($request, $handler);
     }
 }

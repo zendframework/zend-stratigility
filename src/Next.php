@@ -7,25 +7,23 @@
 
 namespace Zend\Stratigility;
 
+use Interop\Http\Server\RequestHandlerInterface;
 use InvalidArgumentException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use SplQueue;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
-
-use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
 /**
  * Iterate a queue of middlewares and execute them.
  */
-class Next implements DelegateInterface
+class Next implements RequestHandlerInterface
 {
     /**
-     * @var null|DelegateInterface
+     * @var null|RequestHandlerInterface
      */
-    private $nextDelegate;
+    private $nextHandler;
 
     /**
      * @var SplQueue
@@ -43,15 +41,15 @@ class Next implements DelegateInterface
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param null|DelegateInterface $nextDelegate Next delegate to invoke when the
+     * @param null|RequestHandlerInterface $nextHandler Next handler to invoke when the
      *     queue is exhausted.
      * @throws InvalidArgumentException for a non-callable, non-delegate $done
      *     argument.
      */
-    public function __construct(SplQueue $queue, DelegateInterface $nextDelegate = null)
+    public function __construct(SplQueue $queue, RequestHandlerInterface $nextHandler = null)
     {
-        $this->queue        = clone $queue;
-        $this->nextDelegate = $nextDelegate;
+        $this->queue       = clone $queue;
+        $this->nextHandler = $nextHandler;
     }
 
     /**
@@ -68,30 +66,6 @@ class Next implements DelegateInterface
      */
     public function __invoke(ServerRequestInterface $request)
     {
-        return $this->process($request);
-    }
-
-    /**
-     * Proxy to handle method.
-     * It is needed to support http-interop/http-middleware 0.1.1.
-     *
-     * @param RequestInterface $request
-     * @return ResponseInterface
-     */
-    public function next(RequestInterface $request)
-    {
-        return $this->handle($request);
-    }
-
-    /**
-     * Proxy to handle method.
-     * It is needed to support http-interop/http-middleware 0.2-0.4.1.
-     *
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
-     */
-    public function process(ServerRequestInterface $request)
-    {
         return $this->handle($request);
     }
 
@@ -103,14 +77,14 @@ class Next implements DelegateInterface
      * @throws Exception\MissingResponseException If the middleware executed does
      *     not return a response.
      */
-    public function handle(ServerRequestInterface $request)
+    public function handle(ServerRequestInterface $request) : ResponseInterface
     {
         $request  = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            if ($this->nextDelegate) {
-                return $this->nextDelegate->{HANDLER_METHOD}($request);
+            if ($this->nextHandler) {
+                return $this->nextHandler->handle($request);
             }
 
             throw new Exception\MissingResponseException(sprintf(
@@ -126,13 +100,13 @@ class Next implements DelegateInterface
 
         // Skip if layer path does not match current url
         if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
-            return $this->process($request);
+            return $this->handle($request);
         }
 
         // Skip if match is not at a border ('/', '.', or end)
         $border = $this->getBorder($path, $normalizedRoute);
         if ($border && '/' !== $border && '.' !== $border) {
-            return $this->process($request);
+            return $this->handle($request);
         }
 
         // Trim off the part of the url that matches the layer route

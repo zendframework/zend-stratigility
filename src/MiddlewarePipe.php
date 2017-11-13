@@ -8,13 +8,14 @@
 namespace Zend\Stratigility;
 
 use Closure;
+use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use ReflectionFunction;
 use ReflectionMethod;
 use SplQueue;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
 /**
@@ -64,42 +65,42 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      * Takes the pipeline, creates a Next handler, and delegates to the
      * Next handler.
      *
-     * $delegate will be invoked if the internal queue is exhausted without
-     * returning a response; in such situations, $delegate will then be
+     * $handler will be invoked if the internal queue is exhausted without
+     * returning a response; in such situations, $handler will then be
      * responsible for creating and returning the final response.
      *
-     * $delegate may be either a DelegateInterface instance, or a callable
+     * $handler may be either a RequestHandlerInterface instance, or a callable
      * accepting at least a request instance (in such cases, the delegate
      * will be decorated using Delegate\CallableDelegateDecorator).
      *
      * @param Request $request
      * @param Response $response
-     * @param callable|DelegateInterface $delegate
+     * @param callable|RequestHandlerInterface $handler
      * @return Response
      */
-    public function __invoke(Request $request, Response $response, $delegate)
+    public function __invoke(Request $request, Response $response, $handler)
     {
-        if (! $delegate instanceof DelegateInterface && is_callable($delegate)) {
-            $delegate = new Delegate\CallableDelegateDecorator($delegate, $response);
+        if (! $handler instanceof RequestHandlerInterface && is_callable($handler)) {
+            $handler = new Delegate\CallableDelegateDecorator($handler, $response);
         }
 
-        return $this->process($request, $delegate);
+        return $this->process($request, $handler);
     }
 
     /**
      * http-interop invocation: single-pass with delegate.
      *
-     * Executes the internal pipeline, passing $delegate as the "final
+     * Executes the internal pipeline, passing $handler as the "final
      * handler" in cases when the pipeline exhausts itself.
      *
      * @param Request $request
-     * @param DelegateInterface $delegate
+     * @param RequestHandlerInterface $handler
      * @return Response
      */
-    public function process(Request $request, DelegateInterface $delegate)
+    public function process(Request $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        $next = new Next($this->pipeline, $delegate);
-        return $next->process($request);
+        $next = new Next($this->pipeline, $handler);
+        return $next->handle($request);
     }
 
     /**
@@ -227,7 +228,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
 
         $params = $r->getParameters();
         $type = $params[1]->getClass();
-        if (! $type || ! is_a($type->getName(), DelegateInterface::class, true)) {
+        if (! $type || ! is_a($type->getName(), RequestHandlerInterface::class, true)) {
             return $this->getCallableMiddlewareDecorator()
                 ->decorateCallableMiddleware($middleware);
         }
