@@ -1,8 +1,9 @@
 # Migrating from version 2 to version 3
 
-## PHP 7.1 support
+## PHP support
 
-We support only PHP 7.1.
+We support only PHP 7.1 and above.
+PHP 5.6 and 7.0 support has been dropped.
 
 ## PSR-15
 
