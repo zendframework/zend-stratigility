@@ -42,8 +42,6 @@ class CallableMiddlewareWrapper implements MiddlewareInterface
     /**
      * Proxies to underlying middleware, using composed response prototype.
      *
-     * Also decorates the $handler using the CallableMiddlewareWrapper.
-     *
      * {@inheritDocs}
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
