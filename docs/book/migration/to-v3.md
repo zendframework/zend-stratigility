@@ -1,4 +1,4 @@
-# Migrating to version 2
+# Migrating from version 2 to version 3
 
 ## PHP 7.1 support
 
