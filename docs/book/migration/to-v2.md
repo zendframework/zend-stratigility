@@ -231,9 +231,6 @@ Additionally, starting in version 2.0.0, `MiddlewarePipe` *will no longer implem
 http-interop/http-middleware `MiddlewareInterface`*. This has several
 repercussions.
 
-Stratigility 3.0.0 targets `http-interop/http-server-middleware`, and that version
-(and compatible versions) only.
-
 ### Callable middleware in version 1.3.0
 
 Callable middleware can be used without change in version 1.3.0. However, we

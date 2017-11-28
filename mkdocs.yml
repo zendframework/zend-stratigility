@@ -13,6 +13,7 @@ pages:
         - "API Reference": api.md
         - Migration:
           - "To Version 2": migration/to-v2.md
+          - "From v2 to v3": migration/to-v3.md
 site_name: zend-stratigility
 site_description: zend-stratigility
 repo_url: 'https://github.com/zendframework/zend-stratigility'
