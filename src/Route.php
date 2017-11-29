@@ -7,9 +7,9 @@
 
 namespace Zend\Stratigility;
 
+use Interop\Http\Server\MiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 
 /**
  * Value object representing route-based middleware
@@ -23,7 +23,7 @@ use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewa
 class Route
 {
     /**
-     * @var ServerMiddlewareInterface
+     * @var MiddlewareInterface
      */
     protected $handler;
 
@@ -34,9 +34,9 @@ class Route
 
     /**
      * @param string $path
-     * @param ServerMiddlewareInterface $handler
+     * @param MiddlewareInterface $handler
      */
-    public function __construct($path, ServerMiddlewareInterface $handler)
+    public function __construct($path, MiddlewareInterface $handler)
     {
         if (! is_string($path)) {
             throw new InvalidArgumentException('Path must be a string');

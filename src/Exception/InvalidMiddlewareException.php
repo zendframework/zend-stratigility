@@ -7,6 +7,7 @@
 
 namespace Zend\Stratigility\Exception;
 
+use Interop\Http\Server\MiddlewareInterface;
 use InvalidArgumentException;
 
 class InvalidMiddlewareException extends InvalidArgumentException
@@ -27,7 +28,8 @@ class InvalidMiddlewareException extends InvalidArgumentException
 
         return new self(
             sprintf(
-                'Middleware must be callable, %s found',
+                'Middleware must implement %s, %s found',
+                MiddlewareInterface::class,
                 $received
             )
         );

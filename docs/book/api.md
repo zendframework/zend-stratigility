@@ -26,6 +26,11 @@ The following make up the primary API of Stratigility.
 > webimpress/http-middleware-compatility; read that package's documentation to
 > understand how you can do so.
 
+> ### http-server-middleware
+>
+> Starting with version 3.0.0 support of http-interop/http-middleware has been dropped
+> and http-interop/http-server-middleware PSR-15 support has been added instead.
+
 ## Middleware
 
 `Zend\Stratigility\MiddlewarePipe` is the primary application interface, and
