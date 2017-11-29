@@ -75,7 +75,7 @@ class MiddlewarePipe implements MiddlewareInterface
      * @param null|MiddlewareInterface $middleware Middleware (callback or PSR-15 middleware)
      * @return self
      */
-    public function pipe($path, MiddlewareInterface $middleware = null)
+    public function pipe($path, $middleware = null)
     {
         if (null === $middleware
             && $path instanceof MiddlewareInterface

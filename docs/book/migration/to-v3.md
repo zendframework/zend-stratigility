@@ -50,11 +50,6 @@ The following exceptions has been removed:
 
 ### Signature changes
 
-- `MiddlewarePipe::pipe` - added type hint on the second parameter to
-  `MiddlewareInterface`. It is possible to pipe only instances of PSR-15
-  middlewares - see [Pipeline - `MiddlewarePipe`](#pipeline-middlewarepipe)
-  section for more details.
-
 - `Next::__construct()` - the second parameter has typehint on
   PSR-15 `RequestHandlerInterface`.
 
