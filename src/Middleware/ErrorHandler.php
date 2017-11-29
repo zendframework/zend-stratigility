@@ -14,7 +14,6 @@ use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
-use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 use Zend\Stratigility\Exception\MissingResponseException;
 
 /**
@@ -90,22 +89,6 @@ final class ErrorHandler implements MiddlewareInterface
     {
         $this->responsePrototype = $responsePrototype;
         $this->responseGenerator = $responseGenerator ?: new ErrorResponseGenerator();
-    }
-
-    /**
-     * Proxy to process()
-     *
-     * Proxies to process, after first wrapping the `$next` argument using the
-     * CallableDelegateDecorator.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param callable $next
-     * @return ResponseInterface
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
-    {
-        return $this->process($request, new CallableDelegateDecorator($next, $response));
     }
 
     /**

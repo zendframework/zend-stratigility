@@ -7,9 +7,9 @@
 
 namespace Zend\Stratigility;
 
+use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
-use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
 
 /**
  * Value object representing route-based middleware

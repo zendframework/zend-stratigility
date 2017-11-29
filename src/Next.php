@@ -9,7 +9,6 @@ namespace Zend\Stratigility;
 
 use Interop\Http\Server\RequestHandlerInterface;
 use InvalidArgumentException;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
@@ -53,23 +52,6 @@ class Next implements RequestHandlerInterface
     }
 
     /**
-     * Invokable form; proxy to process().
-     *
-     * Ignores any arguments other than the request.
-     *
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
-     * @throws Exception\MissingResponseException If the queue is exhausted, and
-     *     no "next delegate" is present.
-     * @throws Exception\MissingResponseException If the middleware executed does
-     *     not return a response.
-     */
-    public function __invoke(ServerRequestInterface $request)
-    {
-        return $this->handle($request);
-    }
-
-    /**
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception\MissingResponseException If the queue is exhausted, and
@@ -79,7 +61,7 @@ class Next implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        $request  = $this->resetPath($request);
+        $request = $this->resetPath($request);
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
@@ -96,7 +78,7 @@ class Next implements RequestHandlerInterface
         $layer           = $this->queue->dequeue();
         $path            = $request->getUri()->getPath() ?: '/';
         $route           = $layer->path;
-        $normalizedRoute = (strlen($route) > 1) ? rtrim($route, '/') : $route;
+        $normalizedRoute = strlen($route) > 1 ? rtrim($route, '/') : $route;
 
         // Skip if layer path does not match current url
         if (substr(strtolower($path), 0, strlen($normalizedRoute)) !== strtolower($normalizedRoute)) {
@@ -110,7 +92,7 @@ class Next implements RequestHandlerInterface
         }
 
         // Trim off the part of the url that matches the layer route
-        if (! empty($route) && $route !== '/') {
+        if ($route && $route !== '/') {
             $request = $this->stripRouteFromPath($request, $route);
         }
 
