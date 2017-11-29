@@ -42,7 +42,7 @@ class MiddlewarePipeTest extends TestCase
     private function createFinalHandler() : RequestHandlerInterface
     {
         $handler = $this->prophesize(RequestHandlerInterface::class);
-        $handler->handle(Argument::any())->willReturn(new Response\EmptyResponse());
+        $handler->handle(Argument::any())->willReturn(new Response());
 
         return $handler->reveal();
     }
