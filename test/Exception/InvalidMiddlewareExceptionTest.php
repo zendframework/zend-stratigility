@@ -7,6 +7,7 @@
 
 namespace ZendTest\Stratigility\Exception;
 
+use Interop\Http\Server\MiddlewareInterface;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
@@ -38,7 +39,8 @@ class InvalidMiddlewareExceptionTest extends TestCase
     {
         $e = InvalidMiddlewareException::fromValue($value);
         $this->assertEquals(sprintf(
-            'Middleware must be callable, %s found',
+            'Middleware must implement %s; received middleware of type %s',
+            MiddlewareInterface::class,
             $expected
         ), $e->getMessage());
     }

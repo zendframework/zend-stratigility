@@ -4,6 +4,8 @@ The following make up the primary API of Stratigility.
 
 > ### http-middleware
 >
+> - Affects: 2.X versions >= 2.1.0 
+>
 > Stratigility has supported http-interop/http-middleware since version 2.0.0,
 > originally pinning to the 0.4.1 specification.
 >
@@ -25,6 +27,13 @@ The following make up the primary API of Stratigility.
 > Alternately, you can use the interfaces defined in
 > webimpress/http-middleware-compatility; read that package's documentation to
 > understand how you can do so.
+
+> ### http-server-middleware
+>
+> - Affects: version 3.0.0alpha1
+>
+> Starting with version 3.0.0, support for http-interop/http-middleware has been
+> replaced with support for http-interop/http-server-middleware.
 
 ## Middleware
 

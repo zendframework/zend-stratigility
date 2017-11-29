@@ -7,7 +7,7 @@
 
 namespace ZendTest\Stratigility;
 
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface;
 use InvalidArgumentException;
 use OutOfRangeException;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +17,7 @@ class RouteTest extends TestCase
 {
     public function createEmptyMiddleware()
     {
-        return $this->prophesize(ServerMiddlewareInterface::class)->reveal();
+        return $this->prophesize(MiddlewareInterface::class)->reveal();
     }
 
     public function testPathAndHandlerAreAccessibleAfterInstantiation()

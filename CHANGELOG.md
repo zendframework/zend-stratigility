@@ -6,6 +6,40 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
+## 3.0.0alpha1 - TBD
+
+### Added
+
+- Nothing.
+
+### Changed
+
+- [#122](https://github.com/zendframework/zend-stratigility/pull/122) updates
+  the library to use `http-interop/http-server-middleware` instead of
+  `http-interop/http-middleware`, and implement and typehint against the new
+  package's interfaces.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- [#122](https://github.com/zendframework/zend-stratigility/pull/122) removes
+  the following classes:
+  - `Zend\Stratigility\CallableDelegateDecorator`
+  - `Zend\Stratigility\CallableInteropMiddlewareWrapper`
+  - `Zend\Stratigility\CallableMiddlewareWrapper`
+  - `Zend\Stratigility\CallableMiddlewareWrapperFactory`
+  - `Zend\Stratigility\Exception\InvalidRequestTypeException`
+  - `Zend\Stratigility\Exception\MissingResponsePrototypeException`
+  - `Zend\Stratigility\MiddlewareInterface`
+  - `Zend\Stratigility\NoopFinalHandler`
+
+### Fixed
+
+- Nothing.
+
 ## 2.2.0 - TBD
 
 ### Added

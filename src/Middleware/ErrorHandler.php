@@ -9,15 +9,12 @@ namespace Zend\Stratigility\Middleware;
 
 use ErrorException;
 use Exception;
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
-use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 use Zend\Stratigility\Exception\MissingResponseException;
-
-use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
 /**
  * Error handler middleware.
@@ -65,7 +62,7 @@ use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
  * Listeners are attached using the attachListener() method, and triggered
  * in the order attached.
  */
-final class ErrorHandler implements ServerMiddlewareInterface
+final class ErrorHandler implements MiddlewareInterface
 {
     /**
      * @var callable[]
@@ -92,22 +89,6 @@ final class ErrorHandler implements ServerMiddlewareInterface
     {
         $this->responsePrototype = $responsePrototype;
         $this->responseGenerator = $responseGenerator ?: new ErrorResponseGenerator();
-    }
-
-    /**
-     * Proxy to process()
-     *
-     * Proxies to process, after first wrapping the `$next` argument using the
-     * CallableDelegateDecorator.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param callable $next
-     * @return ResponseInterface
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
-    {
-        return $this->process($request, new CallableDelegateDecorator($next, $response));
     }
 
     /**
@@ -148,15 +129,15 @@ final class ErrorHandler implements ServerMiddlewareInterface
      * used.
      *
      * @param ServerRequestInterface $request
-     * @param DelegateInterface $delegate
+     * @param RequestHandlerInterface $handler
      * @return ResponseInterface
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
         set_error_handler($this->createErrorHandler());
 
         try {
-            $response = $delegate->{HANDLER_METHOD}($request);
+            $response = $handler->handle($request);
 
             if (! $response instanceof ResponseInterface) {
                 throw new MissingResponseException('Application did not return a response');

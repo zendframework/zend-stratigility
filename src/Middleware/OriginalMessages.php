@@ -7,17 +7,17 @@
 
 namespace Zend\Stratigility\Middleware;
 
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Stratigility\MiddlewareInterface;
 
 /**
- * Inject attributes containing the original request, response, and URI instances.
+ * Inject attributes containing the original request and URI instances.
  *
  * This middleware will add request attributes as follows:
  *
  * - "originalRequest", representing the request provided to this middleware.
- * - "originalResponse", representing the response provided to this middleware.
  * - "originalUri", representing the URI composed by the request provided to
  *   this middleware.
  *
@@ -32,21 +32,15 @@ class OriginalMessages implements MiddlewareInterface
 {
     /**
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param null|callable $next
+     * @param RequestHandlerInterface $handler
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        if (! $next) {
-            return $response;
-        }
-
         $request = $request
             ->withAttribute('originalUri', $request->getUri())
-            ->withAttribute('originalRequest', $request)
-            ->withAttribute('originalResponse', $response);
+            ->withAttribute('originalRequest', $request);
 
-        return $next($request, $response);
+        return $handler->handle($request);
     }
 }
