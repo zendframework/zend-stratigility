@@ -35,11 +35,6 @@ class MiddlewarePipe implements MiddlewareInterface
     protected $pipeline;
 
     /**
-     * @var ResponseInterface
-     */
-    protected $responsePrototype;
-
-    /**
      * Constructor
      *
      * Initializes the queue.
