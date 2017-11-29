@@ -1,4 +1,4 @@
-# Creating Middleware
+# Creating Middleware in Version 1 and 2
 
 To create middleware, write a callable capable of receiving minimally PSR-7
 ServerRequest and Response objects, and a callback to call the next middleware
@@ -33,6 +33,7 @@ Middleware written in this way can be any of the following:
 - Static class methods
 - PHP array callbacks (e.g., `[ $dispatcher, 'dispatch' ]`, where `$dispatcher` is a class instance)
 - Invokable PHP objects (i.e., instances of classes implementing `__invoke()`)
+- Objects implementing `Zend\Stratigility\MiddlewareInterface`
 
 In all cases, if you wish to implement typehinting, the signature is:
 
@@ -47,23 +48,42 @@ function (
 ## http-interop middleware
 
 You can also write middleware which implements interfaces from
-`http-interop/http-server-middleware`:
+`http-interop/http-middleware`. Stratigility 2.1 supports all versions of
+http-interop middleware that are supported by the package
+[webimpress/http-middleware-compatibility](https://github.com/webimpress/http-middleware-compatibility).
+
+As an example of http-interop middleware:
 
 ```php
-use Interop\Http\Server\MiddlewareInterface;
-use Interop\Http\Server\RequestHandlerInterface;
+// http-interop/http-middleware 0.2:
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
+
+// http-interop/http-middleware 0.4.1:
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+
+// http-interop/http-middleware 0.5.0:
+use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface as DelegateInterface;
+
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class MyMiddleware implements MiddlewareInterface
+class MyMiddleware implements ServerMiddlewareInterface
 {
     public function process(
         ServerRequestInterface $request,
-        RequestHandlerInterface $handler
+        DelegateInterface $delegate
     ) : ResponseInterface {
         // ... do something and return response
-        // or call request handler:
-        // return $handler->handle($request);
+        // or call delegate:
+
+        // http-interop/http-middleware < 0.5:
+        // return $delegate->delegate($request);
+
+        // http-interop/http-middleware 0.5.0:
+        // return $delegate->handle($request);
     }
 }
 ```
