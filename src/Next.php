@@ -22,7 +22,7 @@ class Next implements RequestHandlerInterface
     /**
      * @var null|RequestHandlerInterface
      */
-    private $nextHandler;
+    private $fallbackHandler;
 
     /**
      * @var SplQueue
@@ -40,22 +40,20 @@ class Next implements RequestHandlerInterface
      * Clones the queue provided to allow re-use.
      *
      * @param SplQueue $queue
-     * @param null|RequestHandlerInterface $nextHandler Next handler to invoke when the
-     *     queue is exhausted.
-     * @throws InvalidArgumentException for a non-callable, non-delegate $done
-     *     argument.
+     * @param null|RequestHandlerInterface $fallbackHandler Fallback handler to
+     *     invoke when the queue is exhausted.
      */
-    public function __construct(SplQueue $queue, RequestHandlerInterface $nextHandler = null)
+    public function __construct(SplQueue $queue, RequestHandlerInterface $fallbackHandler = null)
     {
-        $this->queue       = clone $queue;
-        $this->nextHandler = $nextHandler;
+        $this->queue           = clone $queue;
+        $this->fallbackHandler = $fallbackHandler;
     }
 
     /**
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception\MissingResponseException If the queue is exhausted, and
-     *     no "next delegate" is present.
+     *     no fallback handler is present.
      * @throws Exception\MissingResponseException If the middleware executed does
      *     not return a response.
      */
@@ -65,8 +63,8 @@ class Next implements RequestHandlerInterface
 
         // No middleware remains; done
         if ($this->queue->isEmpty()) {
-            if ($this->nextHandler) {
-                return $this->nextHandler->handle($request);
+            if ($this->fallbackHandler) {
+                return $this->fallbackHandler->handle($request);
             }
 
             throw new Exception\MissingResponseException(sprintf(
