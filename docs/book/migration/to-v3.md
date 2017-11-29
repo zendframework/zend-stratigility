@@ -42,7 +42,6 @@ The following classes has been removed:
 
 The following exceptions has been removed:
 
-- `Zend\Stratigility\Exception\InvalidMiddlewareException`
 - `Zend\Stratigility\Exception\InvalidRequestTypeException`
 - `Zend\Stratigility\Exception\MissingResponsePrototypeException`
 

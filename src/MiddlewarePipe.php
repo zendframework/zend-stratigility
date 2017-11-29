@@ -12,6 +12,7 @@ use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SplQueue;
+use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
 /**
  * Pipe middleware like unix pipes.
@@ -82,6 +83,10 @@ class MiddlewarePipe implements MiddlewareInterface
         ) {
             $middleware = $path;
             $path       = '/';
+        }
+
+        if (! $middleware instanceof MiddlewareInterface) {
+            throw InvalidMiddlewareException::fromValue($middleware);
         }
 
         $this->pipeline->enqueue(new Route(
