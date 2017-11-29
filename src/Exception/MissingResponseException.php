@@ -15,4 +15,15 @@ use OutOfBoundsException;
  */
 class MissingResponseException extends OutOfBoundsException
 {
+    public static function forCallableMiddleware(callable $middleware) : self
+    {
+        $type = is_object($middleware)
+            ? get_class($middleware)
+            : gettype($middleware);
+
+        return new self(sprintf(
+            'Decorated callable middleware of type %s failed to produce a response.',
+            $type
+        ));
+    }
 }

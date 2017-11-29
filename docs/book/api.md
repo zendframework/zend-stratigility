@@ -173,7 +173,56 @@ your users.
 
 Stratigility provides several concrete middleware implementations.
 
-#### ErrorHandler and NotFoundHandler
+### CallableMiddlewareDecorator
+
+`Zend\Stratigility\Middleware\CallableMiddlewareDecorator` provides the ability
+to decorate PHP callables that have the same signature as or a compatible
+signature to PSR-15's `MiddlewareInterface`. This allows for one-off middleware
+creation when creating your pipeline:
+
+```php
+$pipeline->pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
+    // do some work
+    $response = $next($req, $handler);
+    // do some work
+    return $response;
+});
+```
+
+### DoublePassMiddlewareDecorator
+
+`Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator` provides the
+ability to decorate "double-pass", callable middleware (so-called because you
+pass the request _and_ response to the delegate) within a class implementing the
+PSR-15 `MiddlewareInterface`. This allows you to adapt existing middleware with
+the double-pass interface to work with Stratigility.
+
+```php
+$pipeline->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
+    // do some work
+    $response = $next($req, $res);
+    // do some work
+    return $response;
+});
+```
+
+`$next` is a callable that decorates Stratigility's `Next` instance; it
+ignores the response argument.
+
+The constructor takes an optional second argument, a response prototype. This
+will be used to pass to the middleware when it is executed. If no instance is
+provided, a zend-diactoros response instance is auto-wired. If you want to use
+an alternate PSR-7 `ResponseInterface` implementation, pass it when creating the
+decorator instance:
+
+```php
+$pipeline->pipe(new DoublePassMiddlewareDecorator(
+    $doublePassMiddleware,
+    $response
+));
+```
+
+### ErrorHandler and NotFoundHandler
 
 These two middleware allow you to provide handle PHP errors and exceptions, and
 404 conditions, respectively. You may read more about them in the
