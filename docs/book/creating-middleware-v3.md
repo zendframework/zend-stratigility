@@ -1,8 +1,10 @@
 # Creating Middleware in Version 3
 
-In Stratigility 3.0 middleware has to be PSR-15 compatible, it means
-it must implement `MiddlewareInterface`. Please see the following
-example:
+- Since: 3.0.0alpha1
+
+Starting with version 3.0.0alpha1, middleware piped to a `MiddlewarePipe`
+**MUST** implement the http-interop/http-server-middleware interfaces.
+As an example:
 
 ```php
 use Interop\Http\Server\MiddlewareInterface;

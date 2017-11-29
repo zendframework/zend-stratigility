@@ -4,6 +4,8 @@ The following make up the primary API of Stratigility.
 
 > ### http-middleware
 >
+> - Affects: 2.X versions >= 2.1.0 
+>
 > Stratigility has supported http-interop/http-middleware since version 2.0.0,
 > originally pinning to the 0.4.1 specification.
 >
@@ -28,8 +30,10 @@ The following make up the primary API of Stratigility.
 
 > ### http-server-middleware
 >
-> Starting with version 3.0.0 support of http-interop/http-middleware has been dropped
-> and http-interop/http-server-middleware PSR-15 support has been added instead.
+> - Affects: version 3.0.0alpha1
+>
+> Starting with version 3.0.0, support for http-interop/http-middleware has been
+> replaced with support for http-interop/http-server-middleware.
 
 ## Middleware
 

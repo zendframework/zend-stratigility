@@ -1,55 +1,64 @@
 # Migrating from version 2 to version 3
 
+In this document, we outline the backwards breaking changes with version 3.0,
+and provide guidance on how to upgrade your application to be compatible.
+
 - [PHP support](#php-support)
 - [PSR-15](#psr-15)
 - [Pipeline - `MiddlewarePipe`](#pipeline-middlewarepipe)
 - [Removed classes and exceptions](#removed-classes-and-exceptions)
-- [Changes in public interface](#changes-in-public-interface)
+- [Changes in public interfaces](#changes-in-public-interfaces)
   - [Signature changes](#signature-changes)
   - [Removed methods](#removed-methods)
 
 ## PHP support
 
-We support only PHP 7.1 and above.
-PHP 5.6 and 7.0 support has been dropped.
+We now support only PHP versions 7.1 and above.  PHP 5.6 and 7.0 support has
+been dropped.
 
 ## PSR-15
 
-Since version 3.0.0 Stratigility supports PSR-15 middlewares.
-Support of `http-interop/http-middleware` has been dropped.
+Stratigility now supports only PSR-15 interfaces. Support of
+`http-interop/http-middleware` has been dropped.
 
-All middlewares and request handlers now implement PSR-15 interfaces.
+All middleware and request handlers must now implement PSR-15 interfaces.
 
 ## Pipeline - `MiddlewarePipe`
 
-Since version 3.0.0 we allow only piping `MiddlewareInterface` instances
-into `MiddlewarePipe` class. All inside wrappers has been removed. If
-you'd like to use different middleware style (callable, double-pass)
-you have to wrap them and pipe `MiddlewareInterface` instance instead.
+We now only allow piping `Interop\Http\Server\MiddlewareInterface` instances
+into the `MiddlewarePipe` class.
+
+In version 2, we had a number of internal utilities for identifying other types
+of middleware (callable, double-pass, etc.), and would decorate those within the
+`pipe()` method. This is no longer allowed.
+
+If you wish to use those types, you will need to decorate them in a
+`MiddlewareInterface` implementation when piping them to the pipeline.
 
 > TODO: Are we going to provide some wrappers?
 
 ## Removed classes and exceptions
 
-The following classes has been removed:
+The following classes have been removed:
 
 - `Zend\Stratigility\CallableDelegateDecorator`
 - `Zend\Stratigility\CallableInteropMiddlewareWrapper`
 - `Zend\Stratigility\CallableMiddlewareWrapper`
 - `Zend\Stratigility\CallableMiddlewareWrapperFactory`
-- `Zend\Stratigility\MiddlewareInterface` - please use PSR-15 MiddlewareInterface instead
+- `Zend\Stratigility\MiddlewareInterface` (Please use the PSR-15
+  `MiddlewareInterface` instead.)
 - `Zend\Stratigility\NoopFinalHandler`
 
-The following exceptions has been removed:
+The following exceptions have been removed:
 
 - `Zend\Stratigility\Exception\InvalidRequestTypeException`
 - `Zend\Stratigility\Exception\MissingResponsePrototypeException`
 
-## Changes in public interface
+## Changes in public interfaces
 
 ### Signature changes
 
-- `Next::__construct()` - the second parameter has typehint on
+- `Next::__construct()`: the second parameter now typehints against the
   PSR-15 `RequestHandlerInterface`.
 
 > TODO: below link to PSR-15 is not working as it is not yet accepted.
@@ -58,11 +67,14 @@ A number of signatures have been changed due to updating Stratigility to
 support [PSR-15](http://www.php-fig.org/psr/psr-15/) instead of
 [http-interop/http-server-middleware](https://github.com/http-interop/http-server-middleware)
 and [http-interop/http-middleware](https://github.com/http-interop/http-middleware)
-(which were the basis for PSR-15). Essentially, these were a matter of
-updating typehints on `Interop\Http\ServerMiddleware\DelegateInterface` and
-`Interop\Http\Server\RequestHandlerInterface` to PSR-15
-`RequestHandlerInterface` and adding return type
-`Psr\Http\Message\ResponseInterface`. Signatures affected include:
+(which were draft specification implementations of PSR-15). Primarily, these
+were a matter of updating typehints on
+`Interop\Http\ServerMiddleware\DelegateInterface` and
+`Interop\Http\Server\RequestHandlerInterface` to the PSR-15
+`RequestHandlerInterface`, and adding the return type hint
+`Psr\Http\Message\ResponseInterface`.
+
+Signatures affected include:
 
 - `Zend\Stratigility\MiddlewarePipe::process()`
 - `Zend\Stratigility\Middleware\ErrorHandler::process()`
@@ -70,33 +82,38 @@ updating typehints on `Interop\Http\ServerMiddleware\DelegateInterface` and
 - `Zend\Stratigility\Middleware\OriginalMessages::process()`
 - `Zend\Stratigility\MiddlewarePipe::process()`
 
-All of these classes implements now PSR-15 `MiddlewareInterface`.
+All of these classes now implement the PSR-15 `MiddlewareInterface`.
 
-### Removed method
+### Removed methods
 
-- `MiddlewarePipe::__invoke()` - class is no longer invokable.
-  Method `process` should be used instead.
+- `MiddlewarePipe::__invoke()`: the class is no longer invokable.
+  Use the method `process` instead.
 
-- `MiddlewarePipe::setCallableMiddlewareDecorator()` - as we accept only
-  PSR-15 middlewares in pipeline this method is no longer needed.
-  Other middlewares types should be wrapped before piping.
+- `MiddlewarePipe::setCallableMiddlewareDecorator()`: since we now accept only
+  PSR-15 middleware implementations within `MiddlewarePipe`, this method is no
+  longer needed. Other middleware types should be decorated in a
+  `MiddlewareInterface` implementation prior to piping.
 
-- `MiddlewarePipe::setResponsePrototype()` - method no longer needed,
-  because we do not support double-pass middlewares anymore.
+- `MiddlewarePipe::setResponsePrototype()`: this method is no longer needed,
+  due to removing support for non-`MiddlewareInterface` types.
 
-- `MiddlewarePipe::hasResponsePrototype()` - method no longer needed,
-  because we do not support double-pass middlewares anymore.
+- `MiddlewarePipe::hasResponsePrototype()`: this method is no longer needed,
+  due to removing support for non-`MiddlewareInterface` types.
 
-- `MiddlewarePipe::raiseThrowables()` - method deprecated since 2.0.0.
+- `MiddlewarePipe::raiseThrowables()`: this method has been deprecated since
+  2.0.0, and slated for removal with this version.
 
-- `Middleware\ErrorHandler::__invoke()` - class is no longer invokable.
-  Method `process` should be used instead.
+- `Middleware\ErrorHandler::__invoke()`: this class is no longer invokable.
+  Use the `process` method instead.
 
-- `Next::__invoke()` - class is no longer invokable. Method `handle`
-  should be used instead.
+- `Next::__invoke()`: this class is no longer invokable. Use the method `handle`
+  instead.
 
-- `Next::next()` - it was proxy to `handle` method.
+- `Next::next()`: this method was a proxy to the `handle()` method, and no
+  longer of use, particularly as the class is an internal detail.
 
-- `Next::process()` - please use `handle` method instead.
+- `Next::process()`: this method was a proxy to the `handle()` method, and no
+  longer of use, particularly as the class is an internal detail.
 
-- `Next::raiseThrowables()` - method deprecated since 2.0.0.
+- `Next::raiseThrowables()`: this method has been deprecated since 2.0.0, and
+  slated for removal with this version.

@@ -1,4 +1,4 @@
-# Creating Middleware in Version 1 and 2
+# Creating Middleware in Versions 1 and 2
 
 To create middleware, write a callable capable of receiving minimally PSR-7
 ServerRequest and Response objects, and a callback to call the next middleware
