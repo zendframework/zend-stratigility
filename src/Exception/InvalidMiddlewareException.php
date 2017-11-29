@@ -20,15 +20,13 @@ class InvalidMiddlewareException extends InvalidArgumentException
      */
     public static function fromValue($value)
     {
-        $received = gettype($value);
-
-        if (is_object($value)) {
-            $received = get_class($value);
-        }
+        $received = is_object($value)
+            ? get_class($value)
+            : gettype($value);
 
         return new self(
             sprintf(
-                'Middleware must implement %s, %s found',
+                'Middleware must implement %s; received middleware of type %s',
                 MiddlewareInterface::class,
                 $received
             )

@@ -39,7 +39,7 @@ class InvalidMiddlewareExceptionTest extends TestCase
     {
         $e = InvalidMiddlewareException::fromValue($value);
         $this->assertEquals(sprintf(
-            'Middleware must implement %s, %s found',
+            'Middleware must implement %s; received middleware of type %s',
             MiddlewareInterface::class,
             $expected
         ), $e->getMessage());
