@@ -3,7 +3,7 @@
 Install this library using composer:
 
 ```console
-$ composer require zendframework/zend-diactoros zendframework/zend-stratigility:^1.0
+$ composer require zendframework/zend-diactoros zendframework/zend-stratigility:^2.0
 ```
 
 Stratigility has the following dependencies (which are managed by Composer):
@@ -14,8 +14,7 @@ Stratigility has the following dependencies (which are managed by Composer):
   [Diactoros](https://zendframework.github.io/zend-diactoros/).
 
 - [`http-interop/http-middleware`](https://github.com/http-interop/http-middleware),
-  which provides the interfaces that will become PSR-15. This is pinned to the
-  0.2 series.
+  which provides the interfaces that will become PSR-15. This is pinned to 0.4.1+.
 
 - `zendframework/zend-escaper`, used by the `ErrorHandler` middleware and the
   (legacy) `FinalHandler` implementation for escaping error messages prior to
