@@ -11,6 +11,8 @@ You can typically handle these conditions via middleware itself.
 
 ## Handling 404 conditions
 
+- Since 1.3.0
+
 If no middleware is able to handle the incoming request, this is typically
 representative of an HTTP 404 status. Stratigility provides a barebones
 middleware that you may register in an innermost layer that will return a 404
@@ -34,8 +36,8 @@ If you would like a templated response, you will need to write your own
 middleware; such middleware might look like the following:
 
 ```php
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -63,6 +65,27 @@ class NotFoundMiddleware implements ServerMiddlewareInterface
 ```
 
 ## Handling PHP errors and exceptions
+
+- Since 1.3.0
+
+> ### Opting in to error middleware
+>
+> If you have upgraded from Expressive 1.0.0, you will have been using the
+> `FinalHandler` implementation, and relying on the fact that, internally,
+> dispatching wraps all middleware in `try/catch` blocks.
+> 
+> Starting in 1.3.0, we provide a new way to handle errors via middleware.
+> 
+> **To opt-in to the new system, you must call `raiseThrowables()` on your
+> middleware pipeline:**
+> 
+> ```php
+> $pipeline = new MiddlewarePipe();
+> $pipeline->raiseThrowables();
+> ```
+> 
+> (Starting in 2.0.0, this will no longer be necessary, but until then, this is
+> how you opt-in to the system described below.)
 
 `Zend\Stratigility\Middleware\ErrorHandler` is a middleware implementation to
 register as the *outermost layer* of your application (or close to the outermost
@@ -209,3 +232,26 @@ $errorHandler->attachListener(function ($throwable, $request, $response) use ($l
     $logger->error($message);
 });
 ```
+
+## Legacy error middleware
+
+- Deprecated starting in 1.3.0, to be removed in 2.0.0. Please see the
+  [v2 migration guide](../v2/migration.md#error-handling) for more details, as well
+  as the preceding section.
+
+To handle errors, you can write middleware that accepts **exactly** four arguments:
+
+```php
+function ($error, $request, $response, $next) { }
+```
+
+Alternately, you can implement `Zend\Stratigility\ErrorMiddlewareInterface`.
+
+When using `MiddlewarePipe`, as the queue is executed, if `$next()` is called with an argument, or
+if an exception is thrown, middleware will iterate through the queue until the first such error
+handler is found. That error handler can either complete the request, or itself call `$next()`.
+**Error handlers that call `$next()` SHOULD call it with the error it received itself, or with
+another error.**
+
+Error handlers are usually attached at the end of middleware, to prevent attempts at executing
+non-error-handling middleware, and to ensure they can intercept errors from any other handlers.

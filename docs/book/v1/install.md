@@ -3,19 +3,19 @@
 Install this library using composer:
 
 ```console
-$ composer require zendframework/zend-diactoros zendframework/zend-stratigility
+$ composer require zendframework/zend-diactoros zendframework/zend-stratigility:^1.0
 ```
 
 Stratigility has the following dependencies (which are managed by Composer):
 
-- [psr/http-message](https://github.com/php-fig/http-message), which provides
-  the interfaces specified in [PSR-7](http://www.php-fig.org/psr/psr-7),
+- `psr/http-message`, which provides the interfaces specified in [PSR-7](http://www.php-fig.org/psr/psr-7),
   and type-hinted against in this package. In order to use Stratigility, you
   will need an implementation of PSR-7; one such package is
   [Diactoros](https://zendframework.github.io/zend-diactoros/).
 
-- [http-interop/http-server-middleware](https://github.com/http-interop/http-server-middleware),
-  which provides the interfaces that will become PSR-15.
+- [`http-interop/http-middleware`](https://github.com/http-interop/http-middleware),
+  which provides the interfaces that will become PSR-15. This is pinned to the
+  0.2 series.
 
 - `zendframework/zend-escaper`, used by the `ErrorHandler` middleware and the
   (legacy) `FinalHandler` implementation for escaping error messages prior to
@@ -24,7 +24,7 @@ Stratigility has the following dependencies (which are managed by Composer):
 You can provide your own request and response implementations if desired as
 long as they implement the PSR-7 HTTP message interfaces.
 
-## Previous versions
+## Later versions
 
-- [Version 1 documentation](v1/install.md)
-- [Version 2 documentation](v2/install.md)
+- [Version 2 documentation](../v2/install.md)
+- [Version 3 (current) documentation](../install.md)

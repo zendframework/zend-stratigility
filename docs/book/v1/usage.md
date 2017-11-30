@@ -21,10 +21,7 @@ $server = Server::createServer($app,
   $_COOKIE,
   $_FILES
 );
-
-$server->listen(function ($req, $res) {
-  return $res;
-});
+$server->listen(new NoopFinalHandler());
 ```
 
 The above example is useless by itself until you pipe middleware into the application.
