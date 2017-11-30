@@ -15,6 +15,14 @@ pages:
         - Migration:
           - "To Version 2": migration/to-v2.md
           - "From v2 to v3": migration/to-v3.md
+    - v1:
+        - "Installation and Requirements": v1/install.md
+        - Usage: v1/usage.md
+        - Middleware: v1/middleware.md
+        - "Error Handlers": v1/error-handlers.md
+        - "Creating Middleware": v1/creating-middleware.md
+        - "Executing and composing middleware": v1/executing-middleware.md
+        - "API Reference": v1/api.md
 site_name: zend-stratigility
 site_description: zend-stratigility
 repo_url: 'https://github.com/zendframework/zend-stratigility'
