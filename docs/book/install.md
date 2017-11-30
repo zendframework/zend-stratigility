@@ -14,18 +14,8 @@ Stratigility has the following dependencies (which are managed by Composer):
   will need an implementation of PSR-7; one such package is
   [Diactoros](https://zendframework.github.io/zend-diactoros/).
 
-- [http-interop/http-middleware](https://github.com/http-interop/http-middleware),
-  which provides the interfaces that will become PSR-15. In Stratigility 1.3,
-  this is pinned to the 0.2 series; in Stratigility 2.0, this is pinned to
-  0.4.1+. Since Stratigility 2.1 you have to explicitly define an
-  http-interop/http-middleware dependency in your `composer.json`, and you can
-  use any version which is currently supported by the polyfill package
-  [webimpress/http-middleware-compatibility](https://github.com/webimpress/http-middleware-compatibility).
-  **Removed in Stratigility 3.0.**
-
 - [http-interop/http-server-middleware](https://github.com/http-interop/http-server-middleware),
-  which provides the interfaces that will become PSR-15. **Since Stratigility
-  3.0.**
+  which provides the interfaces that will become PSR-15.
 
 - `zendframework/zend-escaper`, used by the `ErrorHandler` middleware and the
   (legacy) `FinalHandler` implementation for escaping error messages prior to
@@ -33,3 +23,8 @@ Stratigility has the following dependencies (which are managed by Composer):
 
 You can provide your own request and response implementations if desired as
 long as they implement the PSR-7 HTTP message interfaces.
+
+## Previous versions
+
+- [Version 1 documentation](v1/install.md)
+- [Version 2 documentation](v2/install.md)

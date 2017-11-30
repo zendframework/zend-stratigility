@@ -11,6 +11,7 @@ use Interop\Http\ServerMiddleware\DelegateInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
 use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\Middleware\NotFoundHandler;
 use Zend\Stratigility\NoopFinalHandler;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -37,6 +38,9 @@ $app->pipe('/foo', function ($req, DelegateInterface $delegate) {
     $response->getBody()->write('FOO!');
     return $response;
 });
+
+// 404 handler
+$app->pipe(new NotFoundHandler(new Response());
 
 $server->listen(new NoopFinalHandler());
 ```

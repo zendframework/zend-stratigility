@@ -236,7 +236,7 @@ $errorHandler->attachListener(function ($throwable, $request, $response) use ($l
 ## Legacy error middleware
 
 - Deprecated starting in 1.3.0, to be removed in 2.0.0. Please see the
-  [migration guide](migration/to-v2.md#error-handling) for more details, as well
+  [v2 migration guide](../v2/migration.md#error-handling) for more details, as well
   as the preceding section.
 
 To handle errors, you can write middleware that accepts **exactly** four arguments:

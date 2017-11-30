@@ -5,7 +5,7 @@ and provide guidance on how to upgrade your application to be compatible.
 
 - [PHP support](#php-support)
 - [PSR-15](#psr-15)
-- [Pipeline - `MiddlewarePipe`](#pipeline-middlewarepipe)
+- [Pipeline (`MiddlewarePipe`)](#pipeline-middlewarepipe)
 - [Removed classes and exceptions](#removed-classes-and-exceptions)
 - [Changes in public interfaces](#changes-in-public-interfaces)
   - [Signature changes](#signature-changes)

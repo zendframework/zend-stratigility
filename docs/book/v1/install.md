@@ -23,3 +23,8 @@ Stratigility has the following dependencies (which are managed by Composer):
 
 You can provide your own request and response implementations if desired as
 long as they implement the PSR-7 HTTP message interfaces.
+
+## Later versions
+
+- [Version 2 documentation](../v2/install.md)
+- [Version 3 (current) documentation](../install.md)
