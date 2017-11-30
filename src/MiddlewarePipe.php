@@ -4,6 +4,7 @@
  * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+declare(strict_types=1);
 
 namespace Zend\Stratigility;
 
@@ -50,10 +51,6 @@ class MiddlewarePipe implements MiddlewareInterface
      *
      * Executes the internal pipeline, passing $handler as the "final
      * handler" in cases when the pipeline exhausts itself.
-     *
-     * @param ServerRequestInterface $request
-     * @param RequestHandlerInterface $handler
-     * @return ResponseInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
@@ -74,9 +71,11 @@ class MiddlewarePipe implements MiddlewareInterface
      * @see Next
      * @param string|MiddlewareInterface $path Either a URI path prefix, or middleware.
      * @param null|MiddlewareInterface $middleware Middleware (callback or PSR-15 middleware)
-     * @return self
+     * @throws InvalidMiddlewareException If provided middleware is invalid (not instance of MiddlewareInterface)
+     * @todo: swap param order
+     * @todo: add type hint on $middleware?
      */
-    public function pipe($path, $middleware = null)
+    public function pipe($path, $middleware = null) : self
     {
         if (null === $middleware
             && $path instanceof MiddlewareInterface
@@ -102,11 +101,8 @@ class MiddlewarePipe implements MiddlewareInterface
      * Normalize a path used when defining a pipe
      *
      * Strips trailing slashes, and prepends a slash.
-     *
-     * @param string $path
-     * @return string
      */
-    private function normalizePipePath($path)
+    private function normalizePipePath(string $path) : string
     {
         // Prepend slash if missing
         if (empty($path) || $path[0] !== '/') {

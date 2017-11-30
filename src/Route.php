@@ -4,6 +4,7 @@
  * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+declare(strict_types=1);
 
 namespace Zend\Stratigility;
 
@@ -32,26 +33,17 @@ class Route
      */
     protected $path;
 
-    /**
-     * @param string $path
-     * @param MiddlewareInterface $handler
-     */
-    public function __construct($path, MiddlewareInterface $handler)
+    public function __construct(string $path, MiddlewareInterface $handler)
     {
-        if (! is_string($path)) {
-            throw new InvalidArgumentException('Path must be a string');
-        }
-
         $this->path    = $path;
         $this->handler = $handler;
     }
 
     /**
-     * @param mixed $name
      * @return mixed
      * @throws OutOfRangeException for invalid properties
      */
-    public function __get($name)
+    public function __get(string $name)
     {
         if (! property_exists($this, $name)) {
             throw new OutOfRangeException('Only the path and handler may be accessed from a Route instance');

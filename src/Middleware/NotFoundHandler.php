@@ -4,6 +4,7 @@
  * @copyright Copyright (c) 2016-2017 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+declare(strict_types=1);
 
 namespace Zend\Stratigility\Middleware;
 
@@ -34,23 +35,17 @@ class NotFoundHandler implements MiddlewareInterface
      *
      * Proxies to process, after first wrapping the `$next` argument using the
      * CallableDelegateDecorator.
-     *
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param callable $next
-     * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
-    {
+    public function __invoke(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        callable $next
+    ) : ResponseInterface {
         return $this->process($request, new CallableDelegateDecorator($next, $response));
     }
 
     /**
      * Creates and returns a 404 response.
-     *
-     * @param ServerRequestInterface $request Ignored.
-     * @param RequestHandlerInterface $handler Ignored.
-     * @return ResponseInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {

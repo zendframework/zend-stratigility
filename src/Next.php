@@ -4,6 +4,7 @@
  * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+declare(strict_types=1);
 
 namespace Zend\Stratigility;
 
@@ -39,7 +40,6 @@ class Next implements RequestHandlerInterface
      *
      * Clones the queue provided to allow re-use.
      *
-     * @param SplQueue $queue
      * @param null|RequestHandlerInterface $fallbackHandler Fallback handler to
      *     invoke when the queue is exhausted.
      */
@@ -50,8 +50,6 @@ class Next implements RequestHandlerInterface
     }
 
     /**
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
      * @throws Exception\MissingResponseException If the queue is exhausted, and
      *     no fallback handler is present.
      * @throws Exception\MissingResponseException If the middleware executed does
@@ -111,11 +109,8 @@ class Next implements RequestHandlerInterface
 
     /**
      * Reset the path, if a segment was previously stripped
-     *
-     * @param ServerRequestInterface $request
-     * @return ServerRequestInterface
      */
-    private function resetPath(ServerRequestInterface $request)
+    private function resetPath(ServerRequestInterface $request) : ServerRequestInterface
     {
         if (! $this->removed) {
             return $request;
@@ -148,12 +143,8 @@ class Next implements RequestHandlerInterface
 
     /**
      * Determine the border between the request path and current route
-     *
-     * @param string $path
-     * @param string $route
-     * @return string
      */
-    private function getBorder($path, $route)
+    private function getBorder(string $path, string $route) : string
     {
         if ($route === '/') {
             return '/';
@@ -164,12 +155,8 @@ class Next implements RequestHandlerInterface
 
     /**
      * Strip the route from the request path
-     *
-     * @param ServerRequestInterface $request
-     * @param string $route
-     * @return ServerRequestInterface
      */
-    private function stripRouteFromPath(ServerRequestInterface $request, $route)
+    private function stripRouteFromPath(ServerRequestInterface $request, string $route) : ServerRequestInterface
     {
         $this->removed = $route;
 
@@ -188,12 +175,9 @@ class Next implements RequestHandlerInterface
     /**
      * Strip the segment from the start of the given path.
      *
-     * @param string $segment
-     * @param string $path
-     * @return string Truncated path
      * @throws RuntimeException if the segment does not begin the path.
      */
-    private function getTruncatedPath($segment, $path)
+    private function getTruncatedPath(string $segment, string $path) : string
     {
         if ($path === $segment) {
             // Segment and path are same; return empty string

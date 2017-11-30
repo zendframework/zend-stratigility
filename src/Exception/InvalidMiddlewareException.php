@@ -4,6 +4,7 @@
  * @copyright Copyright (c) 2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+declare(strict_types=1);
 
 namespace Zend\Stratigility\Exception;
 
@@ -16,9 +17,8 @@ class InvalidMiddlewareException extends InvalidArgumentException
      * Create and return an InvalidArgumentException detailing the invalid middleware type.
      *
      * @param mixed $value
-     * @return InvalidArgumentException
      */
-    public static function fromValue($value)
+    public static function fromValue($value) : self
     {
         $received = is_object($value)
             ? get_class($value)
