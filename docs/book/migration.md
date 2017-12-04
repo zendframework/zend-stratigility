@@ -6,8 +6,9 @@ and provide guidance on how to upgrade your application to be compatible.
 - [PHP support](#php-support)
 - [PSR-15](#psr-15)
 - [Pipeline (`MiddlewarePipe`)](#pipeline-middlewarepipe)
-- [Removed classes and exceptions](#removed-classes-and-exceptions)
 - [Changes in public interfaces](#changes-in-public-interfaces)
+  - [Class additions](#class-additions)
+  - [Removed classes and exceptions](#removed-classes-and-exceptions)
   - [Signature changes](#signature-changes)
   - [Removed methods](#removed-methods)
 
@@ -36,15 +37,58 @@ If you wish to use those types, you will need to decorate them in a
 `MiddlewareInterface` implementation when piping them to the pipeline.
 
 > TODO: Are we going to provide some wrappers?
+## Changes in public interfaces
 
-## Removed classes and exceptions
+### Class additions
+
+- `Zend\Stratigility\Middleware\CallableMiddlewareDecorator` provides the
+  functionality that was formerly provided by
+  `Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper`: it provides
+  the ability to decorate PHP callables that have the same or compatible
+  signatures to the PSR-15 `MiddlewareInterface`. This allows for one-off piping
+  of middleware:
+
+  ```php
+  $pipeline->pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
+      // do some work
+      $response = $next($req, $handler);
+      // do some work
+      return $response;
+  });
+  ```
+
+  The arguments and return value can be type-hinted, but do not need to be. The
+  decorator provides some checking on the return value in order to raise an
+  exception if a response is not returned.
+
+- `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator` provides the
+  functionality that was formerly provided by `Zend\Stratigility\Middleware\CallableMiddlewareWrapper`.
+  The class now makes the response prototype argument to the constructor
+  optional, and falls back to a zend-diactoros response instance if that library
+  is installed. Internally, it decorates the `$handler` as a callable.
+
+  ```php
+  $pipeline->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
+      // do some work
+      $response = $next($req, $res);
+      // do some work
+      return $response;
+  });
+  ```
+
+  Per recommendations in previous versions, if you are using double-pass
+  middleware, do not operate on the response passed to the middleware; instead,
+  only operate on the response returned by `$next`, or produce a concrete
+  response yourself.
+
+### Removed classes and exceptions
 
 The following classes have been removed:
 
-- `Zend\Stratigility\CallableDelegateDecorator`
-- `Zend\Stratigility\CallableInteropMiddlewareWrapper`
-- `Zend\Stratigility\CallableMiddlewareWrapper`
-- `Zend\Stratigility\CallableMiddlewareWrapperFactory`
+- `Zend\Stratigility\Delegate\CallableDelegateDecorator`
+- `Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper`
+- `Zend\Stratigility\Middleware\CallableMiddlewareWrapper`
+- `Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory`
 - `Zend\Stratigility\MiddlewareInterface` (Please use the PSR-15
   `MiddlewareInterface` instead.)
 - `Zend\Stratigility\NoopFinalHandler`
@@ -52,9 +96,6 @@ The following classes have been removed:
 The following exceptions have been removed:
 
 - `Zend\Stratigility\Exception\InvalidRequestTypeException`
-- `Zend\Stratigility\Exception\MissingResponsePrototypeException`
-
-## Changes in public interfaces
 
 ### Signature changes
 
