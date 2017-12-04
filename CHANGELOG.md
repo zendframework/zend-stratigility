@@ -10,7 +10,19 @@ details.
 
 ### Added
 
-- Nothing.
+- [#124](https://github.com/zendframework/zend-stratigility/pull/124) adds the
+  following classes for decorating callable middleware:
+
+  - `Zend\Stratigility\Middleware\CallableMiddlewareDecorator` can decorate
+    PHP callables that have a signature the same as or compatible to the PSR-15
+    `MiddlewareInterface`.
+
+  - `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator` can decorate
+    PHP callables of the form `function ($request, $response, $next)` as PSR-15
+    `MiddlewareInterface` implementations. The class accepts an optional second
+    constructor argument, a `ResponseInterface`, for providing a response
+    prototype; if none is provided, it will create a zend-diactoros `Response`
+    instance internally.
 
 ### Changed
 
@@ -27,13 +39,13 @@ details.
 
 - [#122](https://github.com/zendframework/zend-stratigility/pull/122) removes
   the following classes:
-  - `Zend\Stratigility\CallableDelegateDecorator`
-  - `Zend\Stratigility\CallableInteropMiddlewareWrapper`
-  - `Zend\Stratigility\CallableMiddlewareWrapper`
-  - `Zend\Stratigility\CallableMiddlewareWrapperFactory`
+  - `Zend\Stratigility\Delegate\CallableDelegateDecorator`
   - `Zend\Stratigility\Exception\InvalidRequestTypeException`
   - `Zend\Stratigility\Exception\MissingResponsePrototypeException`
   - `Zend\Stratigility\MiddlewareInterface`
+  - `Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper`
+  - `Zend\Stratigility\Middleware\CallableMiddlewareWrapper`
+  - `Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory`
   - `Zend\Stratigility\NoopFinalHandler`
 
 ### Fixed
