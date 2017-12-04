@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace Zend\Stratigility;
 
 use Interop\Http\Server\RequestHandlerInterface;
-use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;

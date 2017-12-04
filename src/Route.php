@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace Zend\Stratigility;
 
 use Interop\Http\Server\MiddlewareInterface;
-use InvalidArgumentException;
 use OutOfRangeException;
 
 /**
