@@ -150,6 +150,9 @@ All of these classes now implement the PSR-15 `MiddlewareInterface`.
 - `Middleware\ErrorHandler::__invoke()`: this class is no longer invokable.
   Use the `process` method instead.
 
+- `Middleware\NotFoundHandler::__invoke()`: this class is no longer invokable.
+  Use the `process` method instead.
+
 - `Next::__invoke()`: this class is no longer invokable. Use the method `handle`
   instead.
 
