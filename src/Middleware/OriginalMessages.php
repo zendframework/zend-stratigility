@@ -4,6 +4,7 @@
  * @copyright Copyright (c) 2016 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+declare(strict_types=1);
 
 namespace Zend\Stratigility\Middleware;
 
@@ -30,11 +31,6 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class OriginalMessages implements MiddlewareInterface
 {
-    /**
-     * @param ServerRequestInterface $request
-     * @param RequestHandlerInterface $handler
-     * @return ResponseInterface
-     */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
         $request = $request

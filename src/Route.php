@@ -4,11 +4,11 @@
  * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+declare(strict_types=1);
 
 namespace Zend\Stratigility;
 
 use Interop\Http\Server\MiddlewareInterface;
-use InvalidArgumentException;
 use OutOfRangeException;
 
 /**
@@ -17,7 +17,7 @@ use OutOfRangeException;
  * Details the subpath on which the middleware is active, and the
  * handler for the middleware itself.
  *
- * @property-read callable $handler Handler for this route
+ * @property-read MiddlewareInterface $handler Handler for this route
  * @property-read string $path Path for this route
  */
 class Route
@@ -32,26 +32,17 @@ class Route
      */
     protected $path;
 
-    /**
-     * @param string $path
-     * @param MiddlewareInterface $handler
-     */
-    public function __construct($path, MiddlewareInterface $handler)
+    public function __construct(string $path, MiddlewareInterface $handler)
     {
-        if (! is_string($path)) {
-            throw new InvalidArgumentException('Path must be a string');
-        }
-
         $this->path    = $path;
         $this->handler = $handler;
     }
 
     /**
-     * @param mixed $name
      * @return mixed
      * @throws OutOfRangeException for invalid properties
      */
-    public function __get($name)
+    public function __get(string $name)
     {
         if (! property_exists($this, $name)) {
             throw new OutOfRangeException('Only the path and handler may be accessed from a Route instance');

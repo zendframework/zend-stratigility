@@ -4,10 +4,10 @@
  * @copyright Copyright (c) 2015-2016 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+declare(strict_types=1);
 
 namespace Zend\Stratigility;
 
-use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
@@ -24,16 +24,10 @@ abstract class Utils
      *
      * Otherwise, retrieves the code from the response; if not present, or
      * less than 400 or greater than 599, returns 500; otherwise, returns it.
-     *
-     * @param mixed $error
-     * @param ResponseInterface $response
-     * @return int
      */
-    public static function getStatusCode($error, ResponseInterface $response)
+    public static function getStatusCode(Throwable $error, ResponseInterface $response) : int
     {
-        if (($error instanceof Throwable || $error instanceof Exception)
-            && ($error->getCode() >= 400 && $error->getCode() < 600)
-        ) {
+        if ($error->getCode() >= 400 && $error->getCode() < 600) {
             return $error->getCode();
         }
 
