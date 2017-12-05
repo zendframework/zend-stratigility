@@ -24,15 +24,10 @@ abstract class Utils
      *
      * Otherwise, retrieves the code from the response; if not present, or
      * less than 400 or greater than 599, returns 500; otherwise, returns it.
-     *
-     * @todo: this util class is not used in stratigility, maybe it should be moved to expressive?
-     * @todo: do we need $error to be provided here? Maybe we need swap params and allow $error to be null?
      */
     public static function getStatusCode(Throwable $error, ResponseInterface $response) : int
     {
-        if (null !== $error
-            && ($error->getCode() >= 400 && $error->getCode() < 600)
-        ) {
+        if ($error->getCode() >= 400 && $error->getCode() < 600) {
             return $error->getCode();
         }
 
