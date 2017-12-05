@@ -8,10 +8,10 @@
 namespace Zend\Stratigility\Exception;
 
 use UnexpectedValueException;
-use Zend\Stratigility\Middleware\DoublePassMiddlewareWrapper;
+use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
 
 /**
- * Exception thrown by the DoublePassMiddlewareWrapper when no response
+ * Exception thrown by the DoublePassMiddlewareDecorator when no response
  * prototype is provided, and Diactoros is not available to create a default.
  */
 class MissingResponsePrototypeException extends UnexpectedValueException implements ExceptionInterface
@@ -21,7 +21,7 @@ class MissingResponsePrototypeException extends UnexpectedValueException impleme
         return new self(sprintf(
             'Unable to create a %s instance; no response prototype provided,'
             . ' and zendframework/zend-diactoros is not installed',
-            DoublePassMiddlewareWrapper::class
+            DoublePassMiddlewareDecorator::class
         ));
     }
 }
