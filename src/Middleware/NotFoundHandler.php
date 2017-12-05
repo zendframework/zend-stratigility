@@ -31,20 +31,6 @@ class NotFoundHandler implements MiddlewareInterface
     }
 
     /**
-     * Proxy to process()
-     *
-     * Proxies to process, after first wrapping the `$next` argument using the
-     * CallableDelegateDecorator.
-     */
-    public function __invoke(
-        ServerRequestInterface $request,
-        ResponseInterface $response,
-        callable $next
-    ) : ResponseInterface {
-        return $this->process($request, new CallableDelegateDecorator($next, $response));
-    }
-
-    /**
      * Creates and returns a 404 response.
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
