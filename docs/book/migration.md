@@ -81,6 +81,9 @@ If you wish to use those types, you will need to decorate them in a
   only operate on the response returned by `$next`, or produce a concrete
   response yourself.
 
+- `Zend\Stratigility\Exception\ExceptionInterface` - marker for
+  package-specific exceptions.
+
 ### Removed classes and exceptions
 
 The following classes have been removed:
