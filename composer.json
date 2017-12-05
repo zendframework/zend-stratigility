@@ -21,8 +21,9 @@
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "2.1.0-dev",
-      "dev-develop": "2.2.0-dev"
+      "dev-master": "2.1.x-dev",
+      "dev-develop": "2.2.x-dev",
+      "dev-release-3.0.0": "3.0.x-dev"
     }
   },
   "config": {
