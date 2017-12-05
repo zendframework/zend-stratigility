@@ -24,6 +24,11 @@ details.
     prototype; if none is provided, it will create a zend-diactoros `Response`
     instance internally.
 
+- [#128](https://github.com/zendframework/zend-stratigility/pull/128) adds a
+  marker interface, `Zend\Stratigility\Exception\ExceptionInterface`; all
+  package exceptions now implement this interface, allowing you to catch all
+  package-related exceptions by typehinting against it.
+
 ### Changed
 
 - [#122](https://github.com/zendframework/zend-stratigility/pull/122) updates
