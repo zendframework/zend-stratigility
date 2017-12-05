@@ -4,6 +4,7 @@
  * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+declare(strict_types=1);
 
 namespace ZendTest\Stratigility;
 
@@ -117,7 +118,7 @@ class MiddlewarePipeTest extends TestCase
         $this->assertSame($return, $result, var_export([
             spl_object_hash($return) => get_class($return),
             spl_object_hash($result) => get_class($result),
-        ], 1));
+        ], true));
     }
 
     public function testSlashShouldNotBeAppendedInChildMiddlewareWhenLayerDoesNotIncludeIt()
