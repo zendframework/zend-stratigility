@@ -38,6 +38,9 @@ details.
 ### Removed
 
 - [#122](https://github.com/zendframework/zend-stratigility/pull/122) removes
+  support for PHP versions 5.6, 7.0, as well as HHVM.
+
+- [#122](https://github.com/zendframework/zend-stratigility/pull/122) removes
   the following classes:
   - `Zend\Stratigility\Delegate\CallableDelegateDecorator`
   - `Zend\Stratigility\Exception\InvalidRequestTypeException`
