@@ -14,7 +14,7 @@ use OutOfBoundsException;
  * Exception thrown when the internal stack of Zend\Stratigility\Next is
  * exhausted, but no response returned.
  */
-class MissingResponseException extends OutOfBoundsException
+class MissingResponseException extends OutOfBoundsException implements ExceptionInterface
 {
     public static function forCallableMiddleware(callable $middleware) : self
     {

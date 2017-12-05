@@ -14,7 +14,7 @@ use Zend\Stratigility\Middleware\DoublePassMiddlewareWrapper;
  * Exception thrown by the DoublePassMiddlewareWrapper when no response
  * prototype is provided, and Diactoros is not available to create a default.
  */
-class MissingResponsePrototypeException extends UnexpectedValueException
+class MissingResponsePrototypeException extends UnexpectedValueException implements ExceptionInterface
 {
     public static function create() : self
     {

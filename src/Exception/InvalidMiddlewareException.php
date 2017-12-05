@@ -11,7 +11,7 @@ namespace Zend\Stratigility\Exception;
 use Interop\Http\Server\MiddlewareInterface;
 use InvalidArgumentException;
 
-class InvalidMiddlewareException extends InvalidArgumentException
+class InvalidMiddlewareException extends InvalidArgumentException implements ExceptionInterface
 {
     /**
      * Create and return an InvalidArgumentException detailing the invalid middleware type.
