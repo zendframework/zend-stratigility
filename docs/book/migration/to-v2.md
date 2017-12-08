@@ -618,7 +618,7 @@ The following classes, methods, and arguments are removed starting in version
 - `Zend\Stratigility\Http\ResponseInterface` (interface)
 - `Zend\Stratigility\Http\Response` (class)
 - The `$response` argument to middleware is deprecated; please see the
-  [section on callable middleware](callable-middleware-in-version-1.3.0)
+  [section on callable middleware](#callable-middleware-in-version-130)
   for details, and adapt your middleware to no longer use the argument.
   While the legacy callable signature will continue to work, we recommend
   implementing an http-interop/http-middleware interface.
