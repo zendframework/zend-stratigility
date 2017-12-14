@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace Zend\Stratigility;
 
 use Interop\Http\Server\MiddlewareInterface;
-use OutOfRangeException;
 
 /**
  * Value object representing route-based middleware
@@ -17,10 +16,9 @@ use OutOfRangeException;
  * Details the subpath on which the middleware is active, and the
  * handler for the middleware itself.
  *
- * @property-read MiddlewareInterface $handler Handler for this route
- * @property-read string $path Path for this route
+ * @codeCoverageIgnore
  */
-class Route
+final class Route
 {
     /**
      * @var MiddlewareInterface
@@ -38,15 +36,13 @@ class Route
         $this->handler = $handler;
     }
 
-    /**
-     * @return mixed
-     * @throws OutOfRangeException for invalid properties
-     */
-    public function __get(string $name)
+    public function getHandler(): MiddlewareInterface
     {
-        if (! property_exists($this, $name)) {
-            throw new OutOfRangeException('Only the path and handler may be accessed from a Route instance');
-        }
-        return $this->{$name};
+        return $this->handler;
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
     }
 }

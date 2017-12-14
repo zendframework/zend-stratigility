@@ -70,9 +70,10 @@ class Next implements RequestHandlerInterface
             ));
         }
 
+        /* @var $layer Route */
         $layer           = $this->queue->dequeue();
         $path            = $request->getUri()->getPath() ?: '/';
-        $route           = $layer->path;
+        $route           = $layer->getPath();
         $normalizedRoute = strlen($route) > 1 ? rtrim($route, '/') : $route;
 
         // Skip if layer path does not match current url
@@ -91,7 +92,7 @@ class Next implements RequestHandlerInterface
             $request = $this->stripRouteFromPath($request, $route);
         }
 
-        $middleware = $layer->handler;
+        $middleware = $layer->getHandler();
         $response = $middleware->process($request, $this);
 
         if (! $response instanceof ResponseInterface) {
