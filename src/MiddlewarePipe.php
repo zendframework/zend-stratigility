@@ -62,14 +62,12 @@ class MiddlewarePipe implements MiddlewareInterface
      *
      * Each middleware will be associated with a particular path
      */
-    public function pipe(string $path, MiddlewareInterface $middleware) : self
+    public function pipe(string $path, MiddlewareInterface $middleware) : void
     {
         $normalizedPath = $this->normalizePipePath($path);
         $route = new Route($normalizedPath, $middleware);
 
         $this->pipeline->enqueue($route);
-
-        return $this;
     }
 
     /**
@@ -77,9 +75,9 @@ class MiddlewarePipe implements MiddlewareInterface
      *
      * Each middleware should be executed every request cycle.
      */
-    public function pipeMiddleware(MiddlewareInterface $middleware) : self
+    public function pipeMiddleware(MiddlewareInterface $middleware) : void
     {
-        return $this->pipe('/', $middleware);
+        $this->pipe('/', $middleware);
     }
 
     /**
