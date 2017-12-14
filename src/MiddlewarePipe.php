@@ -37,8 +37,6 @@ class MiddlewarePipe implements MiddlewareInterface
     protected $pipeline;
 
     /**
-     * Constructor
-     *
      * Initializes the queue.
      */
     public function __construct()
@@ -66,10 +64,10 @@ class MiddlewarePipe implements MiddlewareInterface
      */
     public function pipe(string $path, MiddlewareInterface $middleware) : self
     {
-        $this->pipeline->enqueue(new Route(
-            $this->normalizePipePath($path),
-            $middleware
-        ));
+        $normalizedPath = $this->normalizePipePath($path);
+        $route = new Route($normalizedPath, $middleware);
+
+        $this->pipeline->enqueue($route);
 
         return $this;
     }
@@ -91,16 +89,6 @@ class MiddlewarePipe implements MiddlewareInterface
      */
     private function normalizePipePath(string $path) : string
     {
-        // Prepend slash if missing
-        if (empty($path) || $path[0] !== '/') {
-            $path = '/' . $path;
-        }
-
-        // Trim trailing slash if present
-        if (strlen($path) > 1 && '/' === substr($path, -1)) {
-            $path = rtrim($path, '/');
-        }
-
-        return $path;
+        return '/' . trim($path, '/');
     }
 }
