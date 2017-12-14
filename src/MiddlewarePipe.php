@@ -13,7 +13,6 @@ use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SplQueue;
-use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
 /**
  * Pipe middleware like unix pipes.
@@ -29,12 +28,12 @@ use Zend\Stratigility\Exception\InvalidMiddlewareException;
  *
  * @see https://github.com/sencha/connect
  */
-class MiddlewarePipe implements MiddlewareInterface
+final class MiddlewarePipe implements MiddlewareInterface
 {
     /**
      * @var SplQueue
      */
-    protected $pipeline;
+    private $pipeline;
 
     /**
      * Initializes the queue.
@@ -59,34 +58,9 @@ class MiddlewarePipe implements MiddlewareInterface
 
     /**
      * Attach middleware to the pipeline.
-     *
-     * Each middleware will be associated with a particular path
      */
-    public function pipe(string $path, MiddlewareInterface $middleware) : void
+    public function pipe(MiddlewareInterface $middleware) : void
     {
-        $normalizedPath = $this->normalizePipePath($path);
-        $route = new Route($normalizedPath, $middleware);
-
         $this->pipeline->enqueue($route);
-    }
-
-    /**
-     * Attach middleware to the pipeline.
-     *
-     * Each middleware should be executed every request cycle.
-     */
-    public function pipeMiddleware(MiddlewareInterface $middleware) : void
-    {
-        $this->pipe('/', $middleware);
-    }
-
-    /**
-     * Normalize a path used when defining a pipe
-     *
-     * Strips trailing slashes, and prepends a slash.
-     */
-    private function normalizePipePath(string $path) : string
-    {
-        return '/' . trim($path, '/');
     }
 }
