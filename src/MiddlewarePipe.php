@@ -62,39 +62,26 @@ class MiddlewarePipe implements MiddlewareInterface
     /**
      * Attach middleware to the pipeline.
      *
-     * Each middleware can be associated with a particular path; if that
-     * path is matched when that middleware is invoked, it will be processed;
-     * otherwise it is skipped.
-     *
-     * No path means it should be executed every request cycle.
-     *
-     * @see Next
-     * @param string|MiddlewareInterface $path Either a URI path prefix, or middleware.
-     * @param null|MiddlewareInterface $middleware Middleware (callback or PSR-15 middleware)
-     * @throws InvalidMiddlewareException If provided middleware is invalid (not instance of MiddlewareInterface)
-     * @todo: swap param order
-     * @todo: add type hint on $middleware?
+     * Each middleware will be associated with a particular path
      */
-    public function pipe($path, $middleware = null) : self
+    public function pipe(string $path, MiddlewareInterface $middleware) : self
     {
-        if (null === $middleware
-            && $path instanceof MiddlewareInterface
-        ) {
-            $middleware = $path;
-            $path       = '/';
-        }
-
-        if (! $middleware instanceof MiddlewareInterface) {
-            throw InvalidMiddlewareException::fromValue($middleware);
-        }
-
         $this->pipeline->enqueue(new Route(
             $this->normalizePipePath($path),
             $middleware
         ));
 
-        // @todo Trigger event here with route details?
         return $this;
+    }
+
+    /**
+     * Attach middleware to the pipeline.
+     *
+     * Each middleware should be executed every request cycle.
+     */
+    public function pipeMiddleware(MiddlewareInterface $middleware) : self
+    {
+        return $this->pipe('/', $middleware);
     }
 
     /**

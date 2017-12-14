@@ -50,7 +50,7 @@ class MiddlewarePipeTest extends TestCase
 
     public function testHandleInvokesUntilFirstHandlerThatDoesNotCallNext()
     {
-        $this->pipeline->pipe(new class () implements MiddlewareInterface
+        $this->pipeline->pipeMiddleware(new class () implements MiddlewareInterface
         {
             public function process(ServerRequestInterface $req, RequestHandlerInterface $handler) : ResponseInterface
             {
@@ -60,7 +60,7 @@ class MiddlewarePipeTest extends TestCase
                 return $res;
             }
         });
-        $this->pipeline->pipe(new class () implements MiddlewareInterface
+        $this->pipeline->pipeMiddleware(new class () implements MiddlewareInterface
         {
             public function process(ServerRequestInterface $req, RequestHandlerInterface $handler) : ResponseInterface
             {
@@ -73,9 +73,9 @@ class MiddlewarePipeTest extends TestCase
 
         $response = new Response();
         $response->getBody()->write("Third\n");
-        $this->pipeline->pipe($this->getMiddlewareWhichReturnsResponse($response));
+        $this->pipeline->pipeMiddleware($this->getMiddlewareWhichReturnsResponse($response));
 
-        $this->pipeline->pipe($this->getNotCalledMiddleware());
+        $this->pipeline->pipeMiddleware($this->getNotCalledMiddleware());
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
         $response = $this->pipeline->process($request, $this->createFinalHandler());
@@ -89,9 +89,9 @@ class MiddlewarePipeTest extends TestCase
     {
         $expected = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $this->pipeline->pipe($this->getPassToHandlerMiddleware());
-        $this->pipeline->pipe($this->getPassToHandlerMiddleware());
-        $this->pipeline->pipe($this->getPassToHandlerMiddleware());
+        $this->pipeline->pipeMiddleware($this->getPassToHandlerMiddleware());
+        $this->pipeline->pipeMiddleware($this->getPassToHandlerMiddleware());
+        $this->pipeline->pipeMiddleware($this->getPassToHandlerMiddleware());
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
 
@@ -107,11 +107,11 @@ class MiddlewarePipeTest extends TestCase
     {
         $return = new Response();
 
-        $this->pipeline->pipe($this->getPassToHandlerMiddleware());
-        $this->pipeline->pipe($this->getPassToHandlerMiddleware());
-        $this->pipeline->pipe($this->getMiddlewareWhichReturnsResponse($return));
+        $this->pipeline->pipeMiddleware($this->getPassToHandlerMiddleware());
+        $this->pipeline->pipeMiddleware($this->getPassToHandlerMiddleware());
+        $this->pipeline->pipeMiddleware($this->getMiddlewareWhichReturnsResponse($return));
 
-        $this->pipeline->pipe($this->getNotCalledMiddleware());
+        $this->pipeline->pipeMiddleware($this->getNotCalledMiddleware());
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
         $result  = $this->pipeline->process($request, $this->createFinalHandler());
@@ -125,7 +125,7 @@ class MiddlewarePipeTest extends TestCase
     {
         $this->pipeline->pipe('/admin', $this->getPassToHandlerMiddleware());
 
-        $this->pipeline->pipe(new class () implements MiddlewareInterface
+        $this->pipeline->pipeMiddleware(new class () implements MiddlewareInterface
         {
             public function process(ServerRequestInterface $req, RequestHandlerInterface $handler) : ResponseInterface
             {
@@ -146,7 +146,7 @@ class MiddlewarePipeTest extends TestCase
     {
         $this->pipeline->pipe('/admin', $this->getPassToHandlerMiddleware());
 
-        $this->pipeline->pipe(new class () implements MiddlewareInterface
+        $this->pipeline->pipeMiddleware(new class () implements MiddlewareInterface
         {
             public function process(ServerRequestInterface $req, RequestHandlerInterface $handler) : ResponseInterface
             {
@@ -203,9 +203,9 @@ class MiddlewarePipeTest extends TestCase
 
         $pipeline = $this->pipeline;
         //$pipeline->setResponsePrototype($this->response);
-        $pipeline->pipe($outerMiddleware->reveal());
+        $pipeline->pipeMiddleware($outerMiddleware->reveal());
         $pipeline->pipe('/test', $childPipeline);
-        $pipeline->pipe($innerMiddleware->reveal());
+        $pipeline->pipeMiddleware($innerMiddleware->reveal());
 
         $request = new Request([], [], 'http://local.example.com/test', 'GET', 'php://memory');
         $final = $this->prophesize(RequestHandlerInterface::class);
@@ -449,7 +449,7 @@ class MiddlewarePipeTest extends TestCase
             ->willReturn($response);
 
         $pipeline = new MiddlewarePipe();
-        $pipeline->pipe($middleware->reveal());
+        $pipeline->pipeMiddleware($middleware->reveal());
 
         $this->assertSame($response, $pipeline->process($this->request, $handler));
     }
