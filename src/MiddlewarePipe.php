@@ -28,7 +28,7 @@ use SplQueue;
  *
  * @see https://github.com/sencha/connect
  */
-final class MiddlewarePipe implements MiddlewareInterface
+final class MiddlewarePipe implements MiddlewareInterface, RequestHandlerInterface
 {
     /**
      * @var SplQueue
@@ -41,6 +41,40 @@ final class MiddlewarePipe implements MiddlewareInterface
     public function __construct()
     {
         $this->pipeline = new SplQueue();
+    }
+
+    /**
+     * Perform a deep clone.
+     */
+    public function __clone()
+    {
+        $this->pipeline = clone $this->pipeline;
+    }
+
+    /**
+     * Handle an incoming request.
+     *
+     * Attempts to handle an incoming request by doing the following:
+     *
+     * - Cloning itself, to produce a request handler.
+     * - Dequeuing the first middleware in the cloned handler.
+     * - Processing the first middleware using the request and the cloned handler.
+     *
+     * If the pipeline is empty at the time this method is invoked, it will
+     * raise an exception.
+     *
+     * @throws Exception\EmptyPipelineException if no middleware is present in
+     *     the instance in order to process the request.
+     */
+    public function handle(ServerRequestInterface $request) : ResponseInterface
+    {
+        if (0 === count($this->pipeline)) {
+            throw Exception\EmptyPipelineException::forClass(__CLASS__);
+        }
+
+        $nextHandler = clone $this;
+        $middleware = $nextHandler->pipeline->dequeue();
+        return $middleware->process($request, $nextHandler);
     }
 
     /**
@@ -61,6 +95,6 @@ final class MiddlewarePipe implements MiddlewareInterface
      */
     public function pipe(MiddlewareInterface $middleware) : void
     {
-        $this->pipeline->enqueue($route);
+        $this->pipeline->enqueue($middleware);
     }
 }

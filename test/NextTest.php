@@ -48,106 +48,57 @@ class NextTest extends TestCase
     {
         $this->queue   = new SplQueue();
         $this->request = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
+        $this->fallbackHandler = $this->createFallbackHandler();
     }
 
-    public function testInvokesItselfWhenRouteDoesNotMatchCurrentUrl()
+    public function createFallbackHandler(ResponseInterface $response = null) : RequestHandlerInterface
     {
-        // e.g., handler matches "/foo", but path is "/bar"
-        $route = new Route('/foo', $this->getNotCalledMiddleware());
-        $this->queue->enqueue($route);
+        $response = $response ?: $this->createDefaultResponse();
+        return new class ($response) implements RequestHandlerInterface {
+            /** @var ResponseInterface */
+            private $response;
 
-        $done = new Route('/', $this->getMiddlewareWhichReturnsResponse(new Response()));
-        $this->queue->enqueue($done);
+            public function __construct(ResponseInterface $response)
+            {
+                $this->response = $response;
+            }
 
-        $this->request->withUri(new Uri('http://local.example.com/bar'));
-
-        $next = new Next($this->queue);
-        $next->handle($this->request);
+            public function handle(ServerRequestInterface $request) : ResponseInterface
+            {
+                return $this->response;
+            }
+        };
     }
 
-    public function testInvokesItselfIfRouteDoesNotMatchAtABoundary()
+    public function createDefaultResponse() : ResponseInterface
     {
-        // e.g., if route is "/foo", but path is "/foobar", no match
-        $route = new Route('/foo', $this->getNotCalledMiddleware());
-        $this->queue->enqueue($route);
-
-        $done = new Route('/', $this->getMiddlewareWhichReturnsResponse(new Response()));
-        $this->queue->enqueue($done);
-
-        $this->request->withUri(new Uri('http://local.example.com/foobar'));
-
-        $next = new Next($this->queue);
-        $next->handle($this->request);
+        $this->response = $this->prophesize(ResponseInterface::class);
+        return $this->response->reveal();
     }
 
-    public function testInvokesHandlerWhenMatched()
+    /**
+     * @group http-interop
+     */
+    public function testNextImplementsRequestHandlerInterface()
     {
-        // e.g., if route is "/foo", but path is "/foobar", no match
-        $triggered = null;
-        $route = new Route('/foo', $this->getMiddlewareWhichReturnsResponse(new Response()));
-        $this->queue->enqueue($route);
-
-        $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
-
-        $next = new Next($this->queue);
-        $next->handle($request);
+        $next = new Next($this->queue, $this->fallbackHandler);
+        $this->assertInstanceOf(RequestHandlerInterface::class, $next);
     }
 
-    public function testRequestUriInInvokedHandlerDoesNotContainMatchedPortionOfRoute()
+    /**
+     * @group 25
+     */
+    public function testNextShouldCloneQueueOnInstantiation()
     {
-        $middleware = $this->prophesize(MiddlewareInterface::class);
-        $middleware
-            ->process(Argument::that(function (ServerRequestInterface $req) {
-                Assert::assertSame('/bar', $req->getUri()->getPath());
-
-                return true;
-            }), Argument::any())
-            ->shouldBeCalledTimes(1);
-
-        // e.g., if route is "/foo", and "/foo/bar" is the original path,
-        // then the URI path in the handler is "/bar"
-        $route = new Route('/foo', $middleware->reveal());
-        $this->queue->enqueue($route);
-
-        $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
-
-        $next = new Next($this->queue);
-        $next->handle($request);
+        $next = new Next($this->queue, $this->fallbackHandler);
+        $this->assertAttributeNotSame($this->queue, 'queue', $next);
+        $this->assertAttributeEquals($this->queue, 'queue', $next);
     }
 
-    public function testSlashAndPathGetResetBeforeExecutingNextMiddleware()
+    public function testNextComposesAFallbackHandler()
     {
-        $response = new Response();
-        $response->getBody()->write('done');
-
-        $route1 = new Route('/foo', $this->getPassToHandlerMiddleware());
-        $route2 = new Route('/foo/bar', $this->getNotCalledMiddleware());
-        $route3 = new Route('/foo/baz', $this->getMiddlewareWhichReturnsResponse($response));
-
-        $this->queue->enqueue($route1);
-        $this->queue->enqueue($route2);
-        $this->queue->enqueue($route3);
-
-        $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
-        $next = new Next($this->queue);
-        self::assertSame('done', (string) $next->handle($request)->getBody());
-    }
-
-    public function testMiddlewareReturningResponseShortcircuits()
-    {
-        $response = new Response();
-        $route1 = new Route('/foo', $this->getMiddlewareWhichReturnsResponse($response));
-        $route2 = new Route('/foo/bar', $this->getNotCalledMiddleware());
-        $route3 = new Route('/foo/baz', $this->getNotCalledMiddleware());
-
-        $this->queue->enqueue($route1);
-        $this->queue->enqueue($route2);
-        $this->queue->enqueue($route3);
-
-        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-        $next = new Next($this->queue);
-        $result = $next->handle($request);
-        $this->assertSame($response, $result);
+        $next = new Next($this->queue, $this->fallbackHandler);
+        $this->assertAttributeSame($this->fallbackHandler, 'fallbackHandler', $next);
     }
 
     public function testMiddlewareCallingNextWithRequestPassesRequestToNextMiddleware()
@@ -156,7 +107,7 @@ class NextTest extends TestCase
         $cannedRequest = clone $request;
         $cannedRequest = $cannedRequest->withMethod('POST');
 
-        $route1 = new Route('/foo/bar', new class($cannedRequest) implements MiddlewareInterface
+        $middleware1 = new class($cannedRequest) implements MiddlewareInterface
         {
             private $cannedRequest;
 
@@ -169,8 +120,9 @@ class NextTest extends TestCase
             {
                 return $handler->handle($this->cannedRequest);
             }
-        });
-        $route2 = new Route('/foo/bar/baz', new class($cannedRequest) implements MiddlewareInterface
+        };
+
+        $middleware2 = new class($cannedRequest) implements MiddlewareInterface
         {
             private $cannedRequest;
 
@@ -184,186 +136,54 @@ class NextTest extends TestCase
                 Assert::assertEquals($this->cannedRequest->getMethod(), $req->getMethod());
                 return new Response();
             }
-        });
+        };
 
-        $this->queue->enqueue($route1);
-        $this->queue->enqueue($route2);
+        $this->queue->enqueue($middleware1);
+        $this->queue->enqueue($middleware2);
 
-        $next = new Next($this->queue);
-        $next->handle($request);
-    }
-
-    /**
-     * @group 25
-     */
-    public function testNextShouldCloneQueueOnInstantiation()
-    {
-        $next = new Next($this->queue);
-
-        $r = new ReflectionProperty($next, 'queue');
-        $r->setAccessible(true);
-        $queue = $r->getValue($next);
-
-        $this->assertNotSame($this->queue, $queue);
-        $this->assertEquals($this->queue, $queue);
+        $next = new Next($this->queue, $this->fallbackHandler);
+        $response = $next->handle($request);
+        $this->assertNotSame($this->response, $response);
     }
 
     /**
      * @group http-interop
      */
-    public function testNextImplementsRequestHandlerInterface()
+    public function testNextDelegatesToFallbackHandlerWhenQueueIsEmpty()
     {
-        $next = new Next($this->queue);
-
-        $this->assertInstanceOf(RequestHandlerInterface::class, $next);
+        $expectedResponse = $this->prophesize(ResponseInterface::class)->reveal();
+        $fallbackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallbackHandler
+            ->handle($this->request)
+            ->willReturn($expectedResponse)->shouldBeCalled();
+        $next = new Next($this->queue, $fallbackHandler->reveal());
+        $this->assertSame($expectedResponse, $next->handle($this->request));
     }
 
     /**
      * @group http-interop
      */
-    public function testExceptionIsRaisedWhenQueueIsExhaustedAndNoNextRequestHandlerPresent()
+    public function testNextProcessesEnqueuedMiddleware()
     {
-        $next = new Next($this->queue);
-
-        $this->expectException(Exception\MissingResponseException::class);
-        $this->expectExceptionMessage('exhausted');
-        $next->handle($this->request);
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testProcessReinvokesItselfWhenRouteDoesNotMatchCurrentUrl()
-    {
-        // e.g., handler matches "/foo", but path is "/bar"
-        $request = $this->request->withUri(new Uri('http://local.example.com/bar'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $first = $this->prophesize(MiddlewareInterface::class);
-        $first
-            ->process($request, Argument::type(Next::class))
-            ->will(function () {
-                // This one should be skipped
-                Assert::fail('Route should not be invoked if path does not match');
-            });
-        $this->queue->enqueue(new Route('/foo', $first->reveal()));
-
-        $second = $this->prophesize(MiddlewareInterface::class);
-        $second
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
-            ->willReturn($response);
-        $this->queue->enqueue(new Route('/bar', $second->reveal()));
-
-        $next = new Next($this->queue);
-
-        $this->assertSame($response, $next->handle($request));
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testProcessReinvokesItselfIfRouteDoesNotMatchAtABoundary()
-    {
-        // e.g., if route is "/foo", but path is "/foobar", no match
-        $request = $this->request->withUri(new Uri('http://local.example.com/foobar'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $first = $this->prophesize(MiddlewareInterface::class);
-        $first
-            ->process($request, Argument::type(Next::class))
-            ->will(function () {
-                // This one should be skipped
-                Assert::fail('Route should not be invoked if path does not match');
-            });
-        $this->queue->enqueue(new Route('/foo', $first->reveal()));
-
-        $second = $this->prophesize(MiddlewareInterface::class);
-        $second
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
-            ->willReturn($response);
-        $this->queue->enqueue(new Route('/foobar', $second->reveal()));
-
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->handle($request));
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testProcessDispatchesHandlerWhenMatched()
-    {
-        $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $middleware = $this->prophesize(MiddlewareInterface::class);
-        $middleware
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
-            ->willReturn($response);
-        $this->queue->enqueue(new Route('/foo', $middleware->reveal()));
-
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->handle($request));
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testRequestUriInHandlerInvokedByProcessDoesNotContainMatchedPortionOfRoute()
-    {
-        // e.g., if route is "/foo", and "/foo/bar" is the original path,
-        // then the URI path in the handler is "/bar"
-        $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $middleware = $this->prophesize(MiddlewareInterface::class);
-        $middleware
-            ->process(Argument::that(function ($arg) {
-                Assert::assertInstanceOf(RequestInterface::class, $arg);
-                Assert::assertEquals('/bar', $arg->getUri()->getPath());
-                return true;
-            }), Argument::type(Next::class))
-            ->willReturn($response);
-        $this->queue->enqueue(new Route('/foo', $middleware->reveal()));
-
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->handle($request));
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testSlashAndPathGetResetByProcessBeforeExecutingNextMiddleware()
-    {
-        $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $route1 = $this->prophesize(MiddlewareInterface::class);
-        $route1
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
-            ->will(function ($args) {
-                $request = $args[0];
-                $next = $args[1];
-                return $next->handle($request);
-            });
-        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
-
-        $route2 = $this->prophesize(MiddlewareInterface::class);
-        $route2
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
+        $fallbackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallbackHandler
+            ->handle(Argument::any())
             ->shouldNotBeCalled();
-        $this->queue->enqueue(new Route('/foo/bar', $route2->reveal()));
 
-        $route3 = $this->prophesize(MiddlewareInterface::class);
-        $route3
-            ->process(Argument::that(function ($arg) {
-                Assert::assertEquals('/bat', $arg->getUri()->getPath());
-                return true;
-            }), Argument::type(Next::class))
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $middleware = $this->prophesize(MiddlewareInterface::class);
+        $middleware
+            ->process($this->request, Argument::type(Next::class))
             ->willReturn($response);
-        $this->queue->enqueue(new Route('/foo/baz', $route3->reveal()));
 
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->handle($request));
+        $this->queue->enqueue($middleware->reveal());
+
+        // Creating after middleware enqueued, as Next clones the queue during
+        // instantiation.
+        $next = new Next($this->queue, $fallbackHandler->reveal());
+
+        $this->assertSame($response, $next->handle($this->request));
     }
 
     /**
@@ -371,25 +191,29 @@ class NextTest extends TestCase
      */
     public function testMiddlewareReturningResponseShortCircuitsProcess()
     {
-        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
+        $fallbackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallbackHandler
+            ->handle(Argument::any())
+            ->shouldNotBeCalled();
+
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
         $route1 = $this->prophesize(MiddlewareInterface::class);
         $route1
-            ->process(Argument::that(function ($arg) {
-                Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
-                return true;
-            }), Argument::type(Next::class))
+            ->process($this->request, Argument::type(Next::class))
             ->willReturn($response);
-        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
+        $this->queue->enqueue($route1->reveal());
 
         $route2 = $this->prophesize(MiddlewareInterface::class);
         $route2
             ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
             ->shouldNotBeCalled();
-        $this->queue->enqueue(new Route('/foo/bar', $route2->reveal()));
+        $this->queue->enqueue($route2->reveal());
 
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->handle($request));
+        // Creating after middleware enqueued, as Next clones the queue during
+        // instantiation.
+        $next = new Next($this->queue, $fallbackHandler->reveal());
+
+        $this->assertSame($response, $next->handle($this->request));
     }
 }
