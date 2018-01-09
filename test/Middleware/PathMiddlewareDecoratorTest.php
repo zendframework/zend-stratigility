@@ -249,8 +249,10 @@ class PathMiddlewareDecoratorTest extends TestCase
         $finalHandler->handle(Argument::any())->willReturn(new Response());
 
         $nested = new PathMiddlewareDecorator($nestPrefix, new class () implements MiddlewareInterface {
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
-            {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ) : ResponseInterface {
                 return (new Response())->withHeader('X-Found', 'true');
             }
         });
@@ -263,8 +265,10 @@ class PathMiddlewareDecoratorTest extends TestCase
                 $this->middleware = $middleware;
             }
 
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
-            {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ) : ResponseInterface {
                 return $this->middleware->process($request, $handler);
             }
         });
