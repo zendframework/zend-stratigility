@@ -7,10 +7,11 @@ and provide guidance on how to upgrade your application to be compatible.
 - [PSR-15](#psr-15)
 - [Pipeline (`MiddlewarePipe`)](#pipeline-middlewarepipe)
 - [Changes in public interfaces](#changes-in-public-interfaces)
+  - [Signature changes](#signature-changes)
   - [Class additions](#class-additions)
   - [Removed classes and exceptions](#removed-classes-and-exceptions)
-  - [Signature changes](#signature-changes)
   - [Removed methods](#removed-methods)
+  - [Function additions](#function-additions)
 
 ## PHP support
 
@@ -22,7 +23,29 @@ been dropped.
 Stratigility now supports only PSR-15 interfaces. Support of
 `http-interop/http-middleware` has been dropped.
 
-All middleware and request handlers must now implement PSR-15 interfaces.
+All middleware and request handlers must now implement PSR-15 interfaces,
+including those Stratigility implements.
+
+As a result, a number of signatures have been changed.  Primarily, these were a
+matter of updating typehints on
+`Interop\Http\ServerMiddleware\DelegateInterface` (defined in
+[http-interop/http-middleware](https://github.com/http-interop/http-middleware)
+0.4 and up, an early draft of PSR-15) and
+`Interop\Http\Server\RequestHandlerInterface` (defined in
+[http-interop/http-server-handler](https://github.com/http-interop/http-server-handler),
+the immediate predecessor to the final spec) to
+`Psr\Http\Server\RequestHandlerInterface`, and adding the return type hint
+`Psr\Http\Message\ResponseInterface`.
+
+Signatures affected include:
+
+- `Zend\Stratigility\MiddlewarePipe::process()`
+- `Zend\Stratigility\Middleware\ErrorHandler::process()`
+- `Zend\Stratigility\Middleware\NotFoundHandler::process()`
+- `Zend\Stratigility\Middleware\OriginalMessages::process()`
+- `Zend\Stratigility\MiddlewarePipe::process()`
+
+All of these classes now implement the PSR-15 `MiddlewareInterface`.
 
 ## Pipeline - `MiddlewarePipe`
 
@@ -33,13 +56,41 @@ In version 2, we had a number of internal utilities for identifying other types
 of middleware (callable, double-pass, etc.), and would decorate those within the
 `pipe()` method. This is no longer allowed.
 
-If you wish to use those types, you will need to decorate them in a
-`MiddlewareInterface` implementation when piping them to the pipeline.
+If you wish to use those types, you will need to decorate them using the
+appropriate decorators as outlined in the [Class additions](#class-additions)
+section.
 
-> TODO: Are we going to provide some wrappers?
 ## Changes in public interfaces
 
+### Signature changes
+
+- `Next::__construct()`: the second parameter now typehints against the
+  PSR-15 `RequestHandlerInterface`.
+
+- `Next::handle()`: the method now provides a return typehint of
+  `Psr\Http\Message\ResponseInterface`.
+
+- `MiddlewarePipe::pipe()`: reduces the number of arguments to one, which now
+  typehints against `Psr\Http\Server\MiddlewareInterface`. This means the method
+  can no longer be used to segregate middleware by path. If you want to do that,
+  please use `Zend\Stratigility\Middleware\PathMiddlewareDecorator` to decorate
+  your middleware and to provide the path prefix it will run under. See the next
+  section for details.
+
+- `MiddlewarePipe::process()`: the second parameter now typehints against
+  `Psr\Http\Server\RequestHandlerInterface`, and provides a return typehint of
+  `Psr\Http\Message\ResponseInterface`.
+
 ### Class additions
+
+- `Zend\Stratigility\Middleware\PathMiddlewareDecorator` allows you to segregate
+  middleware by a static URI path prefix. This allows executing middleware only
+  if a particular path matches, or segregating a sub-application by path.
+
+  ```php
+  // Segregate to paths matching '/foo' as the prefix:
+  $pipeline->pipe(new PathMiddlewareDecorator('/foo', $middleware));
+  ```
 
 - `Zend\Stratigility\Middleware\CallableMiddlewareDecorator` provides the
   functionality that was formerly provided by
@@ -95,38 +146,14 @@ The following classes have been removed:
 - `Zend\Stratigility\MiddlewareInterface` (Please use the PSR-15
   `MiddlewareInterface` instead.)
 - `Zend\Stratigility\NoopFinalHandler`
+- `Zend\Stratigility\Route`. This was an internal class used by `MiddlewarePipe`
+  and `Next`, and its removal should not affect consumers.
 
 The following exceptions have been removed:
 
+- `Zend\Stratigility\Exception\InvalidMiddlewareException` (this is no longer
+  thrown by `MiddlewarePipe`, and thus no longer necessary).
 - `Zend\Stratigility\Exception\InvalidRequestTypeException`
-
-### Signature changes
-
-- `Next::__construct()`: the second parameter now typehints against the
-  PSR-15 `RequestHandlerInterface`.
-
-> TODO: below link to PSR-15 is not working as it is not yet accepted.
-
-A number of signatures have been changed due to updating Stratigility to
-support [PSR-15](http://www.php-fig.org/psr/psr-15/) instead of
-[http-interop/http-server-middleware](https://github.com/http-interop/http-server-middleware)
-and [http-interop/http-middleware](https://github.com/http-interop/http-middleware)
-(which were draft specification implementations of PSR-15). Primarily, these
-were a matter of updating typehints on
-`Interop\Http\ServerMiddleware\DelegateInterface` and
-`Interop\Http\Server\RequestHandlerInterface` to the PSR-15
-`RequestHandlerInterface`, and adding the return type hint
-`Psr\Http\Message\ResponseInterface`.
-
-Signatures affected include:
-
-- `Zend\Stratigility\MiddlewarePipe::process()`
-- `Zend\Stratigility\Middleware\ErrorHandler::process()`
-- `Zend\Stratigility\Middleware\NotFoundHandler::process()`
-- `Zend\Stratigility\Middleware\OriginalMessages::process()`
-- `Zend\Stratigility\MiddlewarePipe::process()`
-
-All of these classes now implement the PSR-15 `MiddlewareInterface`.
 
 ### Removed methods
 
@@ -164,3 +191,23 @@ All of these classes now implement the PSR-15 `MiddlewareInterface`.
 
 - `Next::raiseThrowables()`: this method has been deprecated since 2.0.0, and
   slated for removal with this version.
+
+### Function additions
+
+Release 3.0 adds the following utility functions:
+
+#### path
+
+```php
+function Zend\Stratigility\path(
+  string $pathPrefix,
+  Psr\Http\Server\MiddlewareInterface $middleware
+): Psr\Http\Server\MiddlewareInterface
+```
+
+This is a convenience wrapper around instantiation of a
+`Zend\Stratigility\Middleware\PathMiddlewareDecorator` instance:
+
+```php
+$pipeline->pipe(path('/foo', $middleware));
+```
