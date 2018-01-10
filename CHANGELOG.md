@@ -6,7 +6,7 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 3.0.0alpha1 - TBD
+## 3.0.0alpha1 - 2018-01-10
 
 ### Added
 
