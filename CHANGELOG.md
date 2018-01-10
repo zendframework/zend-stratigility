@@ -6,6 +6,67 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
+## 3.0.0alpha2 - TBD
+
+### Added
+
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134) adds a new
+  class, `Zend\Stratigility\Middleware\PathMiddlewareDecorator`, which provides
+  path segregation functionality for middleware, replacing the functionality
+  that was previously implemented in `MiddlewarePipe` and `Next`. Middleware
+  decorated in a `PathMiddlewareDecorator` will only be processed if the current
+  request URI path matches the path prefix provided to the decorator; if it does
+  match, the request passed to it will strip the path prefix from the URI.
+
+  ```php
+  // Only process $middleware if the request path matches '/foo':
+  $pipeline->pipe(new PathMiddlewareDecorator('/foo', $middleware));
+  ```
+
+  Additionally, the patch provides a utility function,
+  `Zend\Stratigility\path()`, to simplify the above declaration:
+
+  ```php
+  $pipeline->pipe(path('/foo', $middleware));
+  ```
+
+### Changed
+
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134) marks the
+  `MiddlewarePipe` class as `final`, disallowing direct extension. Either
+  compose an instance, or create a custom PSR-15 `MiddlewareInterface`
+  implementation.
+
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134) updates
+  `MiddlewarePipe` to implement `Interop\Http\Server\RequestHandlerInterface`.
+  Calling it will cause it to pull the first middleware off the queue and create
+  a `Next` implementation that uses the remaining queue as the request handler;
+  it then processes the middleware.
+
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134) removes
+  the ability to specify a path when calling `pipe()`; use the new
+  `PathMiddlewareDecorator` or `path()` utility function to pipe middleware with
+  path segregation.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134) removes
+  the class `Zend\Stratigility\Route`. This was an internal message passed
+  between a `MiddlewarePipe` and `Next` instance, and its removal should not
+  affect end users.
+
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134) removes
+  `Zend\Stratigility\Exception\InvalidMiddlewareException`, as the exception is
+  no longer raised by `MiddlewarePipe`.
+
+### Fixed
+
+- Nothing.
+
 ## 3.0.0alpha1 - 2018-01-10
 
 ### Added
