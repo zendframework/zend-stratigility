@@ -17,17 +17,16 @@ has been discussed previously. Its API is:
 ```php
 namespace Zend\Stratigility;
 
-use Interop\Http\Server\MiddlewareInterface as ServerMiddlewareInterface;
-use Interop\Http\Server\RequestHandlerInterface as DelegateInterface;
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class MiddlewarePipe implements ServerMiddlewareInterface
+class MiddlewarePipe implements MiddlewareInterface, RequestHandlerInterface
 {
-    public function pipe(
-        string|ServerMiddlewareInterface $path,
-        ServerMiddlewareInterface $middleware = null
-    );
+    public function pipe(MiddlewareInterface $middleware);
+
+    public function handle(ServerRequestInterface $request) : ResponseInterface;
 
     public function process(
         ServerRequestInterface $request,
@@ -36,52 +35,35 @@ class MiddlewarePipe implements ServerMiddlewareInterface
 }
 ```
 
-`pipe()` takes up to two arguments. If only one argument is provided,
-`$middleware` will be assigned that value, and `$path` will be re-assigned to
-the value `/`; this is an indication that the `$middleware` should be invoked
-for any path. If `$path` is provided, the `$middleware` will only be executed
-for that path and any subpaths.
-
-> ### Request path changes when path matched
->
-> When you pipe middleware using a path (other than '' or '/'), the middleware
-> is dispatched with a request that strips the matched segment(s) from the start
-> of the path.
->
-> If, for example, you executed `$pipeline->pipe('/api', $api)`, and this was
-> matched via a URI with the path `/api/users/foo`, the `$api` middleware will
-> receive a request with the path `/users/foo`. This allows middleware
-> segregated by path to be re-used without changes to its own internal routing.
-
 Middleware is executed in the order in which it is piped to the
 `MiddlewarePipe` instance.
 
 The `MiddlewarePipe` is itself middleware, and can be executed in stacks that
-expect http-interop middleware signatures.
+expect http-interop middleware signatures. It is also a request handler,
+allowing you to use it in paradigms where a request handler is required; when
+executed in this way, it will process itself in order to generate a response.
 
 Middleware should either return a response, or the result of
 `RequestHandlerInterface::handle()` (which should eventually evaluate to a
 response instance).
 
-Within Stratigility, `Zend\Stratigility\Next` provides an implementation
-of `RequestHandlerInterface`.
-
-Internally, during execution of the `process()` method, `MiddlewarePipe` creates
-an instance of `Zend\Stratigility\Next` (feeding it its queue), executes it, and
-returns its response.
+Internally, `MiddlewarePipe` creates an instance of `Zend\Stratigility\Next` to
+use as a `RequestHandlerInterface` implementation to pass to each middleware;
+`Next` receives the queue of middleware from the `MiddlewarePipe` instance and
+processes each one, calling them with the current request and itself, advancing
+its internal pointer until all middleware are executed, or a response is
+returned.
 
 ## Next
 
-`Zend\Stratigility\Next` is primarily an implementation detail of middleware,
-and exists to allow delegating to middleware registered later in the stack. It
-is implemented as an http-interop/http-middleware `RequestHandlerInterface`.
+`Zend\Stratigility\Next` is primarily an implementation detail, and exists to
+allow delegating to middleware aggregated in the `MiddlewarePipe`. It is
+implemented as an http-interop/http-middleware `RequestHandlerInterface`.
 
-Since your middleware needs to return a response, it must:
-
-- Compose a response prototype in the middleware to use to build a response, or a
-  canned response to return, OR
-- Create and return a concrete response type, OR
-- Operate on a response returned by invoking the delegate.
+Since your middleware needs to return a response, the instance receives the
+`$handler` argument passed to `MiddlewarePipe::process()` as a fallback request
+handler; if the last middleware in the queue calls on its handler, `Next` will
+execute the fallback request handler to generate a response to return.
 
 ### Providing an altered request:
 
@@ -104,10 +86,13 @@ function ($request, RequestHandlerInterface $handler) use ($bodyParser)
 {
     $bodyParams = $bodyParser($request);
 
-    // Provide a new request instance to the delegate:
-    return $handler->handle(
+    // Provide a new request instance to the handler:
+    $response = return $handler->handle(
         $request->withBodyParams($bodyParams)
     );
+
+    // Return a response with an additional header:
+    return $response->withHeader('X-Completed', 'true');
 }
 ```
 
@@ -137,14 +122,14 @@ function ($request, RequestHandlerInterface $handler) use ($prototype)
 
 If your middleware is not capable of returning a response, or a particular path
 in the middleware cannot return a response, return the result of executing the
-delegate.
+handler.
 
 ```php
 return $handler->handle($request);
 ```
 
 **Middleware should always return a response, and, if it cannot, return the
-result of delegation.**
+result of delegating to the request handler.**
 
 ### Raising an error condition
 
@@ -173,6 +158,27 @@ your users.
 
 Stratigility provides several concrete middleware implementations.
 
+### PathMiddlewareDecorator
+
+If you wish to segregate middleware by path prefix and/or conditionally
+execute middleware based on a path prefix, decorate your middleware using
+`Zend\Stratigility\Middleware\PathMiddlewareDecorator`.
+
+Middleware decorated by `PathMiddlewareDecorator` will only execute if the
+request URI matches the path prefix provided during instantiation.
+
+```php
+// Only process $middleware if the URI path prefix matches '/foo':
+$pipeline->pipe(new PathMiddlewareDecorator('/foo', $middleware));
+```
+
+When the path prefix matches, the `PathMiddlewareDecorator` will strip the path
+prefix from the request passed to the decorated middleware. For example, if you
+executed `$pipeline->pipe('/api', $api)`, and this was matched via a URI with
+the path `/api/users/foo`, the `$api` middleware will receive a request with the
+path `/users/foo`. This allows middleware segregated by path to be re-used
+without changes to its own internal routing.
+
 ### CallableMiddlewareDecorator
 
 `Zend\Stratigility\Middleware\CallableMiddlewareDecorator` provides the ability
@@ -183,7 +189,7 @@ creation when creating your pipeline:
 ```php
 $pipeline->pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
     // do some work
-    $response = $next($req, $handler);
+    $response = $handler->handle($req);
     // do some work
     return $response;
 });
@@ -233,3 +239,23 @@ These two middleware allow you to provide handle PHP errors and exceptions, and
 This callable middleware can be used as the outermost layer of middleware in
 order to set the original request and URI instances as request attributes for
 inner layers.
+
+## Utility Functions
+
+Stratigility provides the following utility functions.
+
+### path
+
+````
+function Zend\Stratigility\path(
+    string $pathPrefix,
+    Interop\Http\Server\MiddlewareInterface $middleware
+) : Zend\Stratigility\Middleware\PathMiddlewareDecorator
+```
+
+`path()` provides a convenient way to perform path segregation when piping your
+middleware.
+
+```php
+$pipeline->pipe(path('/foo', $middleware));
+```

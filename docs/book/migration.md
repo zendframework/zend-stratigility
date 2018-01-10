@@ -60,6 +60,11 @@ If you wish to use those types, you will need to decorate them using the
 appropriate decorators as outlined in the [Class additions](#class-additions)
 section.
 
+Additionally, `MiddlewarePipe` is now marked `final`, and may not be directly
+extended. Decorate an instance if you wish to provide alternate behavior, or
+create your own `MiddlewareInterface` implementation to provide alternate
+internal logic.
+
 ## Changes in public interfaces
 
 ### Signature changes
