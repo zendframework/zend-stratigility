@@ -23,5 +23,5 @@ use Psr\Http\Message\ResponseInterface;
  */
 function closure(callable $middleware) : Middleware\CallableMiddlewareDecorator
 {
-    return Middleware\CallableMiddlewareDecorator($middleware);
+    return new Middleware\CallableMiddlewareDecorator($middleware);
 }

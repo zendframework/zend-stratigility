@@ -32,5 +32,5 @@ use Psr\Http\Message\ResponseInterface;
  */
 function doublePass(callable $middleware, ResponseInterface $response = null) : Middleware\DoublePassMiddlewareDecorator
 {
-    return Middleware\DoublePassMiddlewareDecorator($middleware, $response);
+    return new Middleware\DoublePassMiddlewareDecorator($middleware, $response);
 }
