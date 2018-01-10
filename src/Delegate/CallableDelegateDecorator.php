@@ -15,6 +15,10 @@ use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface
 /**
  * Decorate callable delegates as http-interop delegates in order to process
  * incoming requests.
+ *
+ * @deprecated since 2.2.0; to be removed in 3.0.0. This class is an internal
+ *     detail used to allow usage of Stratigility within double-pass middleware
+ *     frameworks; starting in 3.0.0, Stratigility will support PSR-15 only.
  */
 class CallableDelegateDecorator implements DelegateInterface
 {

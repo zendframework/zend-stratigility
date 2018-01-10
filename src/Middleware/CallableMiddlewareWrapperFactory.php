@@ -9,6 +9,9 @@ namespace Zend\Stratigility\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * @deprecated since 2.2.0; to be removed in 3.0.0.
+ */
 class CallableMiddlewareWrapperFactory
 {
     /**

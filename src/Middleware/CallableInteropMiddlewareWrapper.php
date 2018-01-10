@@ -11,6 +11,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
 use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 
+/**
+ * @deprecated since 2.2.0; to be removed in 3.0.0. Use CallableMiddlewareDecorator instead.
+ */
 class CallableInteropMiddlewareWrapper implements ServerMiddlewareInterface
 {
     /**

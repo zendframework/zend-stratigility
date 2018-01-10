@@ -9,6 +9,9 @@ namespace Zend\Stratigility\Exception;
 
 use InvalidArgumentException;
 
+/**
+ * @deprecated since 2.2.0; to be removed in 3.0.0.
+ */
 class InvalidMiddlewareException extends InvalidArgumentException
 {
     /**

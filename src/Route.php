@@ -17,6 +17,8 @@ use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewa
  * Details the subpath on which the middleware is active, and the
  * handler for the middleware itself.
  *
+ * @internal
+ * @deprecated since 2.2.0, to be removed in 3.0.0.
  * @property-read callable $handler Handler for this route
  * @property-read string $path Path for this route
  */

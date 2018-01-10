@@ -18,6 +18,8 @@ use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 /**
  * Decorate legacy callable middleware to make it dispatchable as server
  * middleware.
+ *
+ * @deprecated since 2.2.0; to be removed in 3.0.0. Use DoublePassMiddlewareDecorator instead.
  */
 class CallableMiddlewareWrapper implements ServerMiddlewareInterface
 {

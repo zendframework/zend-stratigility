@@ -10,6 +10,9 @@ namespace Zend\Stratigility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * @deprecated since 2.2.0; to be removed in 3.0.0.
+ */
 class NoopFinalHandler
 {
     /**
