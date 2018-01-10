@@ -46,6 +46,7 @@
   },
   "autoload": {
     "files": [
+        "src/functions/closure.php",
         "src/functions/path.php"
     ],
     "psr-4": {
