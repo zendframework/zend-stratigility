@@ -72,6 +72,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      * accepting at least a request instance (in such cases, the delegate
      * will be decorated using Delegate\CallableDelegateDecorator).
      *
+     * @deprecated since 2.2.0; to be removed in version 3.0. Use process() instead.
      * @param Request $request
      * @param Response $response
      * @param callable|DelegateInterface $delegate
@@ -116,7 +117,11 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      * @see MiddlewareInterface
      * @see Next
      * @param string|callable|object $path Either a URI path prefix, or middleware.
-     * @param null|callable|object $middleware Middleware
+     *     Note: since v2.2.0, we have deprecated usage of any argument type other
+     *     than a middleware implementation.
+     * @param null|callable|object $middleware Middleware. Note: since v2.2.0, we
+     *     have deprecated usage of this argument. Use the PathMiddlewareDecorator
+     *     to segregate middleware by path.
      * @return self
      */
     public function pipe($path, $middleware = null)

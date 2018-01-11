@@ -35,6 +35,7 @@ class NotFoundHandler implements ServerMiddlewareInterface
      * Proxies to process, after first wrapping the `$next` argument using the
      * CallableDelegateDecorator.
      *
+     * @deprecated since 2.2.0; to be removed in version 3.0. Use process() instead.
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @param callable $next
