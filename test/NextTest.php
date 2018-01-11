@@ -20,7 +20,8 @@ use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Exception;
-use Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory;
+use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
+use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 use Zend\Stratigility\Next;
 use Zend\Stratigility\Route;
 
@@ -33,147 +34,43 @@ class NextTest extends TestCase
         $this->queue     = new SplQueue();
         $this->request   = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
         $this->response  = new Response();
-        $this->decorator = new CallableMiddlewareWrapperFactory($this->response);
     }
 
-    public function testInvokesItselfWhenRouteDoesNotMatchCurrentUrl()
+    /**
+     * Decorate double-pass middleware to test against.
+     *
+     * @param callable $middleware
+     * @param null|string $path to segregate against
+     * @return ServerMiddlewareInterface
+     */
+    public function decorateCallableMiddleware(callable $middleware, $path = null)
     {
-        // e.g., handler matches "/foo", but path is "/bar"
-        $route = new Route('/foo', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                $this->fail('Route should not be invoked if path does not match');
-            }
-        ));
-        $this->queue->enqueue($route);
-
-        $triggered = null;
-        $done = new Route('/', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res) use (&$triggered) {
-                $triggered = true;
-                return $res;
-            }
-        ));
-        $this->queue->enqueue($done);
-
-        $this->request->withUri(new Uri('http://local.example.com/bar'));
-
-        $next = new Next($this->queue);
-        $next($this->request);
-        $this->assertTrue($triggered);
-    }
-
-    public function testInvokesItselfIfRouteDoesNotMatchAtABoundary()
-    {
-        // e.g., if route is "/foo", but path is "/foobar", no match
-        $route = new Route('/foo', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                $this->fail('Route should not be invoked if path does not match');
-            }
-        ));
-        $this->queue->enqueue($route);
-
-        $triggered = null;
-        $done = new Route('/', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $err = null) use (&$triggered) {
-                $triggered = true;
-                return $res;
-            }
-        ));
-        $this->queue->enqueue($done);
-
-        $this->request->withUri(new Uri('http://local.example.com/foobar'));
-
-        $next = new Next($this->queue);
-        $next($this->request);
-        $this->assertTrue($triggered);
-    }
-
-    public function testInvokesHandlerWhenMatched()
-    {
-        // e.g., if route is "/foo", but path is "/foobar", no match
-        $triggered = null;
-        $route = new Route('/foo', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $next) use (&$triggered) {
-                $triggered = true;
-                return $res;
-            }
-        ));
-        $this->queue->enqueue($route);
-
-        $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
-
-        $next = new Next($this->queue);
-        $next($request);
-        $this->assertTrue($triggered);
-    }
-
-    public function testRequestUriInInvokedHandlerDoesNotContainMatchedPortionOfRoute()
-    {
-        // e.g., if route is "/foo", and "/foo/bar" is the original path,
-        // then the URI path in the handler is "/bar"
-        $triggered = null;
-        $route = new Route('/foo', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $next) use (&$triggered) {
-                $triggered = $req->getUri()->getPath();
-                return $res;
-            }
-        ));
-        $this->queue->enqueue($route);
-
-        $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
-
-        $next = new Next($this->queue);
-        $next($request);
-        $this->assertEquals('/bar', $triggered);
-    }
-
-    public function testSlashAndPathGetResetBeforeExecutingNextMiddleware()
-    {
-        $route1 = new Route('/foo', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                return $next($req, $res);
-            }
-        ));
-        $route2 = new Route('/foo/bar', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                return $next($req, $res);
-            }
-        ));
-        $route3 = new Route('/foo/baz', $this->decorator->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                $res->getBody()->write('done');
-                return $res;
-            }
-        ));
-
-        $this->queue->enqueue($route1);
-        $this->queue->enqueue($route2);
-        $this->queue->enqueue($route3);
-
-        $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
-        $next = new Next($this->queue);
-        $next($request);
-        $this->assertEquals('done', (string) $this->response->getBody());
+        $middleware = new DoublePassMiddlewareDecorator($middleware, $this->response);
+        $middleware = $path ? new PathMiddlewareDecorator($path, $middleware) : $middleware;
+        return $middleware;
     }
 
     public function testMiddlewareReturningResponseShortcircuits()
     {
-        $route1 = new Route('/foo', $this->decorator->decorateCallableMiddleware(
+        $route1 = new Route('/foo', $this->decorateCallableMiddleware(
             function ($req, $res, $next) {
                 return $res;
-            }
+            },
+            '/foo'
         ));
-        $route2 = new Route('/foo/bar', $this->decorator->decorateCallableMiddleware(
+        $route2 = new Route('/foo/bar', $this->decorateCallableMiddleware(
             function ($req, $res, $next) {
                 $next($req, $res);
                 $this->fail('Should not hit route2 handler');
-            }
+            },
+            '/foo/bar'
         ));
-        $route3 = new Route('/foo/baz', $this->decorator->decorateCallableMiddleware(
+        $route3 = new Route('/foo/baz', $this->decorateCallableMiddleware(
             function ($req, $res, $next) {
                 $next($req, $res);
                 $this->fail('Should not hit route3 handler');
-            }
+            },
+            '/foo/baz'
         ));
 
         $this->queue->enqueue($route1);
@@ -192,16 +89,18 @@ class NextTest extends TestCase
         $cannedRequest = clone $request;
         $cannedRequest = $cannedRequest->withMethod('POST');
 
-        $route1 = new Route('/foo/bar', $this->decorator->decorateCallableMiddleware(
+        $route1 = new Route('/foo/bar', $this->decorateCallableMiddleware(
             function ($req, $res, $next) use ($cannedRequest) {
                 return $next($cannedRequest, $res);
-            }
+            },
+            '/foo/bar'
         ));
-        $route2 = new Route('/foo/bar/baz', $this->decorator->decorateCallableMiddleware(
+        $route2 = new Route('/foo/bar/baz', $this->decorateCallableMiddleware(
             function ($req, $res, $next) use ($cannedRequest) {
                 $this->assertEquals($cannedRequest->getMethod(), $req->getMethod());
                 return $res;
-            }
+            },
+            '/foo/bar/baz'
         ));
 
         $this->queue->enqueue($route1);
@@ -213,16 +112,18 @@ class NextTest extends TestCase
 
     public function testNextShouldRaiseExceptionIfMiddlewareDoesNotReturnResponse()
     {
-        $route1 = new Route('/foo', $this->decorator->decorateCallableMiddleware(
+        $route1 = new Route('/foo', $this->decorateCallableMiddleware(
             function ($req, $res, $next) {
                 // Explicitly not returning a value
                 $next($req, $res);
-            }
+            },
+            '/foo'
         ));
-        $route2 = new Route('/foo/bar', $this->decorator->decorateCallableMiddleware(
+        $route2 = new Route('/foo/bar', $this->decorateCallableMiddleware(
             function ($req, $res, $next) {
                 return $res;
-            }
+            },
+            '/foo/bar'
         ));
 
         $this->queue->enqueue($route1);
@@ -275,142 +176,6 @@ class NextTest extends TestCase
     /**
      * @group http-interop
      */
-    public function testProcessReinvokesItselfWhenRouteDoesNotMatchCurrentUrl()
-    {
-        // e.g., handler matches "/foo", but path is "/bar"
-        $request = $this->request->withUri(new Uri('http://local.example.com/bar'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $first = $this->prophesize(ServerMiddlewareInterface::class);
-        $first
-            ->process($request, Argument::type(Next::class))
-            ->will(function () {
-                // This one should be skipped
-                Assert::fail('Route should not be invoked if path does not match');
-            });
-        $this->queue->enqueue(new Route('/foo', $first->reveal()));
-
-        $second = $this->prophesize(ServerMiddlewareInterface::class);
-        $second
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
-            ->willReturn($response);
-        $this->queue->enqueue(new Route('/bar', $second->reveal()));
-
-        $next = new Next($this->queue);
-
-        $this->assertSame($response, $next->process($request));
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testProcessReinvokesItselfIfRouteDoesNotMatchAtABoundary()
-    {
-        // e.g., if route is "/foo", but path is "/foobar", no match
-        $request = $this->request->withUri(new Uri('http://local.example.com/foobar'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $first = $this->prophesize(ServerMiddlewareInterface::class);
-        $first
-            ->process($request, Argument::type(Next::class))
-            ->will(function () {
-                // This one should be skipped
-                Assert::fail('Route should not be invoked if path does not match');
-            });
-        $this->queue->enqueue(new Route('/foo', $first->reveal()));
-
-        $second = $this->prophesize(ServerMiddlewareInterface::class);
-        $second
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
-            ->willReturn($response);
-        $this->queue->enqueue(new Route('/foobar', $second->reveal()));
-
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testProcessDispatchesHandlerWhenMatched()
-    {
-        $request = $this->request->withUri(new Uri('http://local.example.com/foo'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
-        $middleware
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
-            ->willReturn($response);
-        $this->queue->enqueue(new Route('/foo', $middleware->reveal()));
-
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testRequestUriInHandlerInvokedByProcessDoesNotContainMatchedPortionOfRoute()
-    {
-        // e.g., if route is "/foo", and "/foo/bar" is the original path,
-        // then the URI path in the handler is "/bar"
-        $request = $this->request->withUri(new Uri('http://local.example.com/foo/bar'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $middleware = $this->prophesize(ServerMiddlewareInterface::class);
-        $middleware
-            ->process(Argument::that(function ($arg) {
-                Assert::assertInstanceOf(RequestInterface::class, $arg);
-                Assert::assertEquals('/bar', $arg->getUri()->getPath());
-                return true;
-            }), Argument::type(Next::class))
-            ->willReturn($response);
-        $this->queue->enqueue(new Route('/foo', $middleware->reveal()));
-
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
-    }
-
-    /**
-     * @group http-interop
-     */
-    public function testSlashAndPathGetResetByProcessBeforeExecutingNextMiddleware()
-    {
-        $request = $this->request->withUri(new Uri('http://example.com/foo/baz/bat'));
-        $response = $this->prophesize(ResponseInterface::class)->reveal();
-
-        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
-        $route1
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
-            ->will(function ($args) {
-                $request = $args[0];
-                $next = $args[1];
-                return $next->process($request);
-            });
-        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
-
-        $route2 = $this->prophesize(ServerMiddlewareInterface::class);
-        $route2
-            ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
-            ->shouldNotBeCalled();
-        $this->queue->enqueue(new Route('/foo/bar', $route2->reveal()));
-
-        $route3 = $this->prophesize(ServerMiddlewareInterface::class);
-        $route3
-            ->process(Argument::that(function ($arg) {
-                Assert::assertEquals('/bat', $arg->getUri()->getPath());
-                return true;
-            }), Argument::type(Next::class))
-            ->willReturn($response);
-        $this->queue->enqueue(new Route('/foo/baz', $route3->reveal()));
-
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
-    }
-
-    /**
-     * @group http-interop
-     */
     public function testMiddlewareReturningResponseShortCircuitsProcess()
     {
         $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
@@ -421,15 +186,15 @@ class NextTest extends TestCase
             ->process(Argument::that(function ($arg) {
                 Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
                 return true;
-            }), Argument::type(Next::class))
+            }), Argument::type(DelegateInterface::class))
             ->willReturn($response);
-        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
+        $this->queue->enqueue(new Route('/foo', new PathMiddlewareDecorator('/foo', $route1->reveal())));
 
         $route2 = $this->prophesize(ServerMiddlewareInterface::class);
         $route2
             ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
             ->shouldNotBeCalled();
-        $this->queue->enqueue(new Route('/foo/bar', $route2->reveal()));
+        $this->queue->enqueue(new Route('/foo/bar', new PathMiddlewareDecorator('/foo/bar', $route2->reveal())));
 
         $next = new Next($this->queue);
         $this->assertSame($response, $next->process($request));
@@ -447,9 +212,9 @@ class NextTest extends TestCase
             ->process(Argument::that(function ($arg) {
                 Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
                 return true;
-            }), Argument::type(Next::class))
+            }), Argument::type(DelegateInterface::class))
             ->willReturn('foobar');
-        $this->queue->enqueue(new Route('/foo', $route1->reveal()));
+        $this->queue->enqueue(new Route('/foo', new PathMiddlewareDecorator('/foo', $route1->reveal())));
 
         $next = new Next($this->queue);
 

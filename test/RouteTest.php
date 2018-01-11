@@ -11,19 +11,20 @@ use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewa
 use InvalidArgumentException;
 use OutOfRangeException;
 use PHPUnit\Framework\TestCase;
+use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 use Zend\Stratigility\Route;
 
 class RouteTest extends TestCase
 {
-    public function createEmptyMiddleware()
+    public function createEmptyMiddleware($path = '/')
     {
-        return $this->prophesize(ServerMiddlewareInterface::class)->reveal();
+        return new PathMiddlewareDecorator($path, $this->prophesize(ServerMiddlewareInterface::class)->reveal());
     }
 
     public function testPathAndHandlerAreAccessibleAfterInstantiation()
     {
         $path = '/foo';
-        $handler = $this->createEmptyMiddleware();
+        $handler = $this->createEmptyMiddleware($path);
 
         $route = new Route($path, $handler);
         $this->assertSame($path, $route->path);
@@ -50,14 +51,31 @@ class RouteTest extends TestCase
     public function testDoesNotAllowNonStringPaths($path)
     {
         $this->expectException(InvalidArgumentException::class);
-        new Route($path, $this->createEmptyMiddleware());
+        new Route($path, $this->createEmptyMiddleware($path));
     }
 
     public function testExceptionIsRaisedIfUndefinedPropertyIsAccessed()
     {
-        $route = new Route('/foo', $this->createEmptyMiddleware());
+        $route = new Route('/foo', $this->createEmptyMiddleware('/foo'));
 
         $this->expectException(OutOfRangeException::class);
         $route->foo;
+    }
+
+    public function testConstructorTriggersDeprecationErrorWhenNonEmptyPathProvidedWithoutPathMiddleware()
+    {
+        $error = false;
+        set_error_handler(function ($errno, $errmessage) use (&$error) {
+            $error = (object) [
+                'type'    => $errno,
+                'message' => $errmessage,
+            ];
+        }, E_USER_DEPRECATED);
+        new Route('/foo', $this->prophesize(ServerMiddlewareInterface::class)->reveal());
+        restore_error_handler();
+
+        $this->assertNotSame(false, $error);
+        $this->assertSame(E_USER_DEPRECATED, $error->type);
+        $this->assertContains(PathMiddlewareDecorator::class, $error->message);
     }
 }

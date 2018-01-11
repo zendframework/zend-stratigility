@@ -45,6 +45,19 @@ class Route
         }
 
         $this->path    = $path;
+
+        if (! in_array($this->path, ['', '/'])
+            && ! $handler instanceof Middleware\PathMiddlewareDecorator
+        ) {
+            trigger_error(sprintf(
+                'Providing a path to a %s instance is deprecated; please use the'
+                . ' %s to decorate your path-segregated middleware instead.',
+                __CLASS__,
+                Middleware\PathMiddlewareDecorator::class
+            ), E_USER_DEPRECATED);
+            $handler = new Middleware\PathMiddlewareDecorator($path, $handler);
+        }
+
         $this->handler = $handler;
     }
 

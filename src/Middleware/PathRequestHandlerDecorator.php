@@ -48,6 +48,8 @@ class PathRequestHandlerDecorator implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request)
     {
-        return $this->handler->{HANDLER_METHOD}($this->originalRequest);
+        $uri = $request->getUri()
+            ->withPath($this->originalRequest->getUri()->getPath());
+        return $this->handler->{HANDLER_METHOD}($request->withUri($uri));
     }
 }

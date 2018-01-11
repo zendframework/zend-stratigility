@@ -121,6 +121,8 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      */
     public function pipe($path, $middleware = null)
     {
+        $legacyArguments = null !== $middleware;
+
         if (null === $middleware
             && ($path instanceof ServerMiddlewareInterface || is_callable($path))
         ) {
@@ -140,10 +142,25 @@ class MiddlewarePipe implements ServerMiddlewareInterface
             throw InvalidMiddlewareException::fromValue($middleware);
         }
 
-        $this->pipeline->enqueue(new Route(
-            $this->normalizePipePath($path),
-            $middleware
-        ));
+        // Trigger an error if we received two arguments
+        if ($legacyArguments) {
+            trigger_error(sprintf(
+                'Providing a path to the %s method is deprecated; please use the'
+                . ' %s to decorate your path-segregated middleware instead.',
+                __CLASS__,
+                Middleware\PathMiddlewareDecorator::class
+            ), E_USER_DEPRECATED);
+        }
+
+        $path = $this->normalizePipePath($path);
+
+        // Decorate path-segregated middleware if we have a non-root path and
+        // the middleware is not already decorated
+        if ($path !== '/' && ! $middleware instanceof Middleware\PathMiddlewareDecorator) {
+            $middleware = new Middleware\PathMiddlewareDecorator($path, $middleware);
+        }
+
+        $this->pipeline->enqueue(new Route($path, $middleware));
 
         // @todo Trigger event here with route details?
         return $this;
