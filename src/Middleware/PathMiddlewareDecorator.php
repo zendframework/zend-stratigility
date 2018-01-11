@@ -122,11 +122,20 @@ class PathMiddlewareDecorator implements MiddlewareInterface
             }
 
             /**
-             * Invokes the composed handler with the original server request.
+             * Invokes the composed handler with a request using the original URI.
+             *
+             * The decorated middleware may provide an altered response. However,
+             * we want to reset the path to the original path on invocation, as
+             * that is the part we originally modified, and is a part the decorated
+             * middleware should not modify.
+             *
+             * {@inheritDoc}
              */
             public function handle(ServerRequestInterface $request) : ResponseInterface
             {
-                return $this->handler->handle($this->originalRequest);
+                $uri = $request->getUri()
+                    ->withPath($this->originalRequest->getUri()->getPath());
+                return $this->handler->handle($request->withUri($uri));
             }
         };
     }

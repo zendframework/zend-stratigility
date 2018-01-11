@@ -348,14 +348,28 @@ class PathMiddlewareDecoratorTest extends TestCase
         $decorator->process($request, $finalHandler->reveal());
     }
 
-    public function testInvocationOfHandlerByDecoratedMiddlewareWillInvokeWithOriginalRequest()
+    public function testInvocationOfHandlerByDecoratedMiddlewareWillInvokeWithOriginalRequestPath()
     {
         $request = new ServerRequest([], [], 'http://local.example.com/test', 'GET', 'php://memory');
         $expectedResponse = new Response();
 
         $finalHandler = $this->prophesize(RequestHandlerInterface::class);
         $finalHandler
-            ->handle($request)
+            ->handle(Argument::that(function ($received) use ($request) {
+                Assert::assertNotSame(
+                    $request,
+                    $received,
+                    'Final handler received same request, and should not have'
+                );
+
+                Assert::assertSame(
+                    $request->getUri()->getPath(),
+                    $received->getUri()->getPath(),
+                    'Final handler received request with different path'
+                );
+
+                return $received;
+            }))
             ->willReturn($expectedResponse);
 
         $segregatedMiddleware = $this->prophesize(MiddlewareInterface::class);

@@ -32,9 +32,39 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
 
         $pipeline = new MiddlewarePipe();
 
-        $first = $this->createPassThroughMiddleware($request);
+        $first = $this->createPassThroughMiddleware(function ($received) use ($request) {
+            Assert::assertSame(
+                $request,
+                $received,
+                'First middleware did not receive original request, but should have'
+            );
+            return $request;
+        });
         $second = new PathMiddlewareDecorator('/foo', $this->createNestedPipeline($request));
-        $last = $this->createPassThroughMiddleware($request);
+        $last = $this->createPassThroughMiddleware(function ($received) use ($request) {
+            Assert::assertNotSame(
+                $request,
+                $received,
+                'Last middleware received original request, but should not have'
+            );
+
+            $originalUri = $request->getUri();
+            $receivedUri = $received->getUri();
+
+            Assert::assertNotSame(
+                $originalUri,
+                $receivedUri,
+                'Last middleware received original URI instance, but should not have'
+            );
+
+            Assert::assertSame(
+                $originalUri->getPath(),
+                $receivedUri->getPath(),
+                'Last middleware did not receive original URI path, but should have'
+            );
+
+            return $request;
+        });
 
         $pipeline->pipe($first);
         $pipeline->pipe($second);
@@ -49,6 +79,22 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
             $response,
             $pipeline->process($request, $handler->reveal())
         );
+    }
+
+    public function createPassThroughMiddleware(callable $requestAssertion) : MiddlewareInterface
+    {
+        $middleware = $this->prophesize(MiddlewareInterface::class);
+        $middleware
+            ->process(
+                Argument::that($requestAssertion),
+                Argument::type(RequestHandlerInterface::class)
+            )
+            ->will(function ($args) {
+                $request = $args[0];
+                $next = $args[1];
+                return $next->handle($request);
+            });
+        return $middleware->reveal();
     }
 
     public function createNestedPipeline(ServerRequestInterface $originalRequest) : MiddlewareInterface
@@ -110,28 +156,5 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
         $pipeline->pipe($normal->reveal());
 
         return $pipeline;
-    }
-
-    public function createPassThroughMiddleware(ServerRequestInterface $originalRequest) : MiddlewareInterface
-    {
-        $middleware = $this->prophesize(MiddlewareInterface::class);
-        $middleware
-            ->process(
-                Argument::that(function ($request) use ($originalRequest) {
-                    Assert::assertSame(
-                        $originalRequest,
-                        $request,
-                        'Non-segregated middleware did not receive original request, but should have'
-                    );
-                    return $request;
-                }),
-                Argument::type(RequestHandlerInterface::class)
-            )
-            ->will(function ($args) {
-                $request = $args[0];
-                $next = $args[1];
-                return $next->handle($request);
-            });
-        return $middleware->reveal();
     }
 }
