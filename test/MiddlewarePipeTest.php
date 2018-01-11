@@ -21,6 +21,8 @@ use Zend\Diactoros\Uri;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
 use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
+use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
+use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
 use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
@@ -43,6 +45,18 @@ class MiddlewarePipeTest extends TestCase
     public function createFinalHandler()
     {
         return new NoopFinalHandler();
+    }
+
+    /**
+     * @param \stdClass $errorContainer
+     * @return callable
+     */
+    public function createDeprecationErrorHandler($errorContainer)
+    {
+        return function ($errno, $errstr) use ($errorContainer) {
+            $errorContainer->type = $errno;
+            $errorContainer->message = $errstr;
+        };
     }
 
     public function invalidHandlers()
@@ -88,26 +102,29 @@ class MiddlewarePipeTest extends TestCase
 
     public function testHandleInvokesUntilFirstHandlerThatDoesNotCallNext()
     {
-        $this->middleware->pipe(function ($req, $res, $next) {
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
             $res->getBody()->write("First\n");
-            return $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
-            $res->getBody()->write("Second\n");
-            return $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
+            $response = $next($req, $res);
+            $response->getBody()->write("First\n");
+            return $response;
+        }));
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
+            $response = $next($req, $res);
+            $response->getBody()->write("Second\n");
+            return $response;
+        }));
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
             $res->getBody()->write("Third\n");
             return $res;
-        });
+        }));
 
-        $this->middleware->pipe(function ($req, $res, $next) {
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
             $this->fail('Should not hit fourth handler!');
-        });
+        }));
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
-        $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
-        $body = (string) $this->response->getBody();
+        $response = $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
+        $body = (string) $response->getBody();
         $this->assertContains('First', $body);
         $this->assertContains('Second', $body);
         $this->assertContains('Third', $body);
@@ -118,15 +135,15 @@ class MiddlewarePipeTest extends TestCase
         $expected = $this->prophesize(ResponseInterface::class)->reveal();
         $this->middleware->setResponsePrototype($expected);
 
-        $this->middleware->pipe(function ($req, $res, $next) {
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
             return $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
+        }));
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
             return $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
+        }));
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
             return $next($req, $res);
-        });
+        }));
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
 
@@ -142,19 +159,19 @@ class MiddlewarePipeTest extends TestCase
     {
         $return = new Response();
 
-        $this->middleware->pipe(function ($req, $res, $next) {
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
             return $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) {
+        }));
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
             return $next($req, $res);
-        });
-        $this->middleware->pipe(function ($req, $res, $next) use ($return) {
+        }));
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) use ($return) {
             return $return;
-        });
+        }));
 
-        $this->middleware->pipe(function ($req, $res, $next) {
+        $this->middleware->pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
             $this->fail('Should not hit fourth handler!');
-        });
+        }));
 
         $request = new Request([], [], 'http://local.example.com/foo', 'GET', 'php://memory');
         $result  = $this->middleware->__invoke($request, $this->response, $this->createFinalHandler());
@@ -249,14 +266,23 @@ class MiddlewarePipeTest extends TestCase
     /**
      * @group http-interop
      */
-    public function testWillDecorateCallableMiddlewareAsInteropMiddlewareIfResponsePrototypePresent()
+    public function testWillDecorateCallableMiddlewareAsDoublePassMiddlewareIfResponsePrototypePresent()
     {
         $pipeline = new MiddlewarePipe();
         $pipeline->setResponsePrototype($this->response);
 
         $middleware = function () {
         };
+
+        $error = (object) [];
+        set_error_handler($this->createDeprecationErrorHandler($error), E_USER_DEPRECATED);
         $pipeline->pipe($middleware);
+        restore_error_handler();
+
+        $this->assertObjectHasAttribute('type', $error);
+        $this->assertSame(E_USER_DEPRECATED, $error->type);
+        $this->assertObjectHasAttribute('message', $error);
+        $this->assertContains(DoublePassMiddlewareDecorator::class, $error->message);
 
         $r = new ReflectionProperty($pipeline, 'pipeline');
         $r->setAccessible(true);
@@ -264,7 +290,7 @@ class MiddlewarePipeTest extends TestCase
 
         $route = $queue->dequeue();
         $test = $route->handler;
-        $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
+        $this->assertInstanceOf(DoublePassMiddlewareDecorator::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
         $this->assertAttributeSame($this->response, 'responsePrototype', $test);
     }
@@ -276,7 +302,16 @@ class MiddlewarePipeTest extends TestCase
 
         $middleware = function ($request, DelegateInterface $delegate) {
         };
+
+        $error = (object) [];
+        set_error_handler($this->createDeprecationErrorHandler($error), E_USER_DEPRECATED);
         $pipeline->pipe($middleware);
+        restore_error_handler();
+
+        $this->assertObjectHasAttribute('type', $error);
+        $this->assertSame(E_USER_DEPRECATED, $error->type);
+        $this->assertObjectHasAttribute('message', $error);
+        $this->assertContains(CallableMiddlewareDecorator::class, $error->message);
 
         $r = new ReflectionProperty($pipeline, 'pipeline');
         $r->setAccessible(true);
@@ -284,7 +319,7 @@ class MiddlewarePipeTest extends TestCase
 
         $route = $queue->dequeue();
         $test = $route->handler;
-        $this->assertInstanceOf(CallableInteropMiddlewareWrapper::class, $test);
+        $this->assertInstanceOf(CallableMiddlewareDecorator::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
     }
 
@@ -302,7 +337,16 @@ class MiddlewarePipeTest extends TestCase
 
         $middleware = function ($request, \Interop\Http\Server\RequestHandlerInterface $handler) {
         };
+
+        $error = (object) [];
+        set_error_handler($this->createDeprecationErrorHandler($error), E_USER_DEPRECATED);
         $pipeline->pipe($middleware);
+        restore_error_handler();
+
+        $this->assertObjectHasAttribute('type', $error);
+        $this->assertSame(E_USER_DEPRECATED, $error->type);
+        $this->assertObjectHasAttribute('message', $error);
+        $this->assertContains(CallableMiddlewareDecorator::class, $error->message);
 
         $r = new ReflectionProperty($pipeline, 'pipeline');
         $r->setAccessible(true);
@@ -310,7 +354,7 @@ class MiddlewarePipeTest extends TestCase
 
         $route = $queue->dequeue();
         $test = $route->handler;
-        $this->assertInstanceOf(CallableInteropMiddlewareWrapper::class, $test);
+        $this->assertInstanceOf(CallableMiddlewareDecorator::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
     }
 
@@ -327,13 +371,22 @@ class MiddlewarePipeTest extends TestCase
         return $response;
     }
 
-    public function testWillDecorateCallableArrayMiddlewareWithoutErrors()
+    public function testTriggersDeprecationNoticeWhenDecoratingCallableArrayMiddleware()
     {
         $pipeline = new MiddlewarePipe();
         $pipeline->setResponsePrototype($this->response);
 
         $middleware = [$this, 'sampleMiddleware'];
+
+        $error = (object) [];
+        set_error_handler($this->createDeprecationErrorHandler($error), E_USER_DEPRECATED);
         $pipeline->pipe($middleware);
+        restore_error_handler();
+
+        $this->assertObjectHasAttribute('type', $error);
+        $this->assertSame(E_USER_DEPRECATED, $error->type);
+        $this->assertObjectHasAttribute('message', $error);
+        $this->assertContains(DoublePassMiddlewareDecorator::class, $error->message);
 
         $r = new ReflectionProperty($pipeline, 'pipeline');
         $r->setAccessible(true);
@@ -341,7 +394,7 @@ class MiddlewarePipeTest extends TestCase
 
         $route = $queue->dequeue();
         $test = $route->handler;
-        $this->assertInstanceOf(CallableMiddlewareWrapper::class, $test);
+        $this->assertInstanceOf(DoublePassMiddlewareDecorator::class, $test);
         $this->assertAttributeSame($middleware, 'middleware', $test);
     }
 

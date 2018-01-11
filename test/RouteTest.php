@@ -64,18 +64,17 @@ class RouteTest extends TestCase
 
     public function testConstructorTriggersDeprecationErrorWhenNonEmptyPathProvidedWithoutPathMiddleware()
     {
-        $error = false;
-        set_error_handler(function ($errno, $errmessage) use (&$error) {
-            $error = (object) [
-                'type'    => $errno,
-                'message' => $errmessage,
-            ];
+        $error = (object) [];
+        set_error_handler(function ($errno, $errstr) use ($error) {
+            $error->type = $errno;
+            $error->message = $errstr;
         }, E_USER_DEPRECATED);
         new Route('/foo', $this->prophesize(ServerMiddlewareInterface::class)->reveal());
         restore_error_handler();
 
-        $this->assertNotSame(false, $error);
+        $this->assertObjectHasAttribute('type', $error);
         $this->assertSame(E_USER_DEPRECATED, $error->type);
+        $this->assertObjectHasAttribute('message', $error);
         $this->assertContains(PathMiddlewareDecorator::class, $error->message);
     }
 }

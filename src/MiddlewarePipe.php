@@ -229,8 +229,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
 
     /**
      * @param callable $middleware
-     * @return ServerMiddlewareInterface|callable Callable, if unable to
-     *     decorate the middleware; ServerMiddlewareInterface if it can.
+     * @return ServerMiddlewareInterface
      */
     private function decorateCallableMiddleware(callable $middleware)
     {
@@ -238,29 +237,54 @@ class MiddlewarePipe implements ServerMiddlewareInterface
         $paramsCount = $r->getNumberOfParameters();
 
         if ($paramsCount !== 2) {
-            return $this->getCallableMiddlewareDecorator()
-                ->decorateCallableMiddleware($middleware);
+            trigger_error(sprintf(
+                'Direct piping of double-pass middleware is deprecated and will'
+                . ' no longer be supported starting in version 3. Please decorate'
+                . ' such middleware in a %s instance before passing to %s::pipe().',
+                Middleware\DoublePassMiddlewareDecorator::class,
+                __CLASS__
+            ), E_USER_DEPRECATED);
+
+            return $this->decorateDoublePassMiddleware($middleware);
         }
 
         $params = $r->getParameters();
         $type = $params[1]->getClass();
         if (! $type || ! is_a($type->getName(), DelegateInterface::class, true)) {
-            return $this->getCallableMiddlewareDecorator()
-                ->decorateCallableMiddleware($middleware);
+            trigger_error(sprintf(
+                'Direct piping of double-pass middleware is deprecated and will'
+                . ' no longer be supported starting in version 3. Please decorate'
+                . ' such middleware in a %s instance before passing to %s::pipe().',
+                Middleware\DoublePassMiddlewareDecorator::class,
+                __CLASS__
+            ), E_USER_DEPRECATED);
+
+            return $this->decorateDoublePassMiddleware($middleware);
         }
 
-        return new Middleware\CallableInteropMiddlewareWrapper($middleware);
+        trigger_error(sprintf(
+            'Direct piping of callable interop/PSR-15 middleware is deprecated'
+            . ' and will no longer be supported starting in version 3. Please'
+            . ' decorate such middleware in a %s instance before passing to'
+            . ' %s::pipe().',
+            Middleware\CallableMiddlewareDecorator::class,
+            __CLASS__
+        ), E_USER_DEPRECATED);
+
+        return new Middleware\CallableMiddlewareDecorator($middleware);
     }
 
     /**
-     * @return Middleware\CallableMiddlewareWrapperFactory
+     * @return ServerMiddlewareInterface Generally one of Middleware\CallableMiddlewareWrapper
+     *      or Middleware\DoublePassMiddlewareDecorator.
      * @throws Exception\MissingResponsePrototypeException if no middleware
      *     decorator and no response prototype are present.
      */
-    private function getCallableMiddlewareDecorator()
+    private function decorateDoublePassMiddleware(callable $middleware)
     {
         if ($this->callableMiddlewareDecorator) {
-            return $this->callableMiddlewareDecorator;
+            return $this->callableMiddlewareDecorator
+                ->decorateCallableMiddleware($middleware);
         }
 
         if (! $this->responsePrototype) {
@@ -275,11 +299,10 @@ class MiddlewarePipe implements ServerMiddlewareInterface
             ));
         }
 
-        $this->setCallableMiddlewareDecorator(
-            new Middleware\CallableMiddlewareWrapperFactory($this->responsePrototype)
+        return new Middleware\DoublePassMiddlewareDecorator(
+            $middleware,
+            $this->responsePrototype
         );
-
-        return $this->callableMiddlewareDecorator;
     }
 
     /**
