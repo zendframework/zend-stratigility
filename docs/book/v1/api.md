@@ -389,7 +389,7 @@ These two middleware allow you to provide handle PHP errors and exceptions, and
 
 This callable middleware can be used as the outermost layer of middleware in
 order to set the original request, URI, and response instances as request
-attributes for inner layers. See the [v2 migration chapter](../migration.md#original-request-response-and-uri)
+attributes for inner layers. See the [v2 migration chapter](../v2/migration.md#original-request-response-and-uri)
 for more details.
 
 ## Middleware Decorators

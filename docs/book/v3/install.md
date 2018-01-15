@@ -26,5 +26,5 @@ long as they implement the PSR-7 HTTP message interfaces.
 
 ## Previous versions
 
-- [Version 1 documentation](v1/install.md)
-- [Version 2 documentation](v2/install.md)
+- [Version 1 documentation](../v1/install.md)
+- [Version 2 documentation](../v2/install.md)
