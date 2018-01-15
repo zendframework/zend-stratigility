@@ -58,6 +58,9 @@ The typehints for the arguments are optional, but such callable middleware will
 receive `ServerRequestInterface` and `RequestHandlerInterface` instances,
 in that order.
 
+You may also use the `middleware()` utility function in place of `new
+CallableMiddlewareDecorator()`.
+
 ## Double-Pass middleware
 
 Prior to PSR-15, many PSR-7 frameworks and projects adopted a "double-pass"
@@ -108,6 +111,9 @@ $pipeline->pipe(new DoublePassMiddlewareDecorator(
     $responsePrototype
 ));
 ```
+
+You may also use the `doublePassMiddleware()` utility function in place of `new
+DoublePassMiddlewareDecorator()`.
 
 > ### Beware of operating on the response
 >

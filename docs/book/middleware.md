@@ -12,8 +12,8 @@ use Interop\Http\Server\RequestHandlerInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
 use Zend\Stratigility\MiddlewarePipe;
-use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
-use Zend\Stratigility\path;
+use function Zend\Stratigility\middleware;
+use function Zend\Stratigility\path;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -22,7 +22,7 @@ $app = new MiddlewarePipe();
 $server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
 
 // Landing page
-$app->pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
+$app->pipe(middleware(function ($req, $handler) {
     if (! in_array($req->getUri()->getPath(), ['/', ''], true)) {
         return $handler->handle($req);
     }
@@ -33,7 +33,7 @@ $app->pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
 }));
 
 // Another page
-$app->pipe(path('/foo', new CallableMiddlewareDecorator(function ($req, $handler) {
+$app->pipe(path('/foo', middleware(function ($req, $handler) {
     $response = new Response();
     $response->getBody()->write('FOO!');
     return $response;

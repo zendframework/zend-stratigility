@@ -30,6 +30,26 @@ details.
   $pipeline->pipe(path('/foo', $middleware));
   ```
 
+- [#136](https://github.com/zendframework/zend-stratigility/pull/136) adds the
+  utility function `Zend\Stratigility\middleware`; this function will decorate
+  callable middleware following the PSR-15 signature within a
+  `Zend\Stratigility\Middleware\CallableMiddlewareDecorator` instance:
+
+  ```php
+  $pipeline->pipe(middleware(function ($request, $handler) {
+  });
+  ```
+
+- [#136](https://github.com/zendframework/zend-stratigility/pull/136) adds the
+  utility function `Zend\Stratigility\doublePassMiddleware`; this function will
+  decorate callable middleware following the double-pass signature within a
+  `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator` instance:
+
+  ```php
+  $pipeline->pipe(doublePassMiddleware(function ($request, $response, $next) {
+  });
+  ```
+
 ### Changed
 
 - [#134](https://github.com/zendframework/zend-stratigility/pull/134) marks the
