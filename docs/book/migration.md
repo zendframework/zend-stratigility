@@ -97,6 +97,9 @@ internal logic.
   $pipeline->pipe(new PathMiddlewareDecorator('/foo', $middleware));
   ```
 
+  Alternately, use the `path()` utility function to generate the instance; [see
+  below](#path).
+
 - `Zend\Stratigility\Middleware\CallableMiddlewareDecorator` provides the
   functionality that was formerly provided by
   `Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper`: it provides
@@ -117,6 +120,9 @@ internal logic.
   decorator provides some checking on the return value in order to raise an
   exception if a response is not returned.
 
+  Alternately, use the `middleware()` utility function to generate the instance;
+  [see below](#middleware).
+
 - `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator` provides the
   functionality that was formerly provided by `Zend\Stratigility\Middleware\CallableMiddlewareWrapper`.
   The class now makes the response prototype argument to the constructor
@@ -136,6 +142,9 @@ internal logic.
   middleware, do not operate on the response passed to the middleware; instead,
   only operate on the response returned by `$next`, or produce a concrete
   response yourself.
+
+  Alternately, use the `doublePassMiddleware()` utility function to create the
+  instance; [see below](#doublepassmiddleware).
 
 - `Zend\Stratigility\Exception\ExceptionInterface` - marker for
   package-specific exceptions.
@@ -215,4 +224,48 @@ This is a convenience wrapper around instantiation of a
 
 ```php
 $pipeline->pipe(path('/foo', $middleware));
+```
+
+### middleware
+
+````
+function Zend\Stratigility\middleware(
+    callable $middleware
+) : Zend\Stratigility\Middleware\CallableMiddlewareDecorator
+```
+
+`middleware()` provides a convenient way to decorate callable middleware that
+implements the PSR-15 middleware signature when piping it to your application.
+
+```php
+$pipeline->pipe(middleware(function ($request, $handler) {
+  // ...
+});
+```
+
+### doublePassMiddleware
+
+````
+function Zend\Stratigility\doublePassMiddleware(
+    callable $middleware,
+    Psr\Http\Message\ResponseInterface $responsePrototype = null
+) : Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator
+```
+
+`doublePassiddleware()` provides a convenient way to decorate middleware that
+implements the double pass middleware signature when piping it to your application.
+
+```php
+$pipeline->pipe(doublePassMiddleware(function ($request, $response, $next) {
+  // ...
+});
+```
+
+If you are not using zend-diactoros as a PSR-7 implementation, you will need to
+pass a response prototype as well:
+
+```php
+$pipeline->pipe(doublePassMiddleware(function ($request, $response, $next) {
+  // ...
+}, $response);
 ```
