@@ -9,10 +9,11 @@ pages:
         - Middleware: middleware.md
         - "Error Handlers": error-handlers.md
         - "Creating Middleware": creating-middleware.md
-        - "Executing and composing middleware": executing-middleware.md
+        - "Composing middleware": executing-middleware.md
         - "API Reference": api.md
         - Migration:
           - "To Version 2": migration/to-v2.md
+          - "Preparing for Version 3": migration/preparing-for-v3.md
 site_name: zend-stratigility
 site_description: zend-stratigility
 repo_url: 'https://github.com/zendframework/zend-stratigility'

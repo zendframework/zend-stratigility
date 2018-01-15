@@ -20,7 +20,8 @@ Stratigility has the following dependencies (which are managed by Composer):
   0.4.1+. Since Stratigility 2.1 you have to explicitly define an
   http-interop/http-middleware dependency in your `composer.json`, and you can
   use any version which is currently supported by the polyfill package
-  [webimpress/http-middleware-compatibility](https://github.com/webimpress/http-middleware-compatibility).
+  [webimpress/http-middleware-compatibility](https://github.com/webimpress/http-middleware-compatibility);
+  if you are creating a new project, we recommend version 0.5.0.
 
 - `zendframework/zend-escaper`, used by the `ErrorHandler` middleware and the
   (legacy) `FinalHandler` implementation for escaping error messages prior to
