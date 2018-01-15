@@ -30,7 +30,9 @@ use Psr\Http\Message\ResponseInterface;
  * }, $responsePrototype));
  * </code>
  */
-function doublePassMiddleware(callable $middleware, ResponseInterface $response = null) : Middleware\DoublePassMiddlewareDecorator
-{
+function doublePassMiddleware(
+    callable $middleware,
+    ResponseInterface $response = null
+) : Middleware\DoublePassMiddlewareDecorator {
     return new Middleware\DoublePassMiddlewareDecorator($middleware, $response);
 }
