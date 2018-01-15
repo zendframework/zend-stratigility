@@ -13,7 +13,6 @@ use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SplQueue;
-use Zend\Stratigility\Exception\InvalidMiddlewareException;
 
 /**
  * Pipe middleware like unix pipes.
@@ -29,21 +28,53 @@ use Zend\Stratigility\Exception\InvalidMiddlewareException;
  *
  * @see https://github.com/sencha/connect
  */
-class MiddlewarePipe implements MiddlewareInterface
+final class MiddlewarePipe implements MiddlewareInterface, RequestHandlerInterface
 {
     /**
      * @var SplQueue
      */
-    protected $pipeline;
+    private $pipeline;
 
     /**
-     * Constructor
-     *
      * Initializes the queue.
      */
     public function __construct()
     {
         $this->pipeline = new SplQueue();
+    }
+
+    /**
+     * Perform a deep clone.
+     */
+    public function __clone()
+    {
+        $this->pipeline = clone $this->pipeline;
+    }
+
+    /**
+     * Handle an incoming request.
+     *
+     * Attempts to handle an incoming request by doing the following:
+     *
+     * - Cloning itself, to produce a request handler.
+     * - Dequeuing the first middleware in the cloned handler.
+     * - Processing the first middleware using the request and the cloned handler.
+     *
+     * If the pipeline is empty at the time this method is invoked, it will
+     * raise an exception.
+     *
+     * @throws Exception\EmptyPipelineException if no middleware is present in
+     *     the instance in order to process the request.
+     */
+    public function handle(ServerRequestInterface $request) : ResponseInterface
+    {
+        if (0 === count($this->pipeline)) {
+            throw Exception\EmptyPipelineException::forClass(__CLASS__);
+        }
+
+        $nextHandler = clone $this;
+        $middleware = $nextHandler->pipeline->dequeue();
+        return $middleware->process($request, $nextHandler);
     }
 
     /**
@@ -61,59 +92,9 @@ class MiddlewarePipe implements MiddlewareInterface
 
     /**
      * Attach middleware to the pipeline.
-     *
-     * Each middleware can be associated with a particular path; if that
-     * path is matched when that middleware is invoked, it will be processed;
-     * otherwise it is skipped.
-     *
-     * No path means it should be executed every request cycle.
-     *
-     * @see Next
-     * @param string|MiddlewareInterface $path Either a URI path prefix, or middleware.
-     * @param null|MiddlewareInterface $middleware Middleware (callback or PSR-15 middleware)
-     * @throws InvalidMiddlewareException If provided middleware is invalid (not instance of MiddlewareInterface)
-     * @todo: swap param order
-     * @todo: add type hint on $middleware?
      */
-    public function pipe($path, $middleware = null) : self
+    public function pipe(MiddlewareInterface $middleware) : void
     {
-        if (null === $middleware
-            && $path instanceof MiddlewareInterface
-        ) {
-            $middleware = $path;
-            $path       = '/';
-        }
-
-        if (! $middleware instanceof MiddlewareInterface) {
-            throw InvalidMiddlewareException::fromValue($middleware);
-        }
-
-        $this->pipeline->enqueue(new Route(
-            $this->normalizePipePath($path),
-            $middleware
-        ));
-
-        // @todo Trigger event here with route details?
-        return $this;
-    }
-
-    /**
-     * Normalize a path used when defining a pipe
-     *
-     * Strips trailing slashes, and prepends a slash.
-     */
-    private function normalizePipePath(string $path) : string
-    {
-        // Prepend slash if missing
-        if (empty($path) || $path[0] !== '/') {
-            $path = '/' . $path;
-        }
-
-        // Trim trailing slash if present
-        if (strlen($path) > 1 && '/' === substr($path, -1)) {
-            $path = rtrim($path, '/');
-        }
-
-        return $path;
+        $this->pipeline->enqueue($middleware);
     }
 }

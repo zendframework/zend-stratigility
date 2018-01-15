@@ -10,17 +10,17 @@ $api = new MiddlewarePipe();  // API middleware collection
 $api->pipe(/* ... */);        // repeat as necessary
 
 $app = new MiddlewarePipe();  // Middleware representing the application
-$app->pipe('/api', $api);     // API middleware attached to the path "/api"
+$app->pipe(new PathMiddlewareDecorator('/api', $api)); // API middleware attached to the path "/api"
 ```
 
 > ### Request path changes when path matched
 >
-> When you pipe middleware using a path (other than '' or '/'), the middleware
-> is dispatched with a request that strips the matched segment(s) from the start
-> of the path. Using the previous example, if the path `/api/users/foo` is
-> matched, the `$api` middleware will receive a request with the path
-> `/users/foo`. This allows middleware segregated by path to be re-used without
-> changes to its own internal routing.
+> When you use the `PathMiddlewareDecorator` using a path (other than '' or
+> '/'), the middleware it decorates is dispatched with a request that strips the
+> matched segment(s) from the start of the path. Using the previous example, if
+> the path `/api/users/foo` is matched, the `$api` middleware will receive a
+> request with the path `/users/foo`. This allows middleware segregated by path to
+> be re-used without changes to its own internal routing.
 
 ## Handling errors
 
@@ -39,23 +39,32 @@ $app->pipe(new ErrorHandler(new Response());
 You can learn how to customize the error handler to your needs in the
 [chapter on error handlers](error-handlers.md).
 
-## Extending the MiddlewarePipe
+## Decorating the MiddlewarePipe
 
-Another approach is to extend the `Zend\Stratigility\MiddlewarePipe` class
-itself, particularly if you want to allow attaching other middleware to your
-own middleware. In such a case, you will generally override the `process()`
-method to perform any additional logic you have, and then call on the parent in
-order to iterate through your stack of middleware:
+Another approach is to compose a `Zend\Stratigility\MiddlewarePipe` instance
+within your own `Interop\Http\Server\MiddlewareInterface` implementation, and
+optionally implementing the `RequestHandlerInterface` and/or `pipe()` method.
+
+In such a case, you might define the `process()` method to perform any
+additional logic you have, and then call on the decorated `MiddlewarePipe`
+instance in order to iterate through your stack of middleware:
 
 ```php
-class CustomMiddleware extends MiddlewarePipe
+class CustomMiddleware implements MiddlewareInterface
 {
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    private $pipeline;
+
+    public function __construct(MiddlewarePipe $pipeline)
+    {
+        $this->pipeline = $pipeline;
+    }
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
         // perform some work...
 
         // delegate to parent
-        parent::process($request, $delegate);
+        $this->pipeline->process($request, $handler);
 
         // maybe do more work?
     }
@@ -63,24 +72,32 @@ class CustomMiddleware extends MiddlewarePipe
 ```
 
 Another approach using this method would be to override the constructor to add
-in specific middleware, perhaps using configuration provided. In this case,
-make sure to also call `parent::__construct()` to ensure the middleware queue
-is initialized; we recommend doing this as the first action of the method.
+in specific middleware, perhaps using configuration provided. 
 
 ```php
+use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\MiddlewarePipe;
 
-class CustomMiddleware extends MiddlewarePipe
+class CustomMiddleware implements MiddlewareInterface
 {
-    public function __construct($configuration)
-    {
-        parent::__construct();
+    private $pipeline;
 
+    public function __construct(array $configuration, MiddlewarePipe $pipeline)
+    {
         // do something with configuration ...
 
         // attach some middleware ...
+        $pipeline->pipe(/* some middleware */);
 
-        $this->pipe(/* some middleware */);
+        $this->pipeline = $pipeline;
+    }
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
+    {
+        /* ... */
     }
 }
 ```

@@ -8,7 +8,6 @@ Creating an application consists of 3 steps:
 
 ```php
 use Zend\Stratigility\MiddlewarePipe;
-use Zend\Stratigility\NoopFinalHandler;
 use Zend\Diactoros\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
