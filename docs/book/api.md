@@ -681,3 +681,67 @@ class TimestampMiddleware implements ServerMiddlewareInterface
     }
 }
 ```
+
+## Utility Functions
+
+Stratigility provides the following utility functions.
+
+### path
+
+````
+function Zend\Stratigility\path(
+    string $pathPrefix,
+    Interop\Http\Server\MiddlewareInterface $middleware
+) : Zend\Stratigility\Middleware\PathMiddlewareDecorator
+```
+
+`path()` provides a convenient way to perform path segregation when piping your
+middleware.
+
+```php
+$pipeline->pipe(path('/foo', $middleware));
+```
+
+### middleware
+
+````
+function Zend\Stratigility\middleware(
+    callable $middleware
+) : Zend\Stratigility\Middleware\CallableMiddlewareDecorator
+```
+
+`middleware()` provides a convenient way to decorate callable middleware that
+implements the PSR-15 middleware signature when piping it to your application.
+
+```php
+$pipeline->pipe(middleware(function ($request, $handler) {
+  // ...
+});
+```
+
+### doublePassMiddleware
+
+````
+function Zend\Stratigility\doublePassMiddleware(
+    callable $middleware,
+    Psr\Http\Message\ResponseInterface $responsePrototype = null
+) : Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator
+```
+
+`doublePassiddleware()` provides a convenient way to decorate middleware that
+implements the double pass middleware signature when piping it to your application.
+
+```php
+$pipeline->pipe(doublePassMiddleware(function ($request, $response, $next) {
+  // ...
+});
+```
+
+If you are not using zend-diactoros as a PSR-7 implementation, you will need to
+pass a response prototype as well:
+
+```php
+$pipeline->pipe(doublePassMiddleware(function ($request, $response, $next) {
+  // ...
+}, $response);
+```

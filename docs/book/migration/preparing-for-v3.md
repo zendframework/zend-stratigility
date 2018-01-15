@@ -45,7 +45,12 @@ class has been backported to version 2.2.0, with usage as follows:
 $pipeline->pipe('/api', $apiMiddleware);
 
 // Version 2.2.0+:
+use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 $pipeline->pipe(new PathMiddlewareDecorator('/api', $apiMiddleware));
+
+// OR:
+use Zend\Stratigility\path;
+$pipeline->pipe(path('/api', $apiMiddleware));
 ```
 
 Path segregation using this middleware works exactly as it has in previous
@@ -54,7 +59,7 @@ versions. (Internally, if you provide both a `$path` and `$middleware` argument,
 two arguments).
 
 **Decorate middleware you need to segregate by path using
-`PathMiddlewareDecorator`.**
+`PathMiddlewareDecorator` or the `path()` utility function.**
 
 To support callable middleware, we have introduced two classes:
 
@@ -75,7 +80,13 @@ $pipeline->pipe(function ($request, $delegate) {
 });
 
 // Version 2.2.0+:
+use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
+use Zend\Stratigility\middleware;
 $pipeline->pipe(new CallableMiddlewareDecorator(function ($request, $delegate) {
+    /* ... */
+}));
+// or:
+$pipeline->pipe(middleware(function ($request, $delegate) {
     /* ... */
 }));
 
@@ -85,7 +96,13 @@ $pipeline->pipe(function ($request, $response, $next) {
 });
 
 // Version 2.2.0+:
+use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
+use Zend\Stratigility\doublePassMiddleware;
 $pipeline->pipe(new DoublePassMiddlewareDecorator(function ($request, $response, $next) {
+    /* ... */
+}));
+// or:
+$pipeline->pipe(doublePassMiddleware(function ($request, $response, $next) {
     /* ... */
 }));
 ```
@@ -95,7 +112,8 @@ error. Internally, `MiddlewarePipe::pipe()` will decorate them using the classes
 noted above.
 
 **Decorate callable middleware before piping using either
-`CallableMiddlewareDecorator` or `DoublePassMiddlewareDecorator`.**
+`CallableMiddlewareDecorator` or `DoublePassMiddlewareDecorator` or the relevant
+utility functions as noted in the examples above.**
 
 ## Extending MiddlewarePipe
 
