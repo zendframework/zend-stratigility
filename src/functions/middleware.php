@@ -16,12 +16,12 @@ use Psr\Http\Message\ResponseInterface;
  * Usage:
  *
  * <code>
- * $pipeline->pipe(closure(function ($req, $handler) {
+ * $pipeline->pipe(middleware(function ($req, $handler) {
  *     // do some work
  * }));
  * </code>
  */
-function closure(callable $middleware) : Middleware\CallableMiddlewareDecorator
+function middleware(callable $middleware) : Middleware\CallableMiddlewareDecorator
 {
     return new Middleware\CallableMiddlewareDecorator($middleware);
 }

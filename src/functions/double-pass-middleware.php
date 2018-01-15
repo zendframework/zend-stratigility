@@ -16,7 +16,7 @@ use Psr\Http\Message\ResponseInterface;
  * Usage:
  *
  * <code>
- * $pipeline->pipe(doublePass(function ($req, $res, $next) {
+ * $pipeline->pipe(doublePassMiddleware(function ($req, $res, $next) {
  *     // do some work
  * }));
  * </code>
@@ -25,12 +25,12 @@ use Psr\Http\Message\ResponseInterface;
  * implementation other than zend-diactoros:
  *
  * <code>
- * $pipeline->pipe(doublePass(function ($req, $handler) {
+ * $pipeline->pipe(doublePassMiddleware(function ($req, $res, $next) {
  *     // do some work
  * }, $responsePrototype));
  * </code>
  */
-function doublePass(callable $middleware, ResponseInterface $response = null) : Middleware\DoublePassMiddlewareDecorator
+function doublePassMiddleware(callable $middleware, ResponseInterface $response = null) : Middleware\DoublePassMiddlewareDecorator
 {
     return new Middleware\DoublePassMiddlewareDecorator($middleware, $response);
 }
