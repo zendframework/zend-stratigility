@@ -607,8 +607,8 @@ This class is forwards compatible with version 3.
 - Deprecated since 2.2.0
 
 This is a middleware decorator for PHP callables that have a signature
-compatible with http-interop/http-middleware version 0.4.1. Please see the
-[Creating Middleware standards-based callable middleware
+compatible with http-interop/http-middleware version 0.4.1 or 0.5.0. Please see
+the [Creating Middleware standards-based callable middleware
 documentation](creating-middleware.md#callable-standards-signature-middleware).
 
 ### CallableMiddlewareWrapper
@@ -691,7 +691,7 @@ Stratigility provides the following utility functions.
 ````
 function Zend\Stratigility\path(
     string $pathPrefix,
-    Interop\Http\Server\MiddlewareInterface $middleware
+    Interop\Http\Server\MiddlewareInterface|Interop\Http\ServerMiddleware\MiddlewareInterface $middleware
 ) : Zend\Stratigility\Middleware\PathMiddlewareDecorator
 ```
 

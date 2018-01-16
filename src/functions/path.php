@@ -7,6 +7,8 @@
 
 namespace Zend\Stratigility;
 
+use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface;
+
 /**
  * Convenience function for creating path-segregated middleware.
  *
