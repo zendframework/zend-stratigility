@@ -235,40 +235,18 @@ class PathMiddlewareDecoratorTest extends TestCase
 
     /**
      * @dataProvider nestedPathCombinations
+     * @param string $prefix
+     * @param string $nestPrefix
+     * @param string $uriPath
+     * @param bool $expectsHeader
      */
-    public function testNestedMiddlewareOnlyMatchesAtPathBoundaries(
-        string $prefix,
-        string $nestPrefix,
-        string $uriPath,
-        bool $expectsHeader
-    ) {
+    public function testNestedMiddlewareOnlyMatchesAtPathBoundaries($prefix, $nestPrefix, $uriPath, $expectsHeader)
+    {
         $finalHandler = $this->prophesize(RequestHandlerInterface::class);
         $finalHandler->{HANDLER_METHOD}(Argument::any())->willReturn(new Response());
 
-        $nested = new PathMiddlewareDecorator($nestPrefix, new class () implements MiddlewareInterface {
-            public function process(
-                ServerRequestInterface $request,
-                RequestHandlerInterface $handler
-            ) : ResponseInterface {
-                return (new Response())->withHeader('X-Found', 'true');
-            }
-        });
-
-        $topLevel = new PathMiddlewareDecorator($prefix, new class ($nested) implements MiddlewareInterface {
-            private $middleware;
-
-            public function __construct(MiddlewareInterface $middleware)
-            {
-                $this->middleware = $middleware;
-            }
-
-            public function process(
-                ServerRequestInterface $request,
-                RequestHandlerInterface $handler
-            ) : ResponseInterface {
-                return $this->middleware->process($request, $handler);
-            }
-        });
+        $nested = new PathMiddlewareDecorator($nestPrefix, new TestAsset\XFoundMiddleware());
+        $topLevel = new PathMiddlewareDecorator($prefix, new TestAsset\DecoratorMiddleware($nested));
 
         $uri = (new Uri())->withPath($uriPath);
         $request = (new ServerRequest())->withUri($uri);
@@ -307,15 +285,9 @@ class PathMiddlewareDecoratorTest extends TestCase
         $finalHandler = $this->prophesize(RequestHandlerInterface::class);
         $finalHandler->{HANDLER_METHOD}(Argument::any())->willReturn(new Response());
 
-        $middleware = new PathMiddlewareDecorator($path, new class () implements MiddlewareInterface {
-            public function process(ServerRequestInterface $req, RequestHandlerInterface $handler) : ResponseInterface
-            {
-                $res = new Response();
-                return $res->withHeader('X-Found', 'true');
-            }
-        });
-        $uri     = (new Uri())->withPath($path);
-        $request = (new ServerRequest)->withUri($uri);
+        $middleware = new PathMiddlewareDecorator($path, new TestAsset\XFoundMiddleware());
+        $uri        = (new Uri())->withPath($path);
+        $request    = (new ServerRequest)->withUri($uri);
 
         $response = $middleware->process($request, $finalHandler->reveal());
         $this->assertTrue($response->hasHeader('x-found'));

@@ -49,7 +49,8 @@ class CallableMiddlewareDecorator implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
     {
-        $response = ($this->middleware)($request, $handler);
+        $middleware = $this->middleware;
+        $response = $middleware($request, $handler);
         if (! $response instanceof ResponseInterface) {
             throw Exception\MissingResponseException::forCallableMiddleware($this->middleware);
         }

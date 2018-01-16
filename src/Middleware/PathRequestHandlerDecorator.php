@@ -7,6 +7,7 @@
 
 namespace Zend\Stratigility\Middleware;
 
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as RequestHandlerInterface;
 
@@ -51,5 +52,14 @@ class PathRequestHandlerDecorator implements RequestHandlerInterface
         $uri = $request->getUri()
             ->withPath($this->originalRequest->getUri()->getPath());
         return $this->handler->{HANDLER_METHOD}($request->withUri($uri));
+    }
+
+    /**
+     * Proxy to handle
+     * {@inheritDocs}
+     */
+    public function next(RequestInterface $request)
+    {
+        return $this->handle($request);
     }
 }

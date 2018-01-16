@@ -82,9 +82,11 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
         );
     }
 
-    public function createPassThroughMiddleware(
-        callable $requestAssertion
-    ) : MiddlewareInterface {
+    /**
+     * @return MiddlewareInterface
+     */
+    public function createPassThroughMiddleware(callable $requestAssertion)
+    {
         $middleware = $this->prophesize(MiddlewareInterface::class);
         $middleware
             ->process(
@@ -99,7 +101,10 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
         return $middleware->reveal();
     }
 
-    public function createNestedPipeline(ServerRequestInterface $originalRequest) : MiddlewareInterface
+    /**
+     * @return MiddlewareInterface
+     */
+    public function createNestedPipeline(ServerRequestInterface $originalRequest)
     {
         $pipeline = new MiddlewarePipe();
 

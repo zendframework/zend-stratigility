@@ -68,7 +68,8 @@ class DoublePassMiddlewareDecorator implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
     {
-        $response = ($this->middleware)(
+        $middleware = $this->middleware;
+        $response = $middleware(
             $request,
             $this->responsePrototype,
             $this->decorateHandler($handler)
