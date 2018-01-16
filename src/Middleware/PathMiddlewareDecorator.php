@@ -103,6 +103,8 @@ class PathMiddlewareDecorator implements MiddlewareInterface
      * @param string $segment
      * @param string $path
      * @return string
+     * @throws Exception\PathOutOfSyncException if path prefix is longer than
+     *     the path
      */
     private function getTruncatedPath($segment, $path)
     {

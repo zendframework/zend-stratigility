@@ -160,7 +160,7 @@ class Next implements DelegateInterface
         $path = $route->path;
         $middleware = $route->handler;
 
-        if (! in_array($path, ['', '/'])
+        if (! in_array($path, ['', '/'], true)
             && ! $middleware instanceof Middleware\PathMiddlewareDecorator
         ) {
             return new Middleware\PathMiddlewareDecorator($path, $middleware);
