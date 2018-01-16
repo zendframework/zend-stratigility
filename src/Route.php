@@ -46,7 +46,7 @@ class Route
 
         $this->path    = $path;
 
-        if (! in_array($this->path, ['', '/'])
+        if (! in_array($this->path, ['', '/'], true)
             && ! $handler instanceof Middleware\PathMiddlewareDecorator
         ) {
             trigger_error(sprintf(
