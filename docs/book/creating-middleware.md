@@ -159,8 +159,11 @@ internally decorates it for you using this class.
 >
 > The `CallableInteropMiddlewareWrapper` is deprecated starting in version
 > 2.2.0, and will be removed entirely for version 3.0.0. We recommend updating
-> your code to use http-middleware 0.5.0 and the `CallableMiddlewareDecorator`
-> to make your code future-proof.
+> your code to use the `CallableMiddlewareDecorator` to make your code
+> future-proof.
+>
+> If possible, also upgrade to http-interop/http-middleware 0.5.0, and use the
+> `handle()` method of the `$handler` argument. 
 
 If your middleware satisfies the http-interop 0.5.0 signature (which, in this
 case, means that it expects a `RequestHandlerInterface`, and will call its
@@ -262,8 +265,9 @@ As such, we provide options for you to decorate such middleware.
 - Deprecated since 2.2.0
 
 Our first double-pass middleware decorator is
-`Zend\Stratigility\Middleware\CallableMiddlewareWrapper`, which implements the
-http-middleware 0.4.1 `MiddlewareInterface`:
+`Zend\Stratigility\Middleware\CallableMiddlewareWrapper`, which implements
+either the http-middleware 0.4.1 or 0.5.0 `MiddlewareInterface`, depending on
+what is installed:
 
 ```php
 $pipeline->pipe(new CallableMiddlewareWrapper(
