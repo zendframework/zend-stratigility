@@ -60,6 +60,7 @@ class Next implements DelegateInterface
      *
      * Ignores any arguments other than the request.
      *
+     * @deprecated starting in 2.2.0, to remove in 3.0.0. Use handle() instead.
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception\MissingResponseException If the queue is exhausted, and
@@ -76,6 +77,8 @@ class Next implements DelegateInterface
      * Proxy to handle method.
      * It is needed to support http-interop/http-middleware 0.1.1.
      *
+     * @codeCoverageIgnore
+     * @deprecated starting in 2.2.0, to remove in 3.0.0. Use handle() instead.
      * @param RequestInterface $request
      * @return ResponseInterface
      */
@@ -88,6 +91,7 @@ class Next implements DelegateInterface
      * Proxy to handle method.
      * It is needed to support http-interop/http-middleware 0.2-0.4.1.
      *
+     * @deprecated starting in 2.2.0, to remove in 3.0.0. Use handle() instead.
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      */
@@ -137,6 +141,7 @@ class Next implements DelegateInterface
     /**
      * Toggle the "raise throwables" flag on.
      *
+     * @codeCoverageIgnore
      * @deprecated Since 2.0.0; this functionality is now a no-op.
      * @return void
      */
