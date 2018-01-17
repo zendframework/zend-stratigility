@@ -19,6 +19,7 @@ use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Exception\InvalidMiddlewareException;
+use Zend\Stratigility\Exception\MissingResponsePrototypeException;
 use Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
@@ -411,5 +412,56 @@ class MiddlewarePipeTest extends TestCase
 
         $route = $queue->dequeue();
         $this->assertSame($nested, $route->handler);
+    }
+
+    public function testPipeTriggersDeprecationErrorWhenPipingDoublePassMiddlewareWithoutNextArgument()
+    {
+        $pipeline = new MiddlewarePipe();
+        $pipeline->setResponsePrototype($this->response);
+
+        $middleware = function ($request, $response) {
+        };
+
+        $error = (object) [];
+        set_error_handler($this->createDeprecationErrorHandler($error), E_USER_DEPRECATED);
+        $pipeline->pipe($middleware);
+        restore_error_handler();
+
+        $this->assertObjectHasAttribute('type', $error);
+        $this->assertSame(E_USER_DEPRECATED, $error->type);
+        $this->assertObjectHasAttribute('message', $error);
+        $this->assertContains(DoublePassMiddlewareDecorator::class, $error->message);
+
+        $r = new ReflectionProperty($pipeline, 'pipeline');
+        $r->setAccessible(true);
+        $queue = $r->getValue($pipeline);
+
+        $route = $queue->dequeue();
+        $test = $route->handler;
+        $this->assertInstanceOf(DoublePassMiddlewareDecorator::class, $test);
+        $this->assertAttributeSame($middleware, 'middleware', $test);
+    }
+
+    public function testPipeTriggersExceptionWhenDecoratingDoublePassMiddlewareAndNoResponsePrototypePresent()
+    {
+        $pipeline = new MiddlewarePipe();
+
+        $middleware = function ($request, $response, $next) {
+        };
+
+        $error = (object) [];
+        set_error_handler($this->createDeprecationErrorHandler($error), E_USER_DEPRECATED);
+        try {
+            $pipeline->pipe($middleware);
+        } catch (MissingResponsePrototypeException $e) {
+        }
+        restore_error_handler();
+
+        $this->assertObjectHasAttribute('type', $error);
+        $this->assertSame(E_USER_DEPRECATED, $error->type);
+        $this->assertObjectHasAttribute('message', $error);
+        $this->assertContains(DoublePassMiddlewareDecorator::class, $error->message);
+
+        $this->assertContains('Cannot wrap callable middleware', $e->getMessage());
     }
 }

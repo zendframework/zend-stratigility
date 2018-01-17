@@ -77,4 +77,29 @@ class RouteTest extends TestCase
         $this->assertObjectHasAttribute('message', $error);
         $this->assertContains(PathMiddlewareDecorator::class, $error->message);
     }
+
+    public function invalidPathArguments()
+    {
+        return [
+            'null'       => [null],
+            'true'       => [true],
+            'false'      => [false],
+            'zero'       => [0],
+            'int'        => [1],
+            'zero-float' => [0.0],
+            'float'      => [1.1],
+            'array'      => [['string']],
+            'object'     => [(object) ['string' => 'string']],
+        ];
+    }
+
+    /**
+     * @dataProvider invalidPathArguments
+     */
+    public function testConstructorRaisesExceptionIfPathIsNotAString($path)
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Path must be a string');
+        new Route($path, $this->createEmptyMiddleware());
+    }
 }
