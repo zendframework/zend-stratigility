@@ -29,6 +29,15 @@ pages:
         - "Executing and composing middleware": v2/executing-middleware.md
         - "API Reference": v2/api.md
         - Migration: v2/migration.md
+    - "_hidden-legacy-page-links":
+        - "_install": install.md
+        - "_usage": usage.md
+        - "_middleware": middleware.md
+        - "_error-handlers": error-handlers.md
+        - "_creating-middleware": creating-middleware.md
+        - "_executing-middleware": executing-middleware.md
+        - "_api": api.md
+        - "_migration": migration.md
 site_name: zend-stratigility
 site_description: zend-stratigility
 repo_url: 'https://github.com/zendframework/zend-stratigility'
