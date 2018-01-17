@@ -66,11 +66,15 @@ class CallableDelegateDecorator implements DelegateInterface
     /**
      * Method provided for compatibility with http-interop/http-middleware 0.1.1.
      *
+     * This method duplicates handle(), as a RequestInterface may or
+     * may not be a ServerRequestInterface instance.
+     *
      * @param RequestInterface $request
      * @return mixed
      */
     public function next(RequestInterface $request)
     {
-        return $this->handle($request);
+        $delegate = $this->delegate;
+        return $delegate($request, $this->response);
     }
 }
