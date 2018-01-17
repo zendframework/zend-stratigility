@@ -2,16 +2,16 @@ docs_dir: docs/book
 site_dir: docs/html
 pages:
     - index.md
-    - Intro: intro.md
+    - Intro: v3/intro.md
     - Reference:
-        - "Installation and Requirements": install.md
-        - Usage: usage.md
-        - Middleware: middleware.md
-        - "Error Handlers": error-handlers.md
-        - "Creating Middleware": creating-middleware.md
-        - "Executing and composing middleware": executing-middleware.md
-        - "API Reference": api.md
-        - Migration: migration.md
+        - "Installation and Requirements": v3/install.md
+        - Usage: v3/usage.md
+        - Middleware: v3/middleware.md
+        - "Error Handlers": v3/error-handlers.md
+        - "Creating Middleware": v3/creating-middleware.md
+        - "Composing middleware": v3/executing-middleware.md
+        - "API Reference": v3/api.md
+        - Migration: v3/migration.md
     - v1:
         - "Installation and Requirements": v1/install.md
         - Usage: v1/usage.md
@@ -32,4 +32,4 @@ pages:
 site_name: zend-stratigility
 site_description: zend-stratigility
 repo_url: 'https://github.com/zendframework/zend-stratigility'
-copyright: 'Copyright (c) 2016-2017 <a href="http://www.zend.com/">Zend Technologies USA Inc.</a>'
+copyright: 'Copyright (c) 2016-2018 <a href="http://www.zend.com/">Zend Technologies USA Inc.</a>'

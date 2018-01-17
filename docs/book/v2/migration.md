@@ -60,7 +60,7 @@ in version 2.0.0.
 ## Error handling
 
 Prior to version 1.3, the recommended way to handle errors was via
-[error middleware](../error-handlers.md#legacy-error-middleware), special
+[error middleware](error-handlers.md#legacy-error-middleware), special
 middleware that accepts an additional initial argument representing an error. On
 top of this, we provide the concept of a "final handler", pseudo-middleware that
 is executed by the `Next` implementation when the middleware stack is exhausted,
@@ -91,8 +91,8 @@ $pipeline->raiseThrowables();
 Once you have done that you may start using some of the new functionality, as
 well as augmented existing functionality:
 
-- [NotFoundHandler middleware](../error-handlers.md#handling-404-conditions)
-- [ErrorHandler middleware](../error-handlers.md#handling-php-errors-and-exceptions)
+- [NotFoundHandler middleware](error-handlers.md#handling-404-conditions)
+- [ErrorHandler middleware](error-handlers.md#handling-php-errors-and-exceptions)
 - `Zend\Stratigility\NoopFinalHandler` (see next section)
 
 Updating your application to use these features will ensure you are forwards
