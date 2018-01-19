@@ -19,6 +19,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Zend\Stratigility\Middleware\HostMiddlewareDecorator;
 
+use function Zend\Stratigility\host;
+
 class HostMiddlewareDecoratorTest extends TestCase
 {
     /**
@@ -115,5 +117,15 @@ class HostMiddlewareDecoratorTest extends TestCase
 
         $decorator = new HostMiddlewareDecorator($decoratorHost, $this->toDecorate->reveal());
         $decorator->process($this->request->reveal(), $this->handler->reveal());
+    }
+
+    public function testHostFunction()
+    {
+        $toDecorate = $this->toDecorate->reveal();
+
+        $middleware = host('foo.bar', $toDecorate);
+        self::assertInstanceOf(HostMiddlewareDecorator::class, $middleware);
+        self::assertAttributeSame('foo.bar', 'host', $middleware);
+        self::assertAttributeSame($toDecorate, 'middleware', $middleware);
     }
 }
