@@ -49,8 +49,8 @@ class PathMiddlewareDecorator implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        // Trim off the part of the url that matches the prefix if it is non-empty
-        $requestToProcess = (! empty($this->prefix) && $this->prefix !== '/')
+        // Trim off the part of the url that matches the prefix if it is not / only
+        $requestToProcess = $this->prefix !== '/'
             ? $this->prepareRequestWithTruncatedPrefix($request)
             : $request;
 
