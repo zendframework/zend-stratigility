@@ -110,6 +110,7 @@ class PathMiddlewareDecoratorTest extends TestCase
         $this->toDecorate->process(Argument::any())->shouldNotBeCalled();
 
         $middleware = new PathMiddlewareDecorator('/foo', $this->toDecorate->reveal());
+        $middleware->process($this->request->reveal(), $this->handler->reveal());
     }
 
     public function testDelegatesOrignalRequestToHandlerIfRequestDoesNotMatchPrefixAtABoundary()
