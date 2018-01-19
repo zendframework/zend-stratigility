@@ -95,11 +95,6 @@ class PathMiddlewareDecorator implements MiddlewareInterface
             return substr($path, $length);
         }
 
-        if ('/' === substr($segment, -1)) {
-            // Re-try by submitting with / stripped from end of segment
-            return $this->getTruncatedPath(rtrim($segment, '/'), $path);
-        }
-
         // Segment is longer than path; this is a problem.
         throw Exception\PathOutOfSyncException::forPath($this->prefix, $path);
     }
