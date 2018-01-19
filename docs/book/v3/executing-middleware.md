@@ -72,7 +72,7 @@ class CustomMiddleware implements MiddlewareInterface
 ```
 
 Another approach using this method would be to override the constructor to add
-in specific middleware, perhaps using configuration provided. 
+in specific middleware, perhaps using configuration provided.
 
 ```php
 use Interop\Http\Server\MiddlewareInterface;

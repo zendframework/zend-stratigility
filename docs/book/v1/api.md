@@ -415,7 +415,7 @@ Two versions exist:
   ```php
   $middleware = new CallableMiddlewareWrapper(
     function ($request, DelegateInterface $delegate) {
-        // ... 
+        // ...
     }
   );
   ```
