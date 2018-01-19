@@ -89,14 +89,8 @@ class PathMiddlewareDecorator implements MiddlewareInterface
             return '';
         }
 
-        $length = strlen($segment);
-        if (strlen($path) > $length) {
-            // Strip decorated path from start of current path
-            return substr($path, $length);
-        }
-
-        // Segment is longer than path; this is a problem.
-        throw Exception\PathOutOfSyncException::forPath($this->prefix, $path);
+        // Strip decorated path from start of current path
+        return substr($path, strlen($segment));
     }
 
     private function prepareHandlerForOriginalRequest(
