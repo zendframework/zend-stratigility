@@ -8,8 +8,6 @@ declare(strict_types=1);
 
 namespace Zend\Stratigility;
 
-use Psr\Http\Message\ResponseInterface;
-
 /**
  * Convenience wrapper around instantiation of a CallableMiddlewareDecorator instance.
  *

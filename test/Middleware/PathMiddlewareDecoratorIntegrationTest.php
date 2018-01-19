@@ -13,14 +13,12 @@ use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UriInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
+use Zend\Stratigility\MiddlewarePipe;
 
 class PathMiddlewareDecoratorIntegrationTest extends TestCase
 {

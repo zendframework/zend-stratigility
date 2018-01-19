@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace ZendTest\Stratigility\Middleware;
 
-use Interop\Http\Server\MiddlewareInterface;
 use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
