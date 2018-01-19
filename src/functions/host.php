@@ -21,7 +21,7 @@ use Interop\Http\Server\MiddlewareInterface;
  * $pipeline->pipe(host('host.foo', $middleware));
  * </code>
  */
-function host(string $host, MiddlewareInterface $middleware) : MiddlewareInterface
+function host(string $host, MiddlewareInterface $middleware) : Middleware\HostMiddlewareDecorator
 {
     return new Middleware\HostMiddlewareDecorator($host, $middleware);
 }

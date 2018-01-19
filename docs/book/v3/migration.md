@@ -228,7 +228,7 @@ Release 3.0 adds the following utility functions:
 function Zend\Stratigility\host(
   string $host,
   Psr\Http\Server\MiddlewareInterface $middleware
-): Psr\Http\Server\MiddlewareInterface
+) : Zend\Stratigility\Middleware\HostMiddlewareDecorator
 ```
 
 This is a convenience wrapper around instantiation of a
