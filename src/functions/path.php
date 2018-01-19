@@ -16,9 +16,9 @@ use Interop\Http\Server\MiddlewareInterface;
  * Usage:
  *
  * <code>
- * use Zend\Stratigility\path;
+ * use function Zend\Stratigility\path;
  *
- * $pipeline->pipe(path(/foo, $middleware));
+ * $pipeline->pipe(path('/foo', $middleware));
  * </code>
  */
 function path(string $path, MiddlewareInterface $middleware) : MiddlewareInterface

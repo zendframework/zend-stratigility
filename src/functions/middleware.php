@@ -16,6 +16,8 @@ use Psr\Http\Message\ResponseInterface;
  * Usage:
  *
  * <code>
+ * use function Zend\Stratigility\middleware;
+ *
  * $pipeline->pipe(middleware(function ($req, $handler) {
  *     // do some work
  * }));
