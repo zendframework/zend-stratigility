@@ -15,6 +15,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\Exception;
 use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
 
+use function Zend\Stratigility\middleware;
+
 class CallableMiddlewareDecoratorTest extends TestCase
 {
     public function testCallableMiddlewareThatDoesNotProduceAResponseRaisesAnException()
@@ -46,5 +48,16 @@ class CallableMiddlewareDecoratorTest extends TestCase
         $decorator = new CallableMiddlewareDecorator($middleware);
 
         $this->assertSame($response, $decorator->process($request, $handler));
+    }
+
+    public function testMiddlewareFunction()
+    {
+        $toDecorate = function ($request, $handler) {
+            return 'foo';
+        };
+
+        $middleware = middleware($toDecorate);
+        self::assertInstanceOf(CallableMiddlewareDecorator::class, $middleware);
+        self::assertAttributeSame($toDecorate, 'middleware', $middleware);
     }
 }

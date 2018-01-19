@@ -21,6 +21,8 @@ use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 
+use function Zend\Stratigility\path;
+
 class PathMiddlewareDecoratorTest extends TestCase
 {
     public function setUp()
@@ -398,5 +400,14 @@ class PathMiddlewareDecoratorTest extends TestCase
             $expectedResponse,
             $decoratedMiddleware->process($request, $finalHandler->reveal())
         );
+    }
+
+    public function testPathFunction()
+    {
+        $toDecorate = $this->toDecorate->reveal();
+        $middleware = path('/foo', $toDecorate);
+        self::assertInstanceOf(PathMiddlewareDecorator::class, $middleware);
+        self::assertAttributeSame('/foo', 'prefix', $middleware);
+        self::assertAttributeSame($toDecorate, 'middleware', $middleware);
     }
 }
