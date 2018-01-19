@@ -254,9 +254,9 @@ This is a convenience wrapper around instantiation of a
 $pipeline->pipe(path('/foo', $middleware));
 ```
 
-### middleware
+#### middleware
 
-````
+```php
 function Zend\Stratigility\middleware(
     callable $middleware
 ) : Zend\Stratigility\Middleware\CallableMiddlewareDecorator
@@ -271,9 +271,9 @@ $pipeline->pipe(middleware(function ($request, $handler) {
 });
 ```
 
-### doublePassMiddleware
+#### doublePassMiddleware
 
-````
+```php
 function Zend\Stratigility\doublePassMiddleware(
     callable $middleware,
     Psr\Http\Message\ResponseInterface $responsePrototype = null

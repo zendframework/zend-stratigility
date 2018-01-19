@@ -262,7 +262,7 @@ $pipeline->pipe(host('example.com', $middleware));
 
 ### path
 
-````
+```php
 function Zend\Stratigility\path(
     string $pathPrefix,
     Interop\Http\Server\MiddlewareInterface $middleware
@@ -278,7 +278,7 @@ $pipeline->pipe(path('/foo', $middleware));
 
 ### middleware
 
-````
+```php
 function Zend\Stratigility\middleware(
     callable $middleware
 ) : Zend\Stratigility\Middleware\CallableMiddlewareDecorator
@@ -295,7 +295,7 @@ $pipeline->pipe(middleware(function ($request, $handler) {
 
 ### doublePassMiddleware
 
-````
+```php
 function Zend\Stratigility\doublePassMiddleware(
     callable $middleware,
     Psr\Http\Message\ResponseInterface $responsePrototype = null
