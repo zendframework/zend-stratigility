@@ -244,7 +244,7 @@ $pipeline->pipe(host('example.com', $middleware));
 function Zend\Stratigility\path(
   string $pathPrefix,
   Psr\Http\Server\MiddlewareInterface $middleware
-): Psr\Http\Server\MiddlewareInterface
+) : Zend\Stratigility\Middleware\PathMiddlewareDecorator
 ```
 
 This is a convenience wrapper around instantiation of a
