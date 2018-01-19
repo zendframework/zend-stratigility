@@ -13,6 +13,7 @@ use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
+use Prophecy\Prophecy\ObjectProphecy;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -25,6 +26,31 @@ use function Zend\Stratigility\path;
 
 class PathMiddlewareDecoratorTest extends TestCase
 {
+    /**
+     * @var UriInterface|ObjectProphecy
+     */
+    private $uri;
+
+    /**
+     * @var ServerRequestInterface|ObjectProphecy
+     */
+    private $request;
+
+    /**
+     * @var ResponseInterface|ObjectProphecy
+     */
+    private $response;
+
+    /**
+     * @var RequestHandlerInterface|ObjectProphecy
+     */
+    private $handler;
+
+    /**
+     * @var MiddlewareInterface|ObjectProphecy
+     */
+    private $toDecorate;
+
     public function setUp()
     {
         $this->uri = $this->prophesize(UriInterface::class);
