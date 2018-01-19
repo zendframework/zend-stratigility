@@ -280,7 +280,7 @@ function Zend\Stratigility\doublePassMiddleware(
 ) : Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator
 ```
 
-`doublePassiddleware()` provides a convenient way to decorate middleware that
+`doublePassMiddleware()` provides a convenient way to decorate middleware that
 implements the double pass middleware signature when piping it to your application.
 
 ```php
