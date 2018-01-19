@@ -34,10 +34,6 @@ class PathMiddlewareDecoratorTest extends TestCase
         $this->toDecorate = $this->prophesize(MiddlewareInterface::class);
     }
 
-    public function createFinalHandler()
-    {
-    }
-
     public function testImplementsMiddlewareInterface()
     {
         $middleware = new PathMiddlewareDecorator('/foo', $this->toDecorate->reveal());
