@@ -10,6 +10,23 @@ details.
 
 ### Added
 
+- [#142](https://github.com/zendframework/zend-stratigility/pull/142) adds a new
+  class, `Zend\Stratigility\Middleware\HostMiddlewareDecorator`, which provides
+  host segregation functionality for middleware, allowing conditional execution
+  of middleware only if the requested host matches a configured host.
+
+  ```php
+  // Only process $middleware if the request host matches 'example.com':
+  $pipeline->pipe(new HostMiddlewareDecorator('example.com', $middleware));
+  ```
+
+  Additionally, the patch provides a utility function,
+  `Zend\Stratigility\host()`, to simplify the above declaration:
+
+  ```php
+  $pipeline->pipe(host('example.com', $middleware));
+  ```
+
 - [#134](https://github.com/zendframework/zend-stratigility/pull/134) adds a new
   class, `Zend\Stratigility\Middleware\PathMiddlewareDecorator`, which provides
   path segregation functionality for middleware, replacing the functionality
