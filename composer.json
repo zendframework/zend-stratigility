@@ -47,6 +47,7 @@
   "autoload": {
     "files": [
         "src/functions/double-pass-middleware.php",
+        "src/functions/host.php",
         "src/functions/middleware.php",
         "src/functions/path.php"
     ],

@@ -88,6 +88,18 @@ internal logic.
 
 ### Class additions
 
+- `Zend\Stratigility\Middleware\HostMiddlewareDecorator` allows you to segregate
+  middleware by a static host name. This allows executing middleware only
+  if a particular host matches.
+
+  ```php
+  // Segregate to hosts matching 'example.com':
+  $pipeline->pipe(new HostMiddlewareDecorator('example.com', $middleware));
+  ```
+
+  Alternately, use the `host()` utility function to generate the instance; [see
+  below](#host).
+
 - `Zend\Stratigility\Middleware\PathMiddlewareDecorator` allows you to segregate
   middleware by a static URI path prefix. This allows executing middleware only
   if a particular path matches, or segregating a sub-application by path.
@@ -209,6 +221,22 @@ The following exceptions have been removed:
 ### Function additions
 
 Release 3.0 adds the following utility functions:
+
+#### host
+
+```php
+function Zend\Stratigility\host(
+  string $host,
+  Psr\Http\Server\MiddlewareInterface $middleware
+) : Zend\Stratigility\Middleware\HostMiddlewareDecorator
+```
+
+This is a convenience wrapper around instantiation of a
+`Zend\Stratigility\Middleware\HostMiddlewareDecorator` instance:
+
+```php
+$pipeline->pipe(host('example.com', $middleware));
+```
 
 #### path
 

@@ -244,6 +244,22 @@ inner layers.
 
 Stratigility provides the following utility functions.
 
+### host
+
+```php
+function Zend\Stratigility\host(
+  string $host,
+  Psr\Http\Server\MiddlewareInterface $middleware
+) : Zend\Stratigility\Middleware\HostMiddlewareDecorator
+```
+
+`host()` provides a convenient way to perform host name segregation when piping your
+middleware.
+
+```php
+$pipeline->pipe(host('example.com', $middleware));
+```
+
 ### path
 
 ````
