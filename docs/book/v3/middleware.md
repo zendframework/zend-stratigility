@@ -63,7 +63,7 @@ another handler_.
 > ### PSR-15 middleware
 >
 > Stratigility supports only [PSR-15](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-15-request-handlers.md)
-> middlewares.
+> middleware.
 
 Middleware can decide more processing can be performed by calling the `$handler`
 instance passed during invocation. With this paradigm, you can build a workflow
