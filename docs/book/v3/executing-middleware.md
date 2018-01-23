@@ -42,7 +42,7 @@ You can learn how to customize the error handler to your needs in the
 ## Decorating the MiddlewarePipe
 
 Another approach is to compose a `Zend\Stratigility\MiddlewarePipe` instance
-within your own `Interop\Http\Server\MiddlewareInterface` implementation, and
+within your own `Psr\Http\Server\MiddlewareInterface` implementation, and
 optionally implementing the `RequestHandlerInterface` and/or `pipe()` method.
 
 In such a case, you might define the `process()` method to perform any
@@ -75,10 +75,10 @@ Another approach using this method would be to override the constructor to add
 in specific middleware, perhaps using configuration provided.
 
 ```php
-use Interop\Http\Server\MiddlewareInterface;
-use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Zend\Stratigility\MiddlewarePipe;
 
 class CustomMiddleware implements MiddlewareInterface

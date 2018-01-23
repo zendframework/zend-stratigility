@@ -69,13 +69,20 @@ details.
 
 ### Changed
 
+- [#145](https://github.com/zendframework/zend-stratigility/pull/145) updates
+  the component to implement and consume **ONLY** PSR-15 interfaces;
+  http-interop interfaces and callable middleware are no longer directly
+  supported (though Stratigility provides decorators for the latter in order to
+  cast them to PSR-15 implementations).
+
 - [#134](https://github.com/zendframework/zend-stratigility/pull/134) marks the
   `MiddlewarePipe` class as `final`, disallowing direct extension. Either
   compose an instance, or create a custom PSR-15 `MiddlewareInterface`
   implementation.
 
-- [#134](https://github.com/zendframework/zend-stratigility/pull/134) updates
-  `MiddlewarePipe` to implement `Interop\Http\Server\RequestHandlerInterface`.
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134) and
+  [#145](https://github.com/zendframework/zend-stratigility/pull/145) update
+  `MiddlewarePipe` to implement `Psr\Http\Server\RequestHandlerInterface`.
   Calling it will cause it to pull the first middleware off the queue and create
   a `Next` implementation that uses the remaining queue as the request handler;
   it then processes the middleware.

@@ -8,10 +8,10 @@ declare(strict_types=1);
 
 namespace Zend\Stratigility\Middleware;
 
-use Interop\Http\Server\MiddlewareInterface;
-use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 class HostMiddlewareDecorator implements MiddlewareInterface
 {

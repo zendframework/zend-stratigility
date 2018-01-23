@@ -7,7 +7,7 @@ The following make up the primary API of Stratigility.
 > - Affects: version 3.0.0alpha1
 >
 > Starting with version 3.0.0, support for http-interop/http-middleware has been
-> replaced with support for http-interop/http-server-middleware.
+> replaced with support for psr/http-server-middleware.
 
 ## Middleware
 
@@ -17,10 +17,10 @@ has been discussed previously. Its API is:
 ```php
 namespace Zend\Stratigility;
 
-use Interop\Http\Server\MiddlewareInterface;
-use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 class MiddlewarePipe implements MiddlewareInterface, RequestHandlerInterface
 {
@@ -39,7 +39,7 @@ Middleware is executed in the order in which it is piped to the
 `MiddlewarePipe` instance.
 
 The `MiddlewarePipe` is itself middleware, and can be executed in stacks that
-expect http-interop middleware signatures. It is also a request handler,
+expect PSR-15 middleware signatures. It is also a request handler,
 allowing you to use it in paradigms where a request handler is required; when
 executed in this way, it will process itself in order to generate a response.
 
@@ -58,7 +58,7 @@ returned.
 
 `Zend\Stratigility\Next` is primarily an implementation detail, and exists to
 allow delegating to middleware aggregated in the `MiddlewarePipe`. It is
-implemented as an http-interop/http-middleware `RequestHandlerInterface`.
+implemented as an PSR-15 `RequestHandlerInterface`.
 
 Since your middleware needs to return a response, the instance receives the
 `$handler` argument passed to `MiddlewarePipe::process()` as a fallback request
@@ -265,7 +265,7 @@ $pipeline->pipe(host('example.com', $middleware));
 ```php
 function Zend\Stratigility\path(
     string $pathPrefix,
-    Interop\Http\Server\MiddlewareInterface $middleware
+    Psr\Http\Server\MiddlewareInterface $middleware
 ) : Zend\Stratigility\Middleware\PathMiddlewareDecorator
 ```
 

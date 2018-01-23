@@ -20,11 +20,11 @@ been dropped.
 
 ## PSR-15
 
-Stratigility now supports only PSR-15 interfaces. Support of
-`http-interop/http-middleware` has been dropped.
+Stratigility now supports only [PSR-15](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-15-request-handlers.md)
+interfaces. Support of `http-interop/http-middleware` has been dropped.
 
-All middleware and request handlers must now implement PSR-15 interfaces,
-including those Stratigility implements.
+All middleware and request handlers must now implement [PSR-15](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-15-request-handlers.md)
+interfaces, including those Stratigility implements.
 
 As a result, a number of signatures have been changed.  Primarily, these were a
 matter of updating typehints on
@@ -49,7 +49,7 @@ All of these classes now implement the PSR-15 `MiddlewareInterface`.
 
 ## Pipeline - `MiddlewarePipe`
 
-We now only allow piping `Interop\Http\Server\MiddlewareInterface` instances
+We now only allow piping `Psr\Http\Server\MiddlewareInterface` instances
 into the `MiddlewarePipe` class.
 
 In version 2, we had a number of internal utilities for identifying other types
