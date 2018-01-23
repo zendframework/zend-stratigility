@@ -14,10 +14,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use ReflectionClass;
+use ReflectionObject;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Stratigility\Exception;
 use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\MiddlewarePipeInterface;
 
 class MiddlewarePipeTest extends TestCase
 {
@@ -178,5 +181,31 @@ class MiddlewarePipeTest extends TestCase
         $pipeline->pipe($middleware2->reveal());
 
         $this->assertSame($response, $pipeline->handle($this->request));
+    }
+
+    public function testMiddlewarePipeIsInstanceOfMiddlewarePipeInterface()
+    {
+        $pipeline = new MiddlewarePipe();
+
+        $r = new ReflectionObject($pipeline);
+        $methods = $r->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $actual = [];
+        foreach ($methods as $method) {
+            if (strpos($method->getName(), '__') !== 0) {
+                $actual[] = $method->getName();
+            }
+        }
+        sort($actual);
+
+        $interfaceReflection = new ReflectionClass(MiddlewarePipeInterface::class);
+        $interfaceMethods = $interfaceReflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $expected = [];
+        foreach ($interfaceMethods as $method) {
+            $expected[] = $method->getName();
+        }
+        sort($expected);
+
+        self::assertEquals($expected, $actual);
+        self::assertInstanceOf(MiddlewarePipeInterface::class, $pipeline);
     }
 }
