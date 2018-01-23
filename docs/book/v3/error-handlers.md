@@ -34,12 +34,12 @@ If you would like a templated response, you will need to write your own
 middleware; such middleware might look like the following:
 
 ```php
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-class NotFoundMiddleware implements ServerMiddlewareInterface
+class NotFoundMiddleware implements MiddlewareInterface
 {
     private $renderer;
 
@@ -51,7 +51,7 @@ class NotFoundMiddleware implements ServerMiddlewareInterface
         $this->response = $response;
     }
 
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
     {
         $response = $this->response->withStatus(404);
         $response->getBody()->write(

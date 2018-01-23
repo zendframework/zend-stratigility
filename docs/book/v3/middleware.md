@@ -7,11 +7,12 @@ take the incoming request, perform actions based on it, and either complete the
 response or pass delegation on to the next middleware in the queue.
 
 ```php
-use Interop\Http\Server\MiddlewareInterface;
-use Interop\Http\Server\RequestHandlerInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
 use Zend\Stratigility\MiddlewarePipe;
+
 use function Zend\Stratigility\middleware;
 use function Zend\Stratigility\path;
 
@@ -59,37 +60,10 @@ So, concisely put, _middleware are PHP callables that accept a request object,
 and do something with it, optionally delegating creation of a response to
 another handler_.
 
-> ### http-interop middleware
+> ### PSR-15 middleware
 >
-> The above example demonstrates the using the interfaces from the http-interop
-> project. http-interop is a project attempting to standardize middleware signatures.
-> The signature of the http-interop/http-server-middleware 1.0 series, on which
-> Stratigility 3.X is based, is:
->
-> ```php
-> namespace Interop\Http\Server;
->
-> use Psr\Http\Message\ResponseInterface;
-> use Psr\Http\Message\ServerRequestInterface;
->
-> interface MiddlewareInterface
-> {
->     public function process(
->         ServerRequestInterface $request,
->         RequestHandlerInterface $handler
->     ) : ResponseInterface;
-> }
->
-> interface RequestHandlerInterface
-> {
->     public function process(
->         ServerRequestInterface $request
->     ) : ResponseInterface;
-> }
-> ```
->
-> Stratigility allows you to implement the http-interop/http-server-middleware
-> interface to provide middleware.
+> Stratigility supports only [PSR-15](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-15-request-handlers.md)
+> middlewares.
 
 Middleware can decide more processing can be performed by calling the `$handler`
 instance passed during invocation. With this paradigm, you can build a workflow
@@ -119,7 +93,7 @@ The handlers in each middleware attached this way will see a URI with that path
 segment stripped, allowing them to be developed separately and re-used under
 any path you wish.
 
-Within Stratigility, middleware can be any
-[http-interop/http-server-middleware](https://github.com/http-interop/http-server-middleware).
+Within Stratigility, middleware must be
+[PSR-15](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-15-request-handlers.md) middleware.
 `Zend\Stratigility\MiddlewarePipe` implements
-`Interop\Http\Server\MiddlewareInterface`.
+`Psr\Http\Server\MiddlewareInterface`.

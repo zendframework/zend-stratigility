@@ -5,6 +5,7 @@
     "keywords": [
         "http",
         "psr-7",
+        "psr-15",
         "middleware",
         "zf",
         "zendframework"
@@ -19,8 +20,8 @@
     },
     "require": {
         "php": "^7.1",
-        "http-interop/http-server-middleware": "^1.1.1",
         "psr/http-message": "^1.0",
+        "psr/http-server-middleware": "^1.0",
         "zendframework/zend-escaper": "^2.3"
     },
     "require-dev": {

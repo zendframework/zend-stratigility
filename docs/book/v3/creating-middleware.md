@@ -1,13 +1,13 @@
 # Creating Middleware
 
 Middleware piped to a `MiddlewarePipe` **MUST** implement the
-http-interop/http-server-middleware interface.
+PSR-15 middleware interface.
 
 ```php
-use Interop\Http\Server\MiddlewareInterface;
-use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 class MyMiddleware implements MiddlewareInterface
 {

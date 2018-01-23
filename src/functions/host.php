@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Zend\Stratigility;
 
-use Interop\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\MiddlewareInterface;
 
 /**
  * Convenience function for creating host-segregated middleware.
