@@ -314,7 +314,7 @@ your callable middleware:
 
 - Typehint the final `$next` argument against `Interop\Http\Middleware\DelegateInterface`;
   optionally, rename it to `$delegate`. This will require a slight change to
-  how you invoke the next layer as well; see below.    
+  how you invoke the next layer as well; see below.
 - Remove the `$response` argument from your signature; if you do, make sure you
   typehint the delegate argument, and make it required.
 
@@ -457,11 +457,11 @@ class PingMiddleware implements ServerMiddlewareInterface
 > While you _can_ write your middleware to implement the
 > http-interop/http-middleware middleware interface, please be aware that if you
 > do so, you will need to take additional steps when upgrading from 1.3 to 2.0.
-> 
+>
 > In most cases, you should be able to simply change the import statements
 > within your class file. As an example, if you have the following in your
 > Stratigility 1.3-based project:
-> 
+>
 > ```php
 > use Interop\Http\Middleware\DelegateInterface;
 > use Interop\Http\Middleware\ServerMiddlewareInterface;

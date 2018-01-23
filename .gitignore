@@ -1,6 +1,7 @@
-vendor/
-phpunit.xml
-docs/html/
-zf-mkdoc-theme/
-clover.xml
-coveralls-upload.json
+/clover.xml
+/coveralls-upload.json
+/docs/html/
+/phpunit.xml
+/vendor/
+/zf-mkdoc-theme.tgz
+/zf-mkdoc-theme/

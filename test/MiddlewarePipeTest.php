@@ -10,14 +10,12 @@ namespace ZendTest\Stratigility;
 
 use Interop\Http\Server\MiddlewareInterface;
 use Interop\Http\Server\RequestHandlerInterface;
-use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
-use Zend\Diactoros\Uri;
 use Zend\Stratigility\Exception;
 use Zend\Stratigility\MiddlewarePipe;
 

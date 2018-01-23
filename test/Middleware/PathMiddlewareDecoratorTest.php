@@ -13,6 +13,7 @@ use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
+use Prophecy\Prophecy\ObjectProphecy;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -21,8 +22,35 @@ use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 
+use function Zend\Stratigility\path;
+
 class PathMiddlewareDecoratorTest extends TestCase
 {
+    /**
+     * @var UriInterface|ObjectProphecy
+     */
+    private $uri;
+
+    /**
+     * @var ServerRequestInterface|ObjectProphecy
+     */
+    private $request;
+
+    /**
+     * @var ResponseInterface|ObjectProphecy
+     */
+    private $response;
+
+    /**
+     * @var RequestHandlerInterface|ObjectProphecy
+     */
+    private $handler;
+
+    /**
+     * @var MiddlewareInterface|ObjectProphecy
+     */
+    private $toDecorate;
+
     public function setUp()
     {
         $this->uri = $this->prophesize(UriInterface::class);
@@ -30,10 +58,6 @@ class PathMiddlewareDecoratorTest extends TestCase
         $this->response = $this->prophesize(ResponseInterface::class);
         $this->handler = $this->prophesize(RequestHandlerInterface::class);
         $this->toDecorate = $this->prophesize(MiddlewareInterface::class);
-    }
-
-    public function createFinalHandler()
-    {
     }
 
     public function testImplementsMiddlewareInterface()
@@ -110,6 +134,7 @@ class PathMiddlewareDecoratorTest extends TestCase
         $this->toDecorate->process(Argument::any())->shouldNotBeCalled();
 
         $middleware = new PathMiddlewareDecorator('/foo', $this->toDecorate->reveal());
+        $middleware->process($this->request->reveal(), $this->handler->reveal());
     }
 
     public function testDelegatesOrignalRequestToHandlerIfRequestDoesNotMatchPrefixAtABoundary()
@@ -397,5 +422,14 @@ class PathMiddlewareDecoratorTest extends TestCase
             $expectedResponse,
             $decoratedMiddleware->process($request, $finalHandler->reveal())
         );
+    }
+
+    public function testPathFunction()
+    {
+        $toDecorate = $this->toDecorate->reveal();
+        $middleware = path('/foo', $toDecorate);
+        self::assertInstanceOf(PathMiddlewareDecorator::class, $middleware);
+        self::assertAttributeSame('/foo', 'prefix', $middleware);
+        self::assertAttributeSame($toDecorate, 'middleware', $middleware);
     }
 }

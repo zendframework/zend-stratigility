@@ -208,4 +208,16 @@ class ErrorHandlerTest extends TestCase
 
         $this->assertSame($this->response->reveal(), $result);
     }
+
+    public function testTheSameListenerIsAttachedOnlyOnce()
+    {
+        $middleware = $this->createMiddleware();
+        $listener = function () {
+        };
+
+        $middleware->attachListener($listener);
+        $middleware->attachListener($listener);
+
+        self::assertAttributeCount(1, 'listeners', $middleware);
+    }
 }

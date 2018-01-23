@@ -43,14 +43,14 @@ class PathMiddlewareDecorator implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        // Skip if match is not at a border ('/', '.', or end)
+        // Skip if match is not at a border ('/' or end)
         $border = $this->getBorder($path);
-        if ($border && '/' !== $border && '.' !== $border) {
+        if ($border && '/' !== $border) {
             return $handler->handle($request);
         }
 
-        // Trim off the part of the url that matches the prefix if it is non-empty
-        $requestToProcess = (! empty($this->prefix) && $this->prefix !== '/')
+        // Trim off the part of the url that matches the prefix if it is not / only
+        $requestToProcess = $this->prefix !== '/'
             ? $this->prepareRequestWithTruncatedPrefix($request)
             : $request;
 
@@ -89,19 +89,8 @@ class PathMiddlewareDecorator implements MiddlewareInterface
             return '';
         }
 
-        $length = strlen($segment);
-        if (strlen($path) > $length) {
-            // Strip decorated path from start of current path
-            return substr($path, $length);
-        }
-
-        if ('/' === substr($segment, -1)) {
-            // Re-try by submitting with / stripped from end of segment
-            return $this->getTruncatedPath(rtrim($segment, '/'), $path);
-        }
-
-        // Segment is longer than path; this is a problem.
-        throw Exception\PathOutOfSyncException::forPath($this->prefix, $path);
+        // Strip decorated path from start of current path
+        return substr($path, strlen($segment));
     }
 
     private function prepareHandlerForOriginalRequest(

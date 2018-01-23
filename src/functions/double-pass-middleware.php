@@ -16,6 +16,8 @@ use Psr\Http\Message\ResponseInterface;
  * Usage:
  *
  * <code>
+ * use function Zend\Stratigility\doublePassMiddleware;
+ *
  * $pipeline->pipe(doublePassMiddleware(function ($req, $res, $next) {
  *     // do some work
  * }));

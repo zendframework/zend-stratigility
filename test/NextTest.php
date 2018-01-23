@@ -16,12 +16,10 @@ use Prophecy\Argument;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use ReflectionProperty;
 use SplQueue;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\Exception;
 use Zend\Stratigility\Next;
 use Zend\Stratigility\Route;
 

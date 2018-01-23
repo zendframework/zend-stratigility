@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace ZendTest\Stratigility\Middleware;
 
-use Interop\Http\Server\MiddlewareInterface;
 use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
@@ -17,6 +16,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
 use Zend\Stratigility\Exception;
 use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
+
+use function Zend\Stratigility\doublePassMiddleware;
 
 class DoublePassMiddlewareDecoratorTest extends TestCase
 {
@@ -88,5 +89,19 @@ class DoublePassMiddlewareDecoratorTest extends TestCase
         $response = $decorator->process($request, $handler);
         $this->assertInstanceOf(ResponseInterface::class, $response);
         $this->assertInstanceOf(Response::class, $response);
+    }
+
+    public function testDoublePassMiddlewareFunction()
+    {
+        $toDecorate = function ($request, $response, $next) {
+            return 'foo';
+        };
+
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $middleware = doublePassMiddleware($toDecorate, $response);
+        self::assertInstanceOf(DoublePassMiddlewareDecorator::class, $middleware);
+        self::assertAttributeSame($toDecorate, 'middleware', $middleware);
+        self::assertAttributeSame($response, 'responsePrototype', $middleware);
     }
 }

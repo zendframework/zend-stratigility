@@ -12,7 +12,7 @@ Stratigility has the following dependencies (which are managed by Composer):
   the interfaces specified in [PSR-7](http://www.php-fig.org/psr/psr-7),
   and type-hinted against in this package. In order to use Stratigility, you
   will need an implementation of PSR-7; one such package is
-  [Diactoros](https://zendframework.github.io/zend-diactoros/).
+  [Diactoros](https://docs.zendframework.com/zend-diactoros/).
 
 - [http-interop/http-server-middleware](https://github.com/http-interop/http-server-middleware),
   which provides the interfaces that will become PSR-15.

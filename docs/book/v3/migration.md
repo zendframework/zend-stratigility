@@ -244,7 +244,7 @@ $pipeline->pipe(host('example.com', $middleware));
 function Zend\Stratigility\path(
   string $pathPrefix,
   Psr\Http\Server\MiddlewareInterface $middleware
-): Psr\Http\Server\MiddlewareInterface
+) : Zend\Stratigility\Middleware\PathMiddlewareDecorator
 ```
 
 This is a convenience wrapper around instantiation of a
@@ -254,9 +254,9 @@ This is a convenience wrapper around instantiation of a
 $pipeline->pipe(path('/foo', $middleware));
 ```
 
-### middleware
+#### middleware
 
-````
+```php
 function Zend\Stratigility\middleware(
     callable $middleware
 ) : Zend\Stratigility\Middleware\CallableMiddlewareDecorator
@@ -271,16 +271,16 @@ $pipeline->pipe(middleware(function ($request, $handler) {
 });
 ```
 
-### doublePassMiddleware
+#### doublePassMiddleware
 
-````
+```php
 function Zend\Stratigility\doublePassMiddleware(
     callable $middleware,
     Psr\Http\Message\ResponseInterface $responsePrototype = null
 ) : Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator
 ```
 
-`doublePassiddleware()` provides a convenient way to decorate middleware that
+`doublePassMiddleware()` provides a convenient way to decorate middleware that
 implements the double pass middleware signature when piping it to your application.
 
 ```php

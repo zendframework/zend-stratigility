@@ -8,13 +8,14 @@ declare(strict_types=1);
 
 namespace ZendTest\Stratigility\Middleware;
 
-use Interop\Http\Server\MiddlewareInterface;
 use Interop\Http\Server\RequestHandlerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\Exception;
 use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
+
+use function Zend\Stratigility\middleware;
 
 class CallableMiddlewareDecoratorTest extends TestCase
 {
@@ -47,5 +48,16 @@ class CallableMiddlewareDecoratorTest extends TestCase
         $decorator = new CallableMiddlewareDecorator($middleware);
 
         $this->assertSame($response, $decorator->process($request, $handler));
+    }
+
+    public function testMiddlewareFunction()
+    {
+        $toDecorate = function ($request, $handler) {
+            return 'foo';
+        };
+
+        $middleware = middleware($toDecorate);
+        self::assertInstanceOf(CallableMiddlewareDecorator::class, $middleware);
+        self::assertAttributeSame($toDecorate, 'middleware', $middleware);
     }
 }

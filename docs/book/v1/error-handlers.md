@@ -73,17 +73,17 @@ class NotFoundMiddleware implements ServerMiddlewareInterface
 > If you have upgraded from Expressive 1.0.0, you will have been using the
 > `FinalHandler` implementation, and relying on the fact that, internally,
 > dispatching wraps all middleware in `try/catch` blocks.
-> 
+>
 > Starting in 1.3.0, we provide a new way to handle errors via middleware.
-> 
+>
 > **To opt-in to the new system, you must call `raiseThrowables()` on your
 > middleware pipeline:**
-> 
+>
 > ```php
 > $pipeline = new MiddlewarePipe();
 > $pipeline->raiseThrowables();
 > ```
-> 
+>
 > (Starting in 2.0.0, this will no longer be necessary, but until then, this is
 > how you opt-in to the system described below.)
 
