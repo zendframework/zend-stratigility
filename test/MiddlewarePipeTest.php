@@ -205,6 +205,7 @@ class MiddlewarePipeTest extends TestCase
         }
         sort($expected);
 
+        self::assertTrue($r->isFinal());
         self::assertEquals($expected, $actual);
         self::assertInstanceOf(MiddlewarePipeInterface::class, $pipeline);
     }
