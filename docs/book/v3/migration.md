@@ -75,8 +75,8 @@ internal logic.
 - `Next::handle()`: the method now provides a return typehint of
   `Psr\Http\Message\ResponseInterface`.
 
-- `MiddlewarePipe` class is marked now as `final` and implements new interface
-  `MiddlewarePipeInterface.`
+- `MiddlewarePipe` class is marked now as `final` and implements the new
+  interface `MiddlewarePipeInterface.`
 
 - `MiddlewarePipe::pipe()`: reduces the number of arguments to one, which now
   typehints against `Psr\Http\Server\MiddlewareInterface`. This means the method
@@ -92,9 +92,9 @@ internal logic.
 ### Class additions
 
 - `Zend\Stratigility\MiddlewarePipeInterface` extends
-  `Psr\Http\Server\MiddlewareInterface` and `Psr\Http\Server\RequestHandlerInterface`
-  and define method `pipe(Psr\Http\Server\MiddlewareInterface $middleware) : void`.
-  It is implemented by `MiddlewarePipe`, because this is marked as `final` class.
+  `Psr\Http\Server\MiddlewareInterface` and `Psr\Http\Server\RequestHandlerInterface`,
+  and defines the method `pipe(Psr\Http\Server\MiddlewareInterface $middleware) : void`.
+  It is implemented by `MiddlewarePipe`.
 
 - `Zend\Stratigility\Middleware\HostMiddlewareDecorator` allows you to segregate
   middleware by a static host name. This allows executing middleware only
