@@ -29,7 +29,7 @@ use Zend\Stratigility\Exception\InvalidMiddlewareException;
  *
  * Inspired by Sencha Connect.
  *
- * @see https://github.com/sencha/connect
+ * @see https://github.com/senchalabs/connect
  */
 class MiddlewarePipe implements ServerMiddlewareInterface
 {
