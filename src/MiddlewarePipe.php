@@ -28,7 +28,7 @@ use SplQueue;
  *
  * @see https://github.com/sencha/connect
  */
-final class MiddlewarePipe implements MiddlewareInterface, RequestHandlerInterface
+final class MiddlewarePipe implements MiddlewarePipeInterface
 {
     /**
      * @var SplQueue

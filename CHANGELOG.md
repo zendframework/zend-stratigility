@@ -10,6 +10,11 @@ details.
 
 ### Added
 
+- [#146](https://github.com/zendframework/zend-stratigility/pull/146) adds a new
+  interface, `Zend\Stratigility\MiddlewarePipeInterface`. It extends the PSR-15
+  `MiddlewareInterface` and `RequestHandlerInterface`, and defines one
+  additional method, `pipe(MiddlewareInterface $middleware) : void`.
+
 - [#142](https://github.com/zendframework/zend-stratigility/pull/142) adds a new
   class, `Zend\Stratigility\Middleware\HostMiddlewareDecorator`, which provides
   host segregation functionality for middleware, allowing conditional execution
@@ -75,13 +80,17 @@ details.
   supported (though Stratigility provides decorators for the latter in order to
   cast them to PSR-15 implementations).
 
-- [#134](https://github.com/zendframework/zend-stratigility/pull/134) marks the
-  `MiddlewarePipe` class as `final`, disallowing direct extension. Either
-  compose an instance, or create a custom PSR-15 `MiddlewareInterface`
-  implementation.
-
 - [#134](https://github.com/zendframework/zend-stratigility/pull/134) and
-  [#145](https://github.com/zendframework/zend-stratigility/pull/145) update
+  [#146](https://github.com/zendframework/zend-stratigility/pull/146) modify
+  `MiddlewarePipe` in two ways: it now implements the new
+  `MiddlewarePipeInterface`, and is marked as `final`, disallowing direct
+  extension. Either decorate an instance in a custom `MiddlewarePipeInterface`
+  implementation, or create a custom PSR-15 `MiddlewareInterface`
+  implementation if piping is not necessary or will allow additional types.
+
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134),
+  [#145](https://github.com/zendframework/zend-stratigility/pull/145), and
+  [#146](https://github.com/zendframework/zend-stratigility/pull/146) update
   `MiddlewarePipe` to implement `Psr\Http\Server\RequestHandlerInterface`.
   Calling it will cause it to pull the first middleware off the queue and create
   a `Next` implementation that uses the remaining queue as the request handler;
