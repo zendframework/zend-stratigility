@@ -184,7 +184,7 @@ class MiddlewarePipeTest extends TestCase
         $this->assertSame($response, $pipeline->handle($this->request));
     }
 
-    public function testMiddlewarePipeIsInstanceOfMiddlewarePipeInterface()
+    public function testMiddlewarePipeOnlyImplementsMiddlewarePipeInterfaceApi()
     {
         $pipeline = new MiddlewarePipe();
 
