@@ -15,6 +15,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
+use ReflectionMethod;
 use ReflectionObject;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
@@ -188,7 +189,7 @@ class MiddlewarePipeTest extends TestCase
         $pipeline = new MiddlewarePipe();
 
         $r = new ReflectionObject($pipeline);
-        $methods = $r->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $methods = $r->getMethods(ReflectionMethod::IS_PUBLIC);
         $actual = [];
         foreach ($methods as $method) {
             if (strpos($method->getName(), '__') !== 0) {
@@ -198,7 +199,7 @@ class MiddlewarePipeTest extends TestCase
         sort($actual);
 
         $interfaceReflection = new ReflectionClass(MiddlewarePipeInterface::class);
-        $interfaceMethods = $interfaceReflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $interfaceMethods = $interfaceReflection->getMethods(ReflectionMethod::IS_PUBLIC);
         $expected = [];
         foreach ($interfaceMethods as $method) {
             $expected[] = $method->getName();
