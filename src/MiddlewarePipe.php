@@ -26,7 +26,7 @@ use SplQueue;
  *
  * Inspired by Sencha Connect.
  *
- * @see https://github.com/sencha/connect
+ * @see https://github.com/senchalabs/connect
  */
 final class MiddlewarePipe implements MiddlewarePipeInterface
 {
