@@ -1,7 +1,7 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2015-2018 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
@@ -72,6 +72,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      * accepting at least a request instance (in such cases, the delegate
      * will be decorated using Delegate\CallableDelegateDecorator).
      *
+     * @deprecated since 2.2.0; to be removed in version 3.0. Use process() instead.
      * @param Request $request
      * @param Response $response
      * @param callable|DelegateInterface $delegate
@@ -116,11 +117,17 @@ class MiddlewarePipe implements ServerMiddlewareInterface
      * @see MiddlewareInterface
      * @see Next
      * @param string|callable|object $path Either a URI path prefix, or middleware.
-     * @param null|callable|object $middleware Middleware
+     *     Note: since v2.2.0, we have deprecated usage of any argument type other
+     *     than a middleware implementation.
+     * @param null|callable|object $middleware Middleware. Note: since v2.2.0, we
+     *     have deprecated usage of this argument. Use the PathMiddlewareDecorator
+     *     to segregate middleware by path.
      * @return self
      */
     public function pipe($path, $middleware = null)
     {
+        $legacyArguments = null !== $middleware;
+
         if (null === $middleware
             && ($path instanceof ServerMiddlewareInterface || is_callable($path))
         ) {
@@ -140,10 +147,25 @@ class MiddlewarePipe implements ServerMiddlewareInterface
             throw InvalidMiddlewareException::fromValue($middleware);
         }
 
-        $this->pipeline->enqueue(new Route(
-            $this->normalizePipePath($path),
-            $middleware
-        ));
+        // Trigger an error if we received two arguments
+        if ($legacyArguments) {
+            trigger_error(sprintf(
+                'Providing a path to the %s method is deprecated; please use the'
+                . ' %s to decorate your path-segregated middleware instead.',
+                __CLASS__,
+                Middleware\PathMiddlewareDecorator::class
+            ), E_USER_DEPRECATED);
+        }
+
+        $path = $this->normalizePipePath($path);
+
+        // Decorate path-segregated middleware if we have a non-root path and
+        // the middleware is not already decorated
+        if ($path !== '/' && ! $middleware instanceof Middleware\PathMiddlewareDecorator) {
+            $middleware = new Middleware\PathMiddlewareDecorator($path, $middleware);
+        }
+
+        $this->pipeline->enqueue(new Route($path, $middleware));
 
         // @todo Trigger event here with route details?
         return $this;
@@ -212,8 +234,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
 
     /**
      * @param callable $middleware
-     * @return ServerMiddlewareInterface|callable Callable, if unable to
-     *     decorate the middleware; ServerMiddlewareInterface if it can.
+     * @return ServerMiddlewareInterface
      */
     private function decorateCallableMiddleware(callable $middleware)
     {
@@ -221,29 +242,54 @@ class MiddlewarePipe implements ServerMiddlewareInterface
         $paramsCount = $r->getNumberOfParameters();
 
         if ($paramsCount !== 2) {
-            return $this->getCallableMiddlewareDecorator()
-                ->decorateCallableMiddleware($middleware);
+            trigger_error(sprintf(
+                'Direct piping of double-pass middleware is deprecated and will'
+                . ' no longer be supported starting in version 3. Please decorate'
+                . ' such middleware in a %s instance before passing to %s::pipe().',
+                Middleware\DoublePassMiddlewareDecorator::class,
+                __CLASS__
+            ), E_USER_DEPRECATED);
+
+            return $this->decorateDoublePassMiddleware($middleware);
         }
 
         $params = $r->getParameters();
         $type = $params[1]->getClass();
         if (! $type || ! is_a($type->getName(), DelegateInterface::class, true)) {
-            return $this->getCallableMiddlewareDecorator()
-                ->decorateCallableMiddleware($middleware);
+            trigger_error(sprintf(
+                'Direct piping of double-pass middleware is deprecated and will'
+                . ' no longer be supported starting in version 3. Please decorate'
+                . ' such middleware in a %s instance before passing to %s::pipe().',
+                Middleware\DoublePassMiddlewareDecorator::class,
+                __CLASS__
+            ), E_USER_DEPRECATED);
+
+            return $this->decorateDoublePassMiddleware($middleware);
         }
 
-        return new Middleware\CallableInteropMiddlewareWrapper($middleware);
+        trigger_error(sprintf(
+            'Direct piping of callable interop/PSR-15 middleware is deprecated'
+            . ' and will no longer be supported starting in version 3. Please'
+            . ' decorate such middleware in a %s instance before passing to'
+            . ' %s::pipe().',
+            Middleware\CallableMiddlewareDecorator::class,
+            __CLASS__
+        ), E_USER_DEPRECATED);
+
+        return new Middleware\CallableMiddlewareDecorator($middleware);
     }
 
     /**
-     * @return Middleware\CallableMiddlewareWrapperFactory
+     * @return ServerMiddlewareInterface Generally one of Middleware\CallableMiddlewareWrapper
+     *      or Middleware\DoublePassMiddlewareDecorator.
      * @throws Exception\MissingResponsePrototypeException if no middleware
      *     decorator and no response prototype are present.
      */
-    private function getCallableMiddlewareDecorator()
+    private function decorateDoublePassMiddleware(callable $middleware)
     {
         if ($this->callableMiddlewareDecorator) {
-            return $this->callableMiddlewareDecorator;
+            return $this->callableMiddlewareDecorator
+                ->decorateCallableMiddleware($middleware);
         }
 
         if (! $this->responsePrototype) {
@@ -258,11 +304,10 @@ class MiddlewarePipe implements ServerMiddlewareInterface
             ));
         }
 
-        $this->setCallableMiddlewareDecorator(
-            new Middleware\CallableMiddlewareWrapperFactory($this->responsePrototype)
+        return new Middleware\DoublePassMiddlewareDecorator(
+            $middleware,
+            $this->responsePrototype
         );
-
-        return $this->callableMiddlewareDecorator;
     }
 
     /**

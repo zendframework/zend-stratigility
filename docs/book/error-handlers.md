@@ -37,11 +37,11 @@ middleware; such middleware might look like the following:
 
 ```php
 use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class NotFoundMiddleware implements ServerMiddlewareInterface
+class NotFoundMiddleware implements MiddlewareInterface
 {
     private $renderer;
 
@@ -64,6 +64,44 @@ class NotFoundMiddleware implements ServerMiddlewareInterface
 }
 ```
 
+> ### Middleware interface
+>
+> The interfaces you implement and consume will vary based on the version of
+> http-interop/http-middleware you have installed.
+>
+> If you have version 0.4.1 installed, you will write middleware as noted above.
+>
+> For 0.5.0, the above becomes:
+>
+> ```php
+> use Interop\Http\Server\MiddlewareInterface;
+> use Interop\Http\Server\RequestHandlerInterface;
+> use Psr\Http\Message\ResponseInterface;
+> use Psr\Http\Message\ServerRequestInterface;
+> 
+> class NotFoundMiddleware implements MiddlewareInterface
+> {
+>     private $renderer;
+> 
+>     public function __construct(
+>         TemplateRendererInterface $renderer,
+>         ResponseInterface $response
+>     ) {
+>         $this->renderer = $renderer;
+>         $this->response = $response;
+>     }
+> 
+>     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
+>     {
+>         $response = $this->response->withStatus(404);
+>         $response->getBody()->write(
+>             $this->renderer->render('error::404')
+>         );
+>         return $response;
+>     }
+> }
+> ```
+
 ## Handling PHP errors and exceptions
 
 - Since 1.3.0
@@ -76,16 +114,16 @@ class NotFoundMiddleware implements ServerMiddlewareInterface
 > 
 > Starting in 1.3.0, we provide a new way to handle errors via middleware.
 > 
-> **To opt-in to the new system, you must call `raiseThrowables()` on your
-> middleware pipeline:**
+> In version 1.3.0 and later v1 releases, you must opt-in to the system by
+> calling `raiseThrowables()` on your middleware pipeline:
 > 
 > ```php
 > $pipeline = new MiddlewarePipe();
 > $pipeline->raiseThrowables();
 > ```
-> 
-> (Starting in 2.0.0, this will no longer be necessary, but until then, this is
-> how you opt-in to the system described below.)
+>
+> Starting in version 2, the new system is enabled by default, and the
+> `FinalHandler` implementation no longer catches exceptions.
 
 `Zend\Stratigility\Middleware\ErrorHandler` is a middleware implementation to
 register as the *outermost layer* of your application (or close to the outermost
@@ -235,7 +273,7 @@ $errorHandler->attachListener(function ($throwable, $request, $response) use ($l
 
 ## Legacy error middleware
 
-- Deprecated starting in 1.3.0, to be removed in 2.0.0. Please see the
+- Deprecated starting in 1.3.0, removed in 2.0.0. Please see the
   [migration guide](migration/to-v2.md#error-handling) for more details, as well
   as the preceding section.
 

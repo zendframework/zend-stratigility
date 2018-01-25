@@ -75,9 +75,29 @@ the value `/`; this is an indication that the `$middleware` should be invoked
 for any path. If `$path` is provided, the `$middleware` will only be executed
 for that path and any subpaths.
 
+> ### Use the PathMiddlewareDecorator to segregate middleware by path
+>
+> - Since 2.2.0
+>
+> Starting in 2.2.0, we have deprecated the 2-argument form of `pipe()`, as
+> version 3 will use only one argument, typehinted against the PSR-15
+> `MiddlewareInterface`. Version 2.2.0 introduces a decorator for accomplishing
+> the same functionality:
+>
+> ```php
+> use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
+>
+> $pipeline->pipe(new PathMiddlewareDecorator($path, $middleware));
+> ```
+>
+> If you continue to use the 2-argument form of `pipe()`, internally it will
+> decorate your middleware regardless &mdash; and also trigger a deprecation
+> error. To avoid the deprecation error, update your code today!
+
 > ### Request path changes when path matched
 >
-> When you pipe middleware using a path (other than '' or '/'), the middleware
+> When you pipe middleware using a path (other than '' or '/') or use the
+> `PathMiddlewareDecorator` (as outlined in the previous note), the middleware
 > is dispatched with a request that strips the matched segment(s) from the start
 > of the path.
 >
@@ -93,6 +113,9 @@ The `MiddlewarePipe` is itself middleware, and can be executed in stacks that
 expect the `__invoke()` signature (via the `__invoke()` signature), or stacks
 expecting http-interop middleware signatures (via the `process()` method).
 
+> ### Invocation is deprecated
+>
+> Starting in version 2.2.0, invocation via `__invoke()` is deprecated.
 
 When using `__invoke()`, the callable `$out` argument should either implement
 delegator/request handler interface from `http-interop/http-middleware`
@@ -146,12 +169,23 @@ $pipeline = new MiddlewarePipe();
 $pipeline->setResponsePrototype(new Response());
 ```
 
+> ### Response prototype deprecated
+>
+> Starting in version 2.2.0, the `setResponsePrototype()` method is deprecated.
+> This is because version 3 will no longer accept non-PSR-15 middleware.
+> Callable middleware will need to be decorated using one of
+> `CallableMiddlewareDecorator` (for callable middleware implementing the PSR-15
+> signature) or `DoublePassMiddlewareDecorator` (for callable middleware expecting
+> a response and `$next` argument). The latter decorator expects a response
+> prototype as its second argument.
+
 ## Next
 
 `Zend\Stratigility\Next` is primarily an implementation detail of middleware,
 and exists to allow delegating to middleware registered later in the stack. It
 is implemented both as a functor and as an http-interop/http-middleware
-`DelegateInterface`.
+`DelegateInterface` and http-interop/http-server-handler
+`RequestHandlerInterface`.
 
 ### Functor invocation
 
@@ -199,6 +233,19 @@ when calling it in your application, or return a response yourself.
 - Since 1.3.0.
 
 When invoked as a `DelegateInterface`, the `process()` method will be invoked, and
+passed a `ServerRequestInterface` instance *only*. If you need to return a response,
+you will need to:
+
+- Compose a response prototype in the middleware to use to build a response, or a
+  canned response to return, OR
+- Create and return a concrete response type, OR
+- Operate on a response returned by invoking the delegate.
+
+### RequestHandler invocation
+
+- Since 2.1.0
+
+When invoked as a `RequestHandlerInterface`, the `handle()` method will be invoked, and
 passed a `ServerRequestInterface` instance *only*. If you need to return a response,
 you will need to:
 
@@ -452,57 +499,144 @@ for more details.
 
 ## Middleware Decorators
 
-Starting in version 1.3.0, we offer the ability to work with
-http-interop/http-middleware. Internally, if a response prototype is composed in
-the `MiddlewarePipe`, callable middleware piped to the `MiddlewarePipe` will be
-wrapped in one of these decorators.
+The following decorator classes are each in the `Zend\Stratigility\Middleware`
+namespace, and fulfill the installed `MiddlewareInterface` based on the
+http-interop/http-middleware version installed in your application.
 
-Two versions exist:
-
-- `Zend\Stratigility\Middleware\CallableMiddlewareWrapper` will wrap a callable
-  using the legacy interface; as such, it also requires a response instance:
-
-  ```php
-  $middleware = new CallableMiddlewareWrapper($middleware, $response);
-  ```
-
-- `Zend\Stratigility\Middleware\CallableMiddlewareWrapper` will wrap a callable
-  that defines exactly two arguments, with the second type-hinting on the
-  http-interop/http-middleware `DelegateInterface` (versions &lt; 0.5):
-
-  ```php
-  $middleware = new CallableMiddlewareWrapper(
-      function ($request, DelegateInterface $delegate) {
-          // ... 
-      }
-  );
-  ```
-
-  or `RequestHandlerInterface` (versions 0.5.0 or greater):
-
-  ```php
-  $middleware = new CallableMiddlewareWrapper(
-      function ($request, RequestHandlerInterface $handler) {
-          // ...
-      }
-  );
-  ```
-
-You can manually decorate callable middleware using these decorators, or simply
+You can manually decorate callable middleware using these decorators, or instead
 let `MiddlewarePipe` do the work for you. To let `MiddlewarePipe` handle this,
 however, you _must_ compose a response prototype prior to piping middleware
-using the legacy middleware signature.
+using the double pass middleware signature.
+
+### PathMiddlewareDecorator
+
+- Since 2.2.0
+
+The `PathMiddlewareDecorator` can be used to segregate middleware by request URI
+path prefix. This can be done for several purposes:
+
+- To execute such middleware only if a given path prefix is matched; e.g.,
+  if you have middleware you want to run for every URI that matches
+  `/api` (e.g., to run rate limiting middleware).
+- To re-use an existing middleware that has its own internal routing under a
+  specific path; e.g., a "shopping cart" middleware pipeline/application that
+  you wish to run under the path `/store` on one site, but under `/shop` on
+  another, while otherwise retaining the same functionality.
+
+The `PathMiddlewareDecorator` constructor accepts two arguments: a string path
+prefix to match, and an http-interop `MiddlewareInterface` instance:
+
+```php
+$middleware = new PathMiddlewareDecorator('/api', $apiMiddleware);
+```
+
+When the path prefix is matched in the current request, the decorator will
+strip the path prefix from the request passed to the composed middleware.
+
+If the middleware calls on the handler, the decorator will replace the request
+URI's path with the path from the original request before invoking the handler.
+
+### CallableMiddlewareDecorator
+
+- Since 2.2.0
+
+This class will decorate any PHP callable middleware that follows the signatures
+of either of the `MiddlewareInterface` from either the 0.4.1 or 0.5.0 version of
+the http-interop/http-middleware package.
+
+Typically, this looks like:
+
+```php
+function ($request, $handler) : Psr\Http\Message\ResponseInterface
+```
+
+where `$handler` will either be of the type
+`Interop\Http\ServerMiddleware\DelegateInterface` or
+`Interop\Http\Server\RequestHandlerInterface`, depending on the http-interop
+version used in your application.
+
+The decorator receives the PHP callable as its sole constructor argument, and is
+then suitable for piping into the application:
+
+```php
+use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
+
+$pipeine->pipe(new CallableMiddlewareDecorator(function ($request, $handler) {
+    // ...
+}));
+```
+
+This class is forwards compatible with version 3.
+
+### DoublePassMiddlewareDecorator
+
+- Since 2.2.0
+
+This class will decorate any PHP callable middleware that follows the "[double
+pass signature](creating-middleware.md#double-pass-middleware)double-pass"  as a
+`MiddlewareInterface` implementation of either the 0.4.1 or 0.5.0 version of
+http-interop.
+
+Typically, this looks like:
+
+```php
+function ($request, $response, $next) : Psr\Http\Message\ResponseInterface
+```
+
+where `$next` is a callable for invoking the next middleware layer, and expects
+
+The decorator receives the PHP callable and a PSR-7 `ResponseInterface` instance
+as its arguments, and is then suitable for piping into the application:
+
+```php
+use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
+
+$pipeine->pipe(new DoublePassMiddlewareDecorator(
+    function ($request, $response, $next) {
+        // ...
+    },
+    $responsePrototype
+));
+```
+
+This class is forwards compatible with version 3.
+
+### CallableInteropMiddlewareWrapper
+
+- Since 1.3.0
+- Deprecated since 2.2.0
+
+This is a middleware decorator for PHP callables that have a signature
+compatible with http-interop/http-middleware version 0.4.1 or 0.5.0. Please see
+the [Creating Middleware standards-based callable middleware
+documentation](creating-middleware.md#callable-standards-signature-middleware).
+
+### CallableMiddlewareWrapper
+
+- Since 1.3.0
+- Deprecated since 2.2.0
+
+This is a middleware decorator for PHP callables that follow the [double pass
+signature](creating-middleware.md#double-pass-middleware). If you plan use
+double pass middleware in version 2.2.0 or later, we recommend using the
+[`DoublePassMiddlewareDecorator`](#doublepassmiddlewaredecorator) instead.
 
 ## Delegates
 
+- Since 2.0.0
+- Deprecated since 2.2.0
+
 In addition to `Zend\Stratigility\Next`, Stratigility provides another
-http-interop/http-middleware `DelegateInterface` implementation,
-`Zend\Stratigility\Delegate\CallableDelegateDecorator`.
+delegate/request handler implementation via 
+`Zend\Stratigility\Delegate\CallableDelegateDecorator`. This class will work
+with either http-interop/http-middleware 0.4.1 or 0.5.0, implementing the
+`DelegateInterface` in the case of the former, or the `RequestHandlerInterface`
+in the case of the latter.
 
 This class can be used to wrap a callable `$next` instance for use in passing to
-an http-interop/http-middleware middleware interface `process()`/`handle()`
-method as a delegate; the primary use case is adapting functor middleware to
-work as http-interop middleware.
+an http-interop/http-middleware middleware interface `process()` method as a
+delegate; the primary use case is adapting functor middleware to work as
+http-interop middleware.
 
 As an example:
 
@@ -546,4 +680,68 @@ class TimestampMiddleware implements ServerMiddlewareInterface
         return $response->withHeader('X-Processed-Timestamp', time());
     }
 }
+```
+
+## Utility Functions
+
+Stratigility provides the following utility functions.
+
+### path
+
+````
+function Zend\Stratigility\path(
+    string $pathPrefix,
+    Interop\Http\Server\MiddlewareInterface|Interop\Http\ServerMiddleware\MiddlewareInterface $middleware
+) : Zend\Stratigility\Middleware\PathMiddlewareDecorator
+```
+
+`path()` provides a convenient way to perform path segregation when piping your
+middleware.
+
+```php
+$pipeline->pipe(path('/foo', $middleware));
+```
+
+### middleware
+
+````
+function Zend\Stratigility\middleware(
+    callable $middleware
+) : Zend\Stratigility\Middleware\CallableMiddlewareDecorator
+```
+
+`middleware()` provides a convenient way to decorate callable middleware that
+implements the PSR-15 middleware signature when piping it to your application.
+
+```php
+$pipeline->pipe(middleware(function ($request, $handler) {
+  // ...
+});
+```
+
+### doublePassMiddleware
+
+````
+function Zend\Stratigility\doublePassMiddleware(
+    callable $middleware,
+    Psr\Http\Message\ResponseInterface $responsePrototype = null
+) : Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator
+```
+
+`doublePassiddleware()` provides a convenient way to decorate middleware that
+implements the double pass middleware signature when piping it to your application.
+
+```php
+$pipeline->pipe(doublePassMiddleware(function ($request, $response, $next) {
+  // ...
+});
+```
+
+If you are not using zend-diactoros as a PSR-7 implementation, you will need to
+pass a response prototype as well:
+
+```php
+$pipeline->pipe(doublePassMiddleware(function ($request, $response, $next) {
+  // ...
+}, $response);
 ```

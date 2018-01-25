@@ -9,7 +9,7 @@ cache:
 env:
   global:
     - COMPOSER_ARGS="--no-interaction --no-plugins"
-    - COVERAGE_DEPS="satooshi/php-coveralls"
+    - COVERAGE_DEPS="php-coveralls/php-coveralls"
 
 matrix:
   include:
@@ -18,7 +18,7 @@ matrix:
         - DEPS=lowest
     - php: 5.6
       env:
-        - LEGACY_DEPS="phpunit/phpunit"
+        - LEGACY_DEPS="phpunit/phpunit malukenho/docheader"
         - DEPS=locked
     - php: 5.6
       env:
@@ -29,7 +29,7 @@ matrix:
     - php: 7
       env:
         - DEPS=locked
-        - LEGACY_DEPS="doctrine/instantiator"
+        - LEGACY_DEPS="doctrine/instantiator malukenho/docheader"
         - CS_CHECK=true
         - TEST_COVERAGE=true
     - php: 7
@@ -53,8 +53,6 @@ matrix:
     - php: 7.2
       env:
         - DEPS=latest
-  allow_failures:
-    - php: 7.2
 
 before_install:
   - if [[ $TEST_COVERAGE != 'true' && "$(php --version | grep xdebug -ci)" -ge 1 ]]; then phpenv config-rm xdebug.ini || return 0 ; fi
@@ -74,7 +72,7 @@ script:
   - if [[ $CS_CHECK == 'true' ]]; then composer license-check ; fi
 
 after_script:
-  - if [[ $TEST_COVERAGE == 'true' ]]; then composer upload-coverage ; fi
+  - if [[ $TEST_COVERAGE == 'true' ]]; then travis_retry php vendor/bin/php-coveralls -v  ; fi
 
 notifications:
   email: false
