@@ -6,6 +6,36 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
+## 3.0.0alpha3 - 2018-02-05
+
+### Added
+
+- [#150](https://github.com/zendframework/zend-stratigility/pull/150) adds a new
+  class, `Zend\Stratigility\Middleware\RequestHandlerMiddleware`. The class
+  implements the PSR-15 `RequestHandlerInterface` and `MiddlewareInterface`, and
+  accepts a single constructor argument, a `RequestHandlerInterface` instance.
+  Each of its `handle()` and `process()` methods proxy to the composed request
+  handler's `handle()` method, returning its result.
+
+  This class can be useful for adapting request handlers to use within
+  pipelines.
+
+### Changed
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
 ## 3.0.0alpha2 - 2018-01-25
 
 ### Added
