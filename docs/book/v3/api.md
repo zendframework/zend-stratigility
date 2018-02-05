@@ -228,6 +228,21 @@ $pipeline->pipe(new DoublePassMiddlewareDecorator(
 ));
 ```
 
+### RequestHandlerMiddleware
+
+`Zend\Stratigility\Middleware\RequestHandlerMiddleware` allows you to decorate a
+PSR-15 `RequestHandlerInterface` for use as either a request handler or
+middleware. When either its `handle()` or `process()` method are called, it will
+proxy to the composed request handler's `handle()` method and return the
+response it produces.
+
+This can be useful for piping a final handler to a pipeline.
+
+```php
+// Where $handler is a RequestHandlerInterface:
+$pipeline->pipe(new RequestHandlerMiddleware($handler));
+```
+
 ### ErrorHandler and NotFoundHandler
 
 These two middleware allow you to provide handle PHP errors and exceptions, and
