@@ -14,20 +14,24 @@ use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
 
 class DoublePassMiddlewareDecoratorExceptionTest extends TestCase
 {
+    /** @var array */
     private $autoloadFunctions = [];
 
     protected function setUp() : void
     {
+        class_exists(MissingResponsePrototypeException::class);
+        class_exists(DoublePassMiddlewareDecorator::class);
+
         $this->autoloadFunctions = spl_autoload_functions();
         foreach ($this->autoloadFunctions as $func) {
             spl_autoload_unregister($func);
         }
     }
 
-    protected function tearDown() : void
+    private function reloadAutoloaders() : void
     {
-        foreach ($this->autoloadFunctions as $func) {
-            spl_autoload_register($func);
+        foreach ($this->autoloadFunctions as $autoloader) {
+            spl_autoload_register($autoloader);
         }
     }
 
@@ -41,7 +45,11 @@ class DoublePassMiddlewareDecoratorExceptionTest extends TestCase
         $this->expectExceptionMessage(
             'no response prototype provided, and zendframework/zend-diactoros is not installed'
         );
-        include_once __DIR__ . '/../../src/Middleware/DoublePassMiddlewareDecorator.php';
-        new DoublePassMiddlewareDecorator($middleware);
+
+        try {
+            new DoublePassMiddlewareDecorator($middleware);
+        } finally {
+            $this->reloadAutoloaders();
+        }
     }
 }
