@@ -20,7 +20,8 @@
     },
     "require": {
         "php": "^7.1",
-        "fig/http-message-util": "^1.1.2",
+        "fig/http-message-util": "^1.1",
+        "psr/http-message": "^1.0",
         "psr/http-server-middleware": "^1.0",
         "zendframework/zend-escaper": "^2.3"
     },
