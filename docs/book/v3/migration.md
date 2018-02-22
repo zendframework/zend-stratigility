@@ -89,6 +89,15 @@ internal logic.
   `Psr\Http\Server\RequestHandlerInterface`, and provides a return typehint of
   `Psr\Http\Message\ResponseInterface`.
 
+- `ErrorHandler::__construct()` and `NotFoundHandler::__construct()`: the first
+  parameter of each constructor now expects a PHP `callable` capable of
+  returning a PSR-7 `ResponseInterface` instance (instead of typehinting
+  directly against `ResponseInterface`). This paves the way for usage with the
+  upcoming PSR-17 (HTTP Message Factories) specification, and simplifies re-use
+  of a dependency injection container service (as otherwise you would need to
+  specify a discrete service per class that expects a response prototype, due to
+  mutability of the response body).
+
 ### Class additions
 
 - `Zend\Stratigility\MiddlewarePipeInterface` extends
