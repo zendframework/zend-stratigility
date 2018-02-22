@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Zend\Stratigility\Middleware;
 
+use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -16,17 +17,20 @@ use Psr\Http\Server\RequestHandlerInterface;
 class NotFoundHandler implements MiddlewareInterface
 {
     /**
-     * @var ResponseInterface
+     * @var callable
      */
-    private $responsePrototype;
+    private $responseFactory;
 
     /**
-     * @param ResponseInterface $responsePrototype Empty/prototype response to
-     *     update and return when returning an 404 response.
+     * @param callable $responseFactory A factory capable of returning an
+     *     empty ResponseInterface instance to update and return when returning
+     *     an 404 response.
      */
-    public function __construct(ResponseInterface $responsePrototype)
+    public function __construct(callable $responseFactory)
     {
-        $this->responsePrototype = $responsePrototype;
+        $this->responseFactory = function () use ($responseFactory) : ResponseInterface {
+            return $responseFactory();
+        };
     }
 
     /**
@@ -34,8 +38,8 @@ class NotFoundHandler implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        $response = $this->responsePrototype
-            ->withStatus(404);
+        $response = ($this->responseFactory)()
+            ->withStatus(StatusCode::STATUS_NOT_FOUND);
         $response->getBody()->write(sprintf(
             'Cannot %s %s',
             $request->getMethod(),

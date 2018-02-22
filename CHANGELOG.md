@@ -6,6 +6,34 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
+## 3.0.0alpha4 - TBD
+
+### Added
+
+- Nothing.
+
+### Changed
+
+- [#153](https://github.com/zendframework/zend-stratigility/pull/153) modifies
+  the first argument of the `Zend\Expressive\Middleware\ErrorHandler` and
+  `NotFoundHandler` classes. Previously, they each expected a
+  `Psr\Http\Message\ResponseInterface` instance; they now both expect a PHP
+  callable capable of producing such an instance. This change was done to
+  simplify re-use of a service for producing unique response instances within
+  dependency injection containers.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
 ## 3.0.0alpha3 - 2018-02-05
 
 ### Added
