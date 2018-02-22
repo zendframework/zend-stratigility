@@ -75,19 +75,22 @@ final class ErrorHandler implements MiddlewareInterface
     private $responseGenerator;
 
     /**
-     * @var ResponseInterface
+     * @var callable
      */
-    private $responsePrototype;
+    private $responseFactory;
 
     /**
-     * @param ResponseInterface $responsePrototype Empty/prototype response to
-     *     update and return when returning an error response.
+     * @param callable $responseFactory A factory capable of returning an
+     *     empty ResponseInterface instance to update and return when returning
+     *     an error response.
      * @param null|callable $responseGenerator Callback that will generate the final
      *     error response; if none is provided, ErrorResponseGenerator is used.
      */
-    public function __construct(ResponseInterface $responsePrototype, callable $responseGenerator = null)
+    public function __construct(callable $responseFactory, callable $responseGenerator = null)
     {
-        $this->responsePrototype = $responsePrototype;
+        $this->responseFactory = function () use ($responseFactory) {
+            return $responseFactory();
+        };
         $this->responseGenerator = $responseGenerator ?: new ErrorResponseGenerator();
     }
 
@@ -155,7 +158,7 @@ final class ErrorHandler implements MiddlewareInterface
     private function handleThrowable(Throwable $e, ServerRequestInterface $request) : ResponseInterface
     {
         $generator = $this->responseGenerator;
-        $response = $generator($e, $request, $this->responsePrototype);
+        $response = $generator($e, $request, ($this->responseFactory)());
         $this->triggerListeners($e, $request, $response);
         return $response;
     }

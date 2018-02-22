@@ -10,6 +10,7 @@ namespace ZendTest\Stratigility\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
+use Prophecy\Prophecy\ObjectProphecy;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -21,9 +22,18 @@ use Zend\Stratigility\Middleware\ErrorResponseGenerator;
 
 class ErrorHandlerTest extends TestCase
 {
+    /** @var ResponseInterface|ObjectProphecy */
+    private $response;
+
+    /** @var callable */
+    private $responseFactory;
+
     public function setUp()
     {
         $this->response = $this->prophesize(ResponseInterface::class);
+        $this->responseFactory = function () {
+            return $this->response->reveal();
+        };
         $this->request = $this->prophesize(ServerRequestInterface::class);
         $this->body = $this->prophesize(StreamInterface::class);
         $this->handler = $this->prophesize(RequestHandlerInterface::class);
@@ -38,7 +48,7 @@ class ErrorHandlerTest extends TestCase
     public function createMiddleware($isDevelopmentMode = false)
     {
         $generator = new ErrorResponseGenerator($isDevelopmentMode);
-        return new ErrorHandler($this->response->reveal(), $generator);
+        return new ErrorHandler($this->responseFactory, $generator);
     }
 
     public function testReturnsResponseFromHandlerWhenNoProblemsOccur()
@@ -203,7 +213,7 @@ class ErrorHandlerTest extends TestCase
         $this->response->getBody()->will([$this->body, 'reveal']);
         $this->body->write('The client messed up')->shouldBeCalled();
 
-        $middleware = new ErrorHandler($this->response->reveal(), $generator);
+        $middleware = new ErrorHandler($this->responseFactory, $generator);
         $result = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($this->response->reveal(), $result);

@@ -30,7 +30,11 @@ class NotFoundHandlerTest extends TestCase
         $request->getMethod()->willReturn('POST');
         $request->getUri()->willReturn('https://example.com/foo');
 
-        $middleware = new NotFoundHandler($response->reveal());
+        $responseFactory = function () use ($response) {
+            return $response->reveal();
+        };
+
+        $middleware = new NotFoundHandler($responseFactory);
 
         $this->assertSame(
             $response->reveal(),
