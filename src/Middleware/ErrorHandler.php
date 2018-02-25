@@ -192,8 +192,8 @@ final class ErrorHandler implements MiddlewareInterface
         ServerRequestInterface $request,
         ResponseInterface $response
     ) : void {
-        array_walk($this->listeners, function ($listener) use ($error, $request, $response) {
+        foreach ($this->listeners as $listener) {
             $listener($error, $request, $response);
-        });
+        }
     }
 }
