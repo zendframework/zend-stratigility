@@ -30,7 +30,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  * - Determining if changes to the response have occurred.
  * - Providing prototypes for factories.
  */
-class OriginalMessages implements MiddlewareInterface
+final class OriginalMessages implements MiddlewareInterface
 {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {

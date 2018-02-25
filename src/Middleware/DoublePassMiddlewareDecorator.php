@@ -34,7 +34,7 @@ use Zend\Stratigility\Exception;
  * Neither the arguments nor the return value need be typehinted; however, if
  * the signature is incompatible, a PHP Error will likely be thrown.
  */
-class DoublePassMiddlewareDecorator implements MiddlewareInterface
+final class DoublePassMiddlewareDecorator implements MiddlewareInterface
 {
     /**
      * @var callable

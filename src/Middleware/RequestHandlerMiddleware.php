@@ -25,7 +25,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  * they may be piped or routed to. When processed, they delegate handling to the
  * decorated handler, which will return a response.
  */
-class RequestHandlerMiddleware implements MiddlewareInterface, RequestHandlerInterface
+final class RequestHandlerMiddleware implements MiddlewareInterface, RequestHandlerInterface
 {
     /**
      * @var RequestHandlerInterface Decorated handler to invoke.
