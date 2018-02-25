@@ -28,8 +28,9 @@ abstract class Utils
      */
     public static function getStatusCode(Throwable $error, ResponseInterface $response) : int
     {
-        if ($error->getCode() >= 400 && $error->getCode() < 600) {
-            return $error->getCode();
+        $errorCode = $error->getCode();
+        if ($errorCode >= 400 && $errorCode < 600) {
+            return $errorCode;
         }
 
         $status = $response->getStatusCode();

@@ -30,8 +30,7 @@ class PathMiddlewareDecorator implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        $path = $request->getUri()->getPath();
-        $path = $path ?: '/';
+        $path = $request->getUri()->getPath() ?: '/';
 
         // Current path is shorter than decorator path
         if (strlen($path) < strlen($this->prefix)) {

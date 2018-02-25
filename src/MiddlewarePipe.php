@@ -69,7 +69,7 @@ final class MiddlewarePipe implements MiddlewarePipeInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        if (0 === count($this->pipeline)) {
+        if ($this->pipeline->isEmpty()) {
             throw Exception\EmptyPipelineException::forClass(__CLASS__);
         }
 
