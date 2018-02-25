@@ -30,7 +30,7 @@ class HostMiddlewareDecorator implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        $host = strtolower($request->getUri()->getHost());
+        $host = $request->getUri()->getHost();
 
         if ($host !== strtolower($this->host)) {
             return $handler->handle($request);
