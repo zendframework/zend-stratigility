@@ -26,6 +26,12 @@ details.
   - `Zend\Stratigility\Middleware\RequestHandlerMiddleware`
   - `Zend\Stratigility\Next`
 
+- [#157](https://github.com/zendframework/zend-stratigility/pull/157) marks the
+  package as conflicting with zendframework/zend-diactoros versions less than
+  1.7.1. This is due to the fact that that version provides a bugfix for its
+  `Uri::getHost()` implementation that ensures it follows the PSR-7 and IETF RFC
+  3986 specifications.
+
 ### Deprecated
 
 - Nothing.

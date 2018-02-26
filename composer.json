@@ -29,10 +29,13 @@
         "malukenho/docheader": "^0.1.6",
         "phpunit/phpunit": "^7.0.1",
         "zendframework/zend-coding-standard": "~1.0.0",
-        "zendframework/zend-diactoros": "^1.0"
+        "zendframework/zend-diactoros": "^1.7.1"
     },
     "suggest": {
         "psr/http-message-implementation": "Please install a psr/http-message-implementation to consume Stratigility; e.g., zendframework/zend-diactoros"
+    },
+    "conflict": {
+        "zendframework/zend-diactoros": "<1.7.1"
     },
     "autoload": {
         "files": [
