@@ -17,7 +17,7 @@ use SplQueue;
 /**
  * Iterate a queue of middlewares and execute them.
  */
-class Next implements RequestHandlerInterface
+final class Next implements RequestHandlerInterface
 {
     /**
      * @var RequestHandlerInterface

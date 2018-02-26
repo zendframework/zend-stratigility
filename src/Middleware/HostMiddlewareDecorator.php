@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-class HostMiddlewareDecorator implements MiddlewareInterface
+final class HostMiddlewareDecorator implements MiddlewareInterface
 {
     /** @var MiddlewareInterface */
     private $middleware;
