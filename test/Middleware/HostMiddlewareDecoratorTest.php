@@ -94,10 +94,8 @@ class HostMiddlewareDecoratorTest extends TestCase
     public function matchingHost() : Generator
     {
         yield ['host.foo', 'host.foo'];
-        yield ['host.FOO', 'host.foo'];
-        yield ['HOST.FOO', 'host.foo'];
         yield ['host.foo', 'HOST.FOO'];
-        yield ['Host.Foo', 'hOsT.fOO'];
+        yield ['host.foo', 'hOsT.fOO'];
     }
 
     /**

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "442a923cd519e6fe7eebe2c1a373b521",
+    "content-hash": "b362b0bdd137d981039645e99c637403",
     "packages": [
         {
             "name": "fig/http-message-util",
@@ -2048,16 +2048,16 @@
         },
         {
             "name": "zendframework/zend-diactoros",
-            "version": "1.7.0",
+            "version": "1.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/zendframework/zend-diactoros.git",
-                "reference": "ed6ce7e2105c400ca10277643a8327957c0384b7"
+                "reference": "bf26aff803a11c5cc8eb7c4878a702c403ec67f1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/zendframework/zend-diactoros/zipball/ed6ce7e2105c400ca10277643a8327957c0384b7",
-                "reference": "ed6ce7e2105c400ca10277643a8327957c0384b7",
+                "url": "https://api.github.com/repos/zendframework/zend-diactoros/zipball/bf26aff803a11c5cc8eb7c4878a702c403ec67f1",
+                "reference": "bf26aff803a11c5cc8eb7c4878a702c403ec67f1",
                 "shasum": ""
             },
             "require": {
@@ -2096,7 +2096,7 @@
                 "psr",
                 "psr-7"
             ],
-            "time": "2018-01-04T18:21:48+00:00"
+            "time": "2018-02-26T15:44:50+00:00"
         }
     ],
     "aliases": [],
