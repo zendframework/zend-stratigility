@@ -6,6 +6,38 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
+## 3.0.0rc1 - 2018-02-26
+
+### Added
+
+- Nothing.
+
+### Changed
+
+- [#155](https://github.com/zendframework/zend-stratigility/pull/155) modifies
+  each of the following classes to mark them `final`:
+
+  - `Zend\Stratigility\Middleware\CallableMiddlewareDecorator`
+  - `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator`
+  - `Zend\Stratigility\Middleware\HostMiddlewareDecorator`
+  - `Zend\Stratigility\Middleware\NotFoundHandler`
+  - `Zend\Stratigility\Middleware\OriginalMessages`
+  - `Zend\Stratigility\Middleware\PathMiddlewareDecorator`
+  - `Zend\Stratigility\Middleware\RequestHandlerMiddleware`
+  - `Zend\Stratigility\Next`
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
 ## 3.0.0alpha4 - 2018-02-22
 
 ### Added
