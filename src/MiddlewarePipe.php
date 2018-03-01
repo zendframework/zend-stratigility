@@ -174,6 +174,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     /**
      * Inject a factory for decorating callable middleware.
      *
+     * @deprecated Since 2.2.0; this feature will be removed in version 3.0.0.
      * @param Middleware\CallableMiddlewareWrapperFactory $decorator
      * @return void
      */
@@ -193,6 +194,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     }
 
     /**
+     * @deprecated Since 2.2.0; this feature will be removed in version 3.0.0.
      * @param Response $prototype
      * @return void
      */
@@ -202,6 +204,7 @@ class MiddlewarePipe implements ServerMiddlewareInterface
     }
 
     /**
+     * @deprecated Since 2.2.0; this feature will be removed in version 3.0.0.
      * @return bool
      */
     public function hasResponsePrototype()
