@@ -284,6 +284,21 @@ details.
 
 - Nothing.
 
+- [#159](https://github.com/zendframework/zend-stratigility/pull/159) deprecates
+  `Zend\Stratigility\MiddlewarePipe::setCallableMiddlewareDecorator()`. Use
+  `Zend\Stratigility\doublePassMiddleware()` or  `Zend\Stratigility\Middleware\DoublePassMiddleware`
+  prior to passing your double-pass middleware to `MiddlewarePipe::pipe()`.
+
+- [#159](https://github.com/zendframework/zend-stratigility/pull/159) deprecates
+  `Zend\Stratigility\MiddlewarePipe::setResponsePrototype()`. This was used only
+  to seed an instance of `Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory`
+  previously; pass your response prototype directly to a new instance of
+  `Zend\Stratigility\Middleware\DoublePassMiddleware` or the ``Zend\Stratigility\doublePassMiddleware()`
+  function instead.
+
+- [#159](https://github.com/zendframework/zend-stratigility/pull/159) deprecates
+  `Zend\Stratigility\MiddlewarePipe::hasResponsePrototype()`.
+
 ### Removed
 
 - Nothing.
