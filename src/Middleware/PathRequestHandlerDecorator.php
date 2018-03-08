@@ -58,7 +58,7 @@ class PathRequestHandlerDecorator implements RequestHandlerInterface
      * Proxy to handle
      * {@inheritDocs}
      */
-    public function process(RequestInterface $request)
+    public function process(ServerRequestInterface $request)
     {
         return $this->handle($request);
     }
