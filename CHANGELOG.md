@@ -6,6 +6,29 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
+## 2.2.0rc3 - 2018-03-08
+
+### Added
+
+- Nothing.
+
+### Changed
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Fixes the signature of `PathRequestHandlerDecorator::process()` to typehint
+  against the PSR-7 `ServerRequestInterface`, and not `RequestInterface`.
+
 ## 2.2.0rc2 - 2018-03-08
 
 ### Added
