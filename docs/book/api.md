@@ -1,8 +1,8 @@
-<noscript><meta http-equiv="refresh" content="0; url=v3/api/"></noscript>
+<noscript><meta http-equiv="refresh" content="0; url=/zend-stratigility/v3/api/"></noscript>
 <script>
   document.addEventListener("DOMContentLoaded", function (event) {
     var uri = new URL(window.location.href);
-    uri.pathname = 'v3/api/';
+    uri.pathname = '/zend-stratigility/v3/api/';
     window.location = uri.href;
   });
 </script>
