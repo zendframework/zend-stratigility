@@ -1,27 +1,25 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2018 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2018 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+
+declare(strict_types=1);
 
 namespace ZendTest\Stratigility\Middleware;
 
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UriInterface;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as RequestHandlerInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
-
-use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
+use Zend\Stratigility\MiddlewarePipe;
 
 class PathMiddlewareDecoratorIntegrationTest extends TestCase
 {
@@ -33,38 +31,38 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
 
         $pipeline = new MiddlewarePipe();
 
-        $first = $this->createPassThroughMiddleware(function ($receivedRequest) use ($request) {
+        $first = $this->createPassThroughMiddleware(function ($received) use ($request) {
             Assert::assertSame(
-                $receivedRequest,
                 $request,
+                $received,
                 'First middleware did not receive original request, but should have'
             );
             return $request;
         });
         $second = new PathMiddlewareDecorator('/foo', $this->createNestedPipeline($request));
-        $last = $this->createPassThroughMiddleware(function ($receivedRequest) use ($request) {
+        $last = $this->createPassThroughMiddleware(function ($received) use ($request) {
             Assert::assertNotSame(
-                $receivedRequest,
                 $request,
+                $received,
                 'Last middleware received original request, but should not have'
             );
 
             $originalUri = $request->getUri();
-            $receivedUri = $receivedRequest->getUri();
+            $receivedUri = $received->getUri();
 
             Assert::assertNotSame(
-                $receivedUri,
                 $originalUri,
+                $receivedUri,
                 'Last middleware received original URI instance, but should not have'
             );
 
             Assert::assertSame(
-                $receivedUri->getPath(),
                 $originalUri->getPath(),
-                'Last middleware received different URI path thatn original, but should not have'
+                $receivedUri->getPath(),
+                'Last middleware did not receive original URI path, but should have'
             );
 
-            return $receivedRequest;
+            return $request;
         });
 
         $pipeline->pipe($first);
@@ -73,7 +71,7 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
 
         $handler = $this->prophesize(RequestHandlerInterface::class);
         $handler
-            ->{HANDLER_METHOD}($request)
+            ->handle($request)
             ->willReturn($response);
 
         $this->assertSame(
@@ -82,10 +80,7 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
         );
     }
 
-    /**
-     * @return MiddlewareInterface
-     */
-    public function createPassThroughMiddleware(callable $requestAssertion)
+    public function createPassThroughMiddleware(callable $requestAssertion) : MiddlewareInterface
     {
         $middleware = $this->prophesize(MiddlewareInterface::class);
         $middleware
@@ -96,15 +91,12 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
             ->will(function ($args) {
                 $request = $args[0];
                 $next = $args[1];
-                return $next->{HANDLER_METHOD}($request);
+                return $next->handle($request);
             });
         return $middleware->reveal();
     }
 
-    /**
-     * @return MiddlewareInterface
-     */
-    public function createNestedPipeline(ServerRequestInterface $originalRequest)
+    public function createNestedPipeline(ServerRequestInterface $originalRequest) : MiddlewareInterface
     {
         $pipeline = new MiddlewarePipe();
 
@@ -130,7 +122,7 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
             ->will(function ($args) {
                 $request = $args[0];
                 $next = $args[1];
-                return $next->{HANDLER_METHOD}($request);
+                return $next->handle($request);
             });
         $decorated = new PathMiddlewareDecorator('/bar', $barMiddleware->reveal());
 
@@ -156,7 +148,7 @@ class PathMiddlewareDecoratorIntegrationTest extends TestCase
             ->will(function ($args) {
                 $request = $args[0];
                 $next = $args[1];
-                return $next->{HANDLER_METHOD}($request);
+                return $next->handle($request);
             });
 
         $pipeline->pipe($decorated);

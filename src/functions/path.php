@@ -1,13 +1,15 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2018 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2018 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
+declare(strict_types=1);
+
 namespace Zend\Stratigility;
 
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface;
+use Psr\Http\Server\MiddlewareInterface;
 
 /**
  * Convenience function for creating path-segregated middleware.
@@ -19,11 +21,8 @@ use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface;
  *
  * $pipeline->pipe(path('/foo', $middleware));
  * </code>
- *
- * @param string $path Path prefix to match in order to dispatch $middleware
- * @return Middleware\PathMiddlewareDecorator
  */
-function path($path, MiddlewareInterface $middleware)
+function path(string $path, MiddlewareInterface $middleware) : Middleware\PathMiddlewareDecorator
 {
     return new Middleware\PathMiddlewareDecorator($path, $middleware);
 }

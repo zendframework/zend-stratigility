@@ -1,62 +1,46 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2016-2018 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2016-2018 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
+declare(strict_types=1);
+
 namespace Zend\Stratigility\Middleware;
 
+use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
-use Zend\Stratigility\Delegate\CallableDelegateDecorator;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-class NotFoundHandler implements ServerMiddlewareInterface
+final class NotFoundHandler implements MiddlewareInterface
 {
     /**
-     * @var ResponseInterface
+     * @var callable
      */
-    private $responsePrototype;
+    private $responseFactory;
 
     /**
-     * @param ResponseInterface $responsePrototype Empty/prototype response to
-     *     update and return when returning an 404 response.
+     * @param callable $responseFactory A factory capable of returning an
+     *     empty ResponseInterface instance to update and return when returning
+     *     an 404 response.
      */
-    public function __construct(ResponseInterface $responsePrototype)
+    public function __construct(callable $responseFactory)
     {
-        $this->responsePrototype = $responsePrototype;
-    }
-
-    /**
-     * Proxy to process()
-     *
-     * Proxies to process, after first wrapping the `$next` argument using the
-     * CallableDelegateDecorator.
-     *
-     * @deprecated since 2.2.0; to be removed in version 3.0. Use process() instead.
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param callable $next
-     * @return ResponseInterface
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
-    {
-        return $this->process($request, new CallableDelegateDecorator($next, $response));
+        $this->responseFactory = function () use ($responseFactory) : ResponseInterface {
+            return $responseFactory();
+        };
     }
 
     /**
      * Creates and returns a 404 response.
-     *
-     * @param ServerRequestInterface $request Ignored.
-     * @param DelegateInterface $delegate Ignored.
-     * @return ResponseInterface
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        $response = $this->responsePrototype
-            ->withStatus(404);
+        $response = ($this->responseFactory)()
+            ->withStatus(StatusCode::STATUS_NOT_FOUND);
         $response->getBody()->write(sprintf(
             'Cannot %s %s',
             $request->getMethod(),

@@ -1,27 +1,8 @@
-# Usage
-
-Creating an application consists of 3 steps:
-
-- Create middleware or a middleware pipeline
-- Create a server, using the middleware
-- Instruct the server to listen for a request
-
-```php
-use Zend\Stratigility\MiddlewarePipe;
-use Zend\Stratigility\NoopFinalHandler;
-use Zend\Diactoros\Server;
-
-require __DIR__ . '/../vendor/autoload.php';
-
-$app    = new MiddlewarePipe();
-$server = Server::createServer($app,
-  $_SERVER,
-  $_GET,
-  $_POST,
-  $_COOKIE,
-  $_FILES
-);
-$server->listen(new NoopFinalHandler());
-```
-
-The above example is useless by itself until you pipe middleware into the application.
+<noscript><meta http-equiv="refresh" content="0; url=/zend-stratigility/v3/usage/"></noscript>
+<script>
+  document.addEventListener("DOMContentLoaded", function (event) {
+    var uri = new URL(window.location.href);
+    uri.pathname = '/zend-stratigility/v3/usage/';
+    window.location = uri.href;
+  });
+</script>

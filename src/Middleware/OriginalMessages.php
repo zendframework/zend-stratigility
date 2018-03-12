@@ -1,23 +1,25 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2016 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2016-2018 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+
+declare(strict_types=1);
 
 namespace Zend\Stratigility\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Stratigility\MiddlewareInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Inject attributes containing the original request, response, and URI instances.
+ * Inject attributes containing the original request and URI instances.
  *
  * This middleware will add request attributes as follows:
  *
  * - "originalRequest", representing the request provided to this middleware.
- * - "originalResponse", representing the response provided to this middleware.
  * - "originalUri", representing the URI composed by the request provided to
  *   this middleware.
  *
@@ -28,25 +30,14 @@ use Zend\Stratigility\MiddlewareInterface;
  * - Determining if changes to the response have occurred.
  * - Providing prototypes for factories.
  */
-class OriginalMessages implements MiddlewareInterface
+final class OriginalMessages implements MiddlewareInterface
 {
-    /**
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param null|callable $next
-     * @return ResponseInterface
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        if (! $next) {
-            return $response;
-        }
-
         $request = $request
             ->withAttribute('originalUri', $request->getUri())
-            ->withAttribute('originalRequest', $request)
-            ->withAttribute('originalResponse', $response);
+            ->withAttribute('originalRequest', $request);
 
-        return $next($request, $response);
+        return $handler->handle($request);
     }
 }

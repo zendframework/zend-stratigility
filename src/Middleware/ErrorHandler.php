@@ -1,23 +1,21 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2016-2018 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2016-2018 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+
+declare(strict_types=1);
 
 namespace Zend\Stratigility\Middleware;
 
 use ErrorException;
-use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
-use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 use Zend\Stratigility\Exception\MissingResponseException;
-
-use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
 /**
  * Error handler middleware.
@@ -34,7 +32,7 @@ use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
  *
  * <code>
  * function (
- *     Throwable|Exception $e,
+ *     Throwable $e,
  *     ServerRequestInterface $request,
  *     ResponseInterface $response
  * ) : ResponseInterface
@@ -52,7 +50,7 @@ use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
  *
  * <code>
  * function (
- *     Throwable|Exception $e,
+ *     Throwable $e,
  *     ServerRequestInterface $request,
  *     ResponseInterface $response
  * ) : void
@@ -65,7 +63,7 @@ use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
  * Listeners are attached using the attachListener() method, and triggered
  * in the order attached.
  */
-final class ErrorHandler implements ServerMiddlewareInterface
+final class ErrorHandler implements MiddlewareInterface
 {
     /**
      * @var callable[]
@@ -78,37 +76,23 @@ final class ErrorHandler implements ServerMiddlewareInterface
     private $responseGenerator;
 
     /**
-     * @var ResponseInterface
+     * @var callable
      */
-    private $responsePrototype;
+    private $responseFactory;
 
     /**
-     * @param ResponseInterface $responsePrototype Empty/prototype response to
-     *     update and return when returning an error response.
-     * @param callable $responseGenerator Callback that will generate the final
+     * @param callable $responseFactory A factory capable of returning an
+     *     empty ResponseInterface instance to update and return when returning
+     *     an error response.
+     * @param null|callable $responseGenerator Callback that will generate the final
      *     error response; if none is provided, ErrorResponseGenerator is used.
      */
-    public function __construct(ResponseInterface $responsePrototype, callable $responseGenerator = null)
+    public function __construct(callable $responseFactory, callable $responseGenerator = null)
     {
-        $this->responsePrototype = $responsePrototype;
+        $this->responseFactory = function () use ($responseFactory) : ResponseInterface {
+            return $responseFactory();
+        };
         $this->responseGenerator = $responseGenerator ?: new ErrorResponseGenerator();
-    }
-
-    /**
-     * Proxy to process()
-     *
-     * Proxies to process, after first wrapping the `$next` argument using the
-     * CallableDelegateDecorator.
-     *
-     * @deprecated since 2.2.0; to be removed in version 3.0. Use process() instead.
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param callable $next
-     * @return ResponseInterface
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
-    {
-        return $this->process($request, new CallableDelegateDecorator($next, $response));
     }
 
     /**
@@ -116,17 +100,15 @@ final class ErrorHandler implements ServerMiddlewareInterface
      *
      * Each listener receives the following three arguments:
      *
-     * - Throwable|Exception $error
+     * - Throwable $error
      * - ServerRequestInterface $request
      * - ResponseInterface $response
      *
      * These instances are all immutable, and the return values of
      * listeners are ignored; use listeners for reporting purposes
      * only.
-     *
-     * @param callable $listener
      */
-    public function attachListener(callable $listener)
+    public function attachListener(callable $listener) : void
     {
         if (in_array($listener, $this->listeners, true)) {
             return;
@@ -142,29 +124,23 @@ final class ErrorHandler implements ServerMiddlewareInterface
      * instances.
      *
      * Internally, wraps the call to $next() in a try/catch block, catching
-     * all PHP Throwables (PHP 7) and Exceptions (PHP 5.6 and earlier).
+     * all PHP Throwables.
      *
      * When an exception is caught, an appropriate error response is created
      * and returned instead; otherwise, the response returned by $next is
      * used.
-     *
-     * @param ServerRequestInterface $request
-     * @param DelegateInterface $delegate
-     * @return ResponseInterface
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
         set_error_handler($this->createErrorHandler());
 
         try {
-            $response = $delegate->{HANDLER_METHOD}($request);
+            $response = $handler->handle($request);
 
             if (! $response instanceof ResponseInterface) {
                 throw new MissingResponseException('Application did not return a response');
             }
         } catch (Throwable $e) {
-            $response = $this->handleThrowable($e, $request);
-        } catch (Exception $e) {
             $response = $this->handleThrowable($e, $request);
         }
 
@@ -174,20 +150,16 @@ final class ErrorHandler implements ServerMiddlewareInterface
     }
 
     /**
-     * Handles all throwables/exceptions, generating and returning a response.
+     * Handles all throwables, generating and returning a response.
      *
      * Passes the error, request, and response prototype to createErrorResponse(),
      * triggers all listeners with the same arguments (but using the response
      * returned from createErrorResponse()), and then returns the response.
-     *
-     * @param Throwable|Exception $e
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
      */
-    private function handleThrowable($e, ServerRequestInterface $request)
+    private function handleThrowable(Throwable $e, ServerRequestInterface $request) : ResponseInterface
     {
         $generator = $this->responseGenerator;
-        $response = $generator($e, $request, $this->responsePrototype);
+        $response = $generator($e, $request, ($this->responseFactory)());
         $this->triggerListeners($e, $request, $response);
         return $response;
     }
@@ -196,20 +168,13 @@ final class ErrorHandler implements ServerMiddlewareInterface
      * Creates and returns a callable error handler that raises exceptions.
      *
      * Only raises exceptions for errors that are within the error_reporting mask.
-     *
-     * @return callable
      */
-    private function createErrorHandler()
+    private function createErrorHandler() : callable
     {
         /**
-         * @param int $errno
-         * @param string $errstr
-         * @param string $errfile
-         * @param int $errline
-         * @return void
          * @throws ErrorException if error is not within the error_reporting mask.
          */
-        return function ($errno, $errstr, $errfile, $errline) {
+        return function (int $errno, string $errstr, string $errfile, int $errline) : void {
             if (! (error_reporting() & $errno)) {
                 // error_reporting does not include this error
                 return;
@@ -221,16 +186,14 @@ final class ErrorHandler implements ServerMiddlewareInterface
 
     /**
      * Trigger all error listeners.
-     *
-     * @param Throwable|Exception $error
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return void
      */
-    private function triggerListeners($error, ServerRequestInterface $request, ResponseInterface $response)
-    {
-        array_walk($this->listeners, function ($listener) use ($error, $request, $response) {
+    private function triggerListeners(
+        Throwable $error,
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ) : void {
+        foreach ($this->listeners as $listener) {
             $listener($error, $request, $response);
-        });
+        }
     }
 }
