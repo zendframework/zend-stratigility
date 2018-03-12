@@ -6,4 +6,3 @@
     window.location = uri.href;
   });
 </script>
-
