@@ -13,7 +13,7 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="../css/styles-482aa2add1.css">
+    <link rel="stylesheet" href="../css/styles-288837cc22.css">
 
     
 </head>
@@ -113,7 +113,7 @@
                             
 
 <li >
-    <a href="../executing-middleware/">Executing and composing middleware</a>
+    <a href="../executing-middleware/">Composing middleware</a>
 </li>
 
 
@@ -136,6 +136,14 @@
 
 <li >
     <a href="../migration/to-v2/">To Version 2</a>
+</li>
+
+
+        
+            
+
+<li >
+    <a href="../migration/preparing-for-v3/">Preparing for Version 3</a>
 </li>
 
 
@@ -167,7 +175,7 @@
                 </li>
                 
                     <li>
-                        <a href="https://github.com/zendframework/zend-stratigility">
+                        <a href="https://github.com/zendframework/zend-stratigility/">
                             
                                 <i class="fa fa-github"></i>
                             
@@ -188,7 +196,7 @@
     
         <li class="main active"><a href="#middleware">Middleware</a></li>
         
-            <li><a href="#http-interop-middleware">http-interop middleware</a></li>
+            <li><a href="#middleware-types">Middleware types</a></li>
         
     
     </ul>
@@ -226,6 +234,8 @@ response or pass delegation on to the next middleware in the queue.</p>
 <pre class="codehilite"><code class="language-php">use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
 use Zend\Stratigility\MiddlewarePipe;
+use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
+use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 use Zend\Stratigility\NoopFinalHandler;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -234,154 +244,57 @@ $app = new MiddlewarePipe();
 $app-&gt;setResponsePrototype(new Response());
 
 $server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
+$response = new Response();
 
 // Landing page
-$app-&gt;pipe('/', function ($req, $res, $next) {
-    if (! in_array($req-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
-        return $next($req, $res);
+$app-&gt;pipe(new CallableMiddlewareDecorator(
+    function ($request, $handler) use ($response) {
+        if (! in_array($req-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
+            return $handler-&gt;handle($request);
+        }
+        $response-&gt;getBody()-&gt;write('Hello world!');
+        return $response;
     }
-    $res-&gt;getBody()-&gt;write('Hello world!');
-    return $res;
-});
+));
 
 // Another page
-$app-&gt;pipe('/foo', function ($req, $res, $next) {
-    $res-&gt;getBody()-&gt;write('FOO!');
-    return $res;
-});
+$app-&gt;pipe(new PathMiddlewareDecorator(
+    '/foo', 
+    new CallableMiddlewareDecorator(function ($request, $handler) use ($response) {
+        $response-&gt;getBody()-&gt;write('FOO!');
+        return $response;
+    })
+));
 
 $server-&gt;listen(new NoopFinalHandler());</code></pre>
 
-<p>In the above example, we have two examples of middleware. The first is a
-landing page, and listens at the root path. If the request path is empty or
-<code>/</code>, it completes the response. If it is not, it delegates to the next
-middleware in the stack. The second middleware matches on the path <code>/foo</code>
+<p>In the above example, we have two examples of middleware. The first is a landing
+page, and listens to every request. If the request path is empty or <code>/</code>, it
+completes the response. If it is not, it passes off request handling to the
+middleware in the stack. The second middleware matches only on the path <code>/foo</code>
 &mdash; meaning it will match <code>/foo</code>, <code>/foo/</code>, and any path beneath. In that
 case, it will complete the response with its own message. If no paths match at
-this point, a "final handler" is composed by default to report 404 status.</p>
-<p>So, concisely put, <em>middleware are PHP callables that accept a request and
-response object, and do something with it</em>.</p>
+this point, a "final handler" is composed by default to report a 404 status.</p>
+<p>So, concisely put, <em>middleware accept a request, and decide if they can handle
+it and return a response, or need to delegate to another handler</em>.</p>
 <blockquote>
-<h3 id="http-interop-middleware">http-interop middleware</h3>
-<p>The above example demonstrates the legacy (pre-1.3.0) signature for
-middleware, which is also widely used across other middleware frameworks
-such as Slim, Relay, Adroit, etc.</p>
-<p>http-interop is a project attempting to standardize middleware signatures.
-The signature until the 0.4.0 series for server-side middleware is:</p>
-<pre class="codehilite"><code class="language-php">namespace Interop\Http\Middleware;
-
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-
-interface ServerMiddlewareInterface
-{
-    public function process(
-        ServerRequestInterface $request,
-        DelegateInterface $delegate
-    ) : ResponseInterface;
-}</code></pre>
-
-<p>where <code>DelegateInterface</code> is defined as:</p>
-<pre class="codehilite"><code class="language-php">namespace Interop\Http\Middleware;
-
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-
-interface DelegateInterface
-{
-    public function process(
-        RequestInterface $request
-    ) : ResponseInterface;
-}</code></pre>
-
-<p>Starting in http-interop/http-middleware 0.4.1, these become:</p>
-<pre class="codehilite"><code class="language-php">namespace Interop\Http\ServerMiddleware;
-
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-
-interface MiddlewareInterface
-{
-    public function process(
-        ServerRequestInterface $request,
-        DelegateInterface $delegate
-    ) : ResponseInterface;
-}
-
-interface DelegateInterface
-{
-    public function process(
-        ServerRequestInterface $request
-    ) : ResponseInterface;
-}</code></pre>
-
-<p>(Note the namespace change, the change in the middleware interface name, and
-the change in the <code>DelegateInterface</code> signature.)</p>
-<p>http-interop/http-middleware 0.5.0 changes the namespace, renames the delegate
-to a request handler, and correspondingly changes the delegation method to
-<code>handle()</code>:</p>
-<pre class="codehilite"><code class="language-php">namespace Interop\Http\Server;
-
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-
-interface MiddlewareInterface
-{
-    public function process(
-        ServerRequestInterface $request,
-        RequestHandlerInterface $handler
-    ) : ResponseInterface;
-}
-
-interface RequestHandlerInterface
-{
-    public function handle(
-        ServerRequestInterface $request
-    ) : ResponseInterface;
-}</code></pre>
-
-<p>Stratigility allows you to implement the http-interop/http-middleware
-middleware interface to provide middleware.  Additionally, you can define
-<code>callable</code> middleware with the following signature, and it will be dispatched
-as http-interop middleware.</p>
-<p>When using http-interop/http-middleware versions prior to 0.5, callable
-middleware will look like this:</p>
-<pre class="codehilite"><code class="language-php">function(
-    ServerRequestInterface $request,
-    DelegateInterface $delegate
-) : ResponseInterface;</code></pre>
-
-<p>When using http-interop/http-middleware versions 0.5.0 and above, it becomes:</p>
-<pre class="codehilite"><code class="language-php">function(
-    ServerRequestInterface $request,
-    HandlerRequestInterface $handler
-) : ResponseInterface;</code></pre>
-
-<p>(In both examples above, the <code>$request</code> argument does not require a typehint
-when defining callable middleware, but we encourage its use.)</p>
-<p>As such, the above example can also be written as follows:</p>
-<pre class="codehilite"><code class="language-php">// Using http-interop/http-middleware 0.4.1:
-$app-&gt;pipe('/', function ($request, DelegateInterface $delegate) {
-    if (! in_array($request-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
-        return $delegate-&gt;process($request);
-    }
-    return new TextResponse('Hello world!');
-});
-
-// Using http-interop/http-middleware 0.5.0:
-$app-&gt;pipe('/', function ($request, RequestHandlerInterface $handler) {
-    if (! in_array($request-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
-        return $handler-&gt;handle($request);
-    }
-    return new TextResponse('Hello world!');
-});</code></pre>
-
+<h3 id="middleware-types">Middleware types</h3>
+<p>Stratigility allows a number of different types of middleware.</p>
+<p>The type demonstrated above is callable middleware based on an
+interface signature that forms the basis of the <a href="https://github.com/php-fig/fig-standards/tree/4b417c91b89fbedaf3283620ce432b6f51c80cc0/proposed/http-handlers">proposed PSR-15
+standard</a>.</p>
+<p>Stratigility also supports:</p>
+<ul>
+<li>Callable "double pass" middleware.</li>
+<li>Middleware implementing the proposed PSR-15 <code>MiddlewareInterface</code>.</li>
+</ul>
+<p>For more details on the various middleware types accepted, including their
+signatures, please read the <a href="../creating-middleware/">chapter on creating middleware</a>.</p>
 </blockquote>
-<p>Middleware can decide more processing can be performed by calling the <code>$next</code>
-callable (or, when defining http-interop middleware, <code>$delegate</code>/<code>$handler</code>)
-passed during invocation. With this paradigm, you can build a workflow engine
-for handling requests &mdash; for instance, you could have middleware perform
-the following:</p>
+<p>Middleware can decide more processing can be performed by calling on the
+<code>$handler</code> argument passed during invocation. With this paradigm, you can build
+a workflow engine for handling requests &mdash; for instance, you could have
+middleware perform the following:</p>
 <ul>
 <li>Handle authentication details</li>
 <li>Perform content negotiation</li>
@@ -392,31 +305,13 @@ the following:</p>
 allowing you to mix and match applications under a common domain. As an
 example, you could put API middleware next to middleware that serves its
 documentation, next to middleware that serves files, and segregate each by URI:</p>
-<pre class="codehilite"><code class="language-php">$app-&gt;pipe('/api', $apiMiddleware);
-$app-&gt;pipe('/docs', $apiDocMiddleware);
-$app-&gt;pipe('/files', $filesMiddleware);</code></pre>
+<pre class="codehilite"><code class="language-php">$app-&gt;pipe(new PathMiddlewareDecorator('/api', $apiMiddleware));
+$app-&gt;pipe(new PathMiddlewareDecorator('/docs', $apiDocMiddleware));
+$app-&gt;pipe(new PathMiddlewareDecorator('/files', $filesMiddleware));</code></pre>
 
 <p>The handlers in each middleware attached this way will see a URI with that path
 segment stripped, allowing them to be developed separately and re-used under
 any path you wish.</p>
-<p>Within Stratigility, middleware can be:</p>
-<ul>
-<li>Any PHP callable that accepts, minimally, a
-  <a href="https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-7-http-message.md">PSR-7</a>
-  ServerRequest and Response (in that order), and, optionally, a callable (for
-  invoking the next middleware in the queue, if any).</li>
-<li>Any <a href="https://github.com/http-interop/http-middleware/tree/0.2.0">http-interop 0.2.0 - middleware</a>.
-  <code>Zend\Stratigility\MiddlewarePipe</code> implements
-  <code>Interop\Http\Middleware\ServerMiddlewareInterface</code>. (Stratigility 1.3.0 series.)</li>
-<li>Any <a href="https://github.com/http-interop/http-middleware/tree/0.4.1">http-interop 0.4.1 - middleware</a>.
-  <code>Zend\Stratigility\MiddlewarePipe</code> implements
-  <code>Interop\Http\ServerMiddleware\MiddlewareInterface</code>. (Stratigility 2.0 series.)</li>
-<li>Any <a href="https://github.com/http-interop/http-middleware/tree/0.5.0">http-interop 0.5.0 - middleware</a>.
-  <code>Zend\Stratigility\MiddlewarePipe</code> implements
-  <code>Interop\Http\Server\MiddlewareInterface</code>. (Since Stratigility 2.1)</li>
-<li>An object implementing <code>Zend\Stratigility\MiddlewareInterface</code>.
-  (Legacy; this interface is deprecated starting in 1.3.0.)</li>
-</ul>
 
 <hr />
 
@@ -485,6 +380,8 @@ any path you wish.</p>
     <script>var base_url = '..';</script>
     <script src="../js/scripts-0b6185f4a5.js"></script>
     <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../search/require.js"></script>
+        <script src="../search/search.js"></script>
 
     <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
         <div class="modal-dialog">

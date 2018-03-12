@@ -13,7 +13,7 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="../css/styles-482aa2add1.css">
+    <link rel="stylesheet" href="../css/styles-288837cc22.css">
 
     
 </head>
@@ -113,7 +113,7 @@
                             
 
 <li >
-    <a href="../executing-middleware/">Executing and composing middleware</a>
+    <a href="../executing-middleware/">Composing middleware</a>
 </li>
 
 
@@ -136,6 +136,14 @@
 
 <li >
     <a href="../migration/to-v2/">To Version 2</a>
+</li>
+
+
+        
+            
+
+<li >
+    <a href="../migration/preparing-for-v3/">Preparing for Version 3</a>
 </li>
 
 
@@ -167,7 +175,7 @@
                 </li>
                 
                     <li>
-                        <a href="https://github.com/zendframework/zend-stratigility">
+                        <a href="https://github.com/zendframework/zend-stratigility/">
                             
                                 <i class="fa fa-github"></i>
                             
@@ -253,11 +261,11 @@ a response, no deeper nested layers will execute once it has been invoked.</p>
 <p>If you would like a templated response, you will need to write your own
 middleware; such middleware might look like the following:</p>
 <pre class="codehilite"><code class="language-php">use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class NotFoundMiddleware implements ServerMiddlewareInterface
+class NotFoundMiddleware implements MiddlewareInterface
 {
     private $renderer;
 
@@ -279,6 +287,40 @@ class NotFoundMiddleware implements ServerMiddlewareInterface
     }
 }</code></pre>
 
+<blockquote>
+<h3 id="middleware-interface">Middleware interface</h3>
+<p>The interfaces you implement and consume will vary based on the version of
+http-interop/http-middleware you have installed.</p>
+<p>If you have version 0.4.1 installed, you will write middleware as noted above.</p>
+<p>For 0.5.0, the above becomes:</p>
+<pre class="codehilite"><code class="language-php">use Interop\Http\Server\MiddlewareInterface;
+use Interop\Http\Server\RequestHandlerInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+class NotFoundMiddleware implements MiddlewareInterface
+{
+    private $renderer;
+
+    public function __construct(
+        TemplateRendererInterface $renderer,
+        ResponseInterface $response
+    ) {
+        $this-&gt;renderer = $renderer;
+        $this-&gt;response = $response;
+    }
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
+    {
+        $response = $this-&gt;response-&gt;withStatus(404);
+        $response-&gt;getBody()-&gt;write(
+            $this-&gt;renderer-&gt;render('error::404')
+        );
+        return $response;
+    }
+}</code></pre>
+
+</blockquote>
 <h2 id="handling-php-errors-and-exceptions">Handling PHP errors and exceptions</h2>
 <ul>
 <li>Since 1.3.0</li>
@@ -289,13 +331,13 @@ class NotFoundMiddleware implements ServerMiddlewareInterface
 <code>FinalHandler</code> implementation, and relying on the fact that, internally,
 dispatching wraps all middleware in <code>try/catch</code> blocks.</p>
 <p>Starting in 1.3.0, we provide a new way to handle errors via middleware.</p>
-<p><strong>To opt-in to the new system, you must call <code>raiseThrowables()</code> on your
-middleware pipeline:</strong></p>
+<p>In version 1.3.0 and later v1 releases, you must opt-in to the system by
+calling <code>raiseThrowables()</code> on your middleware pipeline:</p>
 <pre class="codehilite"><code class="language-php">$pipeline = new MiddlewarePipe();
 $pipeline-&gt;raiseThrowables();</code></pre>
 
-<p>(Starting in 2.0.0, this will no longer be necessary, but until then, this is
-how you opt-in to the system described below.)</p>
+<p>Starting in version 2, the new system is enabled by default, and the
+<code>FinalHandler</code> implementation no longer catches exceptions.</p>
 </blockquote>
 <p><code>Zend\Stratigility\Middleware\ErrorHandler</code> is a middleware implementation to
 register as the <em>outermost layer</em> of your application (or close to the outermost
@@ -420,7 +462,7 @@ function (
 
 <h2 id="legacy-error-middleware">Legacy error middleware</h2>
 <ul>
-<li>Deprecated starting in 1.3.0, to be removed in 2.0.0. Please see the
+<li>Deprecated starting in 1.3.0, removed in 2.0.0. Please see the
   <a href="../migration/to-v2/#error-handling">migration guide</a> for more details, as well
   as the preceding section.</li>
 </ul>
@@ -503,6 +545,8 @@ non-error-handling middleware, and to ensure they can intercept errors from any 
     <script>var base_url = '..';</script>
     <script src="../js/scripts-0b6185f4a5.js"></script>
     <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../search/require.js"></script>
+        <script src="../search/search.js"></script>
 
     <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
         <div class="modal-dialog">

@@ -9,11 +9,11 @@
     <meta name="description" content="zend-stratigility">  
     <link rel="shortcut icon" href="../img/favicon.ico">
 
-    <title>Executing and composing middleware - zend-stratigility</title>
+    <title>Composing middleware - zend-stratigility</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="../css/styles-482aa2add1.css">
+    <link rel="stylesheet" href="../css/styles-288837cc22.css">
 
     
 </head>
@@ -113,7 +113,7 @@
                             
 
 <li class="active">
-    <a href="./">Executing and composing middleware</a>
+    <a href="./">Composing middleware</a>
 </li>
 
 
@@ -136,6 +136,14 @@
 
 <li >
     <a href="../migration/to-v2/">To Version 2</a>
+</li>
+
+
+        
+            
+
+<li >
+    <a href="../migration/preparing-for-v3/">Preparing for Version 3</a>
 </li>
 
 
@@ -167,7 +175,7 @@
                 </li>
                 
                     <li>
-                        <a href="https://github.com/zendframework/zend-stratigility">
+                        <a href="https://github.com/zendframework/zend-stratigility/">
                             
                                 <i class="fa fa-github"></i>
                             
@@ -186,7 +194,9 @@
         <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#executing-and-composing-middleware">Executing and composing middleware</a></li>
+        <li class="main active"><a href="#composing-middleware">Composing middleware</a></li>
+        
+            <li><a href="#use-pathmiddlewaredecorator">Use PathMiddlewareDecorator</a></li>
         
             <li><a href="#request-path-changes-when-path-matched">Request path changes when path matched</a></li>
         
@@ -219,14 +229,14 @@
       
     
   
-  <li class="active">Executing and composing middleware</li>
+  <li class="active">Composing middleware</li>
 </ol>
 
-<h1 id="executing-and-composing-middleware">Executing and composing middleware</h1>
-<p>The easiest way to execute middleware is to write closures and attach them to a
-<code>Zend\Stratigility\MiddlewarePipe</code> instance. You can nest <code>MiddlewarePipe</code>
-instances to create groups of related middleware, and attach them using a base
-path so they only execute if that path is matched.</p>
+<h1 id="composing-middleware">Composing middleware</h1>
+<p>The easiest way to compose middleware is to write closures or middleware classes
+and attach them to a <code>Zend\Stratigility\MiddlewarePipe</code> instance. You can nest
+<code>MiddlewarePipe</code> instances to create groups of related middleware, and attach
+them using a base path so they only execute if that path is matched.</p>
 <pre class="codehilite"><code class="language-php">$api = new MiddlewarePipe();  // API middleware collection
 $api-&gt;pipe(/* ... */);        // repeat as necessary
 
@@ -234,10 +244,21 @@ $app = new MiddlewarePipe();  // Middleware representing the application
 $app-&gt;pipe('/api', $api);     // API middleware attached to the path &quot;/api&quot;</code></pre>
 
 <blockquote>
+<h3 id="use-pathmiddlewaredecorator">Use PathMiddlewareDecorator</h3>
+<ul>
+<li>Since 2.2.0</li>
+</ul>
+<p>Starting in 2.2.0, the two argument form of <code>pipe()</code> is deprecated in favor of
+piping a <code>Zend\Stratigility\Middleware\PathMiddlewareDecorator</code> instance
+instead. The above example would then become:</p>
+<pre class="codehilite"><code class="language-php">$app-&gt;pipe(new PathMiddlewareDecorator('/api', $api));</code></pre>
+
+<p>This form is forwards compatible with the version 3 release.</p>
 <h3 id="request-path-changes-when-path-matched">Request path changes when path matched</h3>
-<p>When you pipe middleware using a path (other than '' or '/'), the middleware
-is dispatched with a request that strips the matched segment(s) from the start
-of the path. Using the previous example, if the path <code>/api/users/foo</code> is
+<p>When you pipe middleware using a path (other than '' or '/') or use the
+<code>PathMiddlewareDecorator</code>, the middleware is dispatched with a request that
+strips the matched segment(s) from the start of the path before dispatching
+the middleware. Using the previous example, if the path <code>/api/users/foo</code> is
 matched, the <code>$api</code> middleware will receive a request with the path
 <code>/users/foo</code>. This allows middleware segregated by path to be re-used without
 changes to its own internal routing.</p>
@@ -297,6 +318,42 @@ class CustomMiddleware extends MiddlewarePipe
 implement a specific workflow for an application segment using existing
 middleware, but do not necessarily want that middleware applied to all requests
 in the application.</p>
+<blockquote>
+<h3 id="extension-is-deprecated">Extension is deprecated</h3>
+<p>Starting in version 2.2.0, extension of the <code>MiddlewarePipe</code> class is
+deprecated, as version 3.0.0 will mark the class `final.</p>
+<p>Instead of extension, we thus recommend composition.</p>
+<p>When doing so, you will implement the http-interop <code>MiddlewareInterface</code> (and,
+in v3, the PSR-15 <code>MiddlewareInterface</code>), and compose the <code>MiddlewarePipe</code>
+instance internally, delegating to it.</p>
+<p>As a complete example, combining the previous two examples:</p>
+<pre class="codehilite"><code class="language-php">class CustomMiddleware imlements MiddlewareInterface
+{
+    private $pipeline;
+
+    public function __construct($configuration)
+    {
+        // Do something with configuration ...
+
+        // Create the pipeline:
+        $this-&gt;pipeline = new MiddlewarePipe();
+
+        // Attach some middleware ...
+        $this-&gt;pipeline-&gt;pipe(/* some middleware */);
+    }
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
+    {
+        // perform some work...
+
+        // delegate to parent
+        $this-&gt;pipeline-&gt;process($request, $handler);
+
+        // maybe do more work?
+    }
+}</code></pre>
+
+</blockquote>
 
 <hr />
 
@@ -365,6 +422,8 @@ in the application.</p>
     <script>var base_url = '..';</script>
     <script src="../js/scripts-0b6185f4a5.js"></script>
     <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../search/require.js"></script>
+        <script src="../search/search.js"></script>
 
     <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
         <div class="modal-dialog">
