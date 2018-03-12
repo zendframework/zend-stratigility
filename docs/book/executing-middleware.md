@@ -1,9 +1,9 @@
-# Executing and composing middleware
+# Composing middleware
 
-The easiest way to execute middleware is to write closures and attach them to a
-`Zend\Stratigility\MiddlewarePipe` instance. You can nest `MiddlewarePipe`
-instances to create groups of related middleware, and attach them using a base
-path so they only execute if that path is matched.
+The easiest way to compose middleware is to write closures or middleware classes
+and attach them to a `Zend\Stratigility\MiddlewarePipe` instance. You can nest
+`MiddlewarePipe` instances to create groups of related middleware, and attach
+them using a base path so they only execute if that path is matched.
 
 ```php
 $api = new MiddlewarePipe();  // API middleware collection
@@ -13,11 +13,26 @@ $app = new MiddlewarePipe();  // Middleware representing the application
 $app->pipe('/api', $api);     // API middleware attached to the path "/api"
 ```
 
+> ### Use PathMiddlewareDecorator
+>
+> - Since 2.2.0
+>
+> Starting in 2.2.0, the two argument form of `pipe()` is deprecated in favor of
+> piping a `Zend\Stratigility\Middleware\PathMiddlewareDecorator` instance
+> instead. The above example would then become:
+>
+> ```php
+> $app->pipe(new PathMiddlewareDecorator('/api', $api));
+> ```
+>
+> This form is forwards compatible with the version 3 release.
+
 > ### Request path changes when path matched
 >
-> When you pipe middleware using a path (other than '' or '/'), the middleware
-> is dispatched with a request that strips the matched segment(s) from the start
-> of the path. Using the previous example, if the path `/api/users/foo` is
+> When you pipe middleware using a path (other than '' or '/') or use the
+> `PathMiddlewareDecorator`, the middleware is dispatched with a request that
+> strips the matched segment(s) from the start of the path before dispatching
+> the middleware. Using the previous example, if the path `/api/users/foo` is
 > matched, the `$api` middleware will receive a request with the path
 > `/users/foo`. This allows middleware segregated by path to be re-used without
 > changes to its own internal routing.
@@ -89,3 +104,44 @@ These approaches are particularly suited for cases where you may want to
 implement a specific workflow for an application segment using existing
 middleware, but do not necessarily want that middleware applied to all requests
 in the application.
+
+> ### Extension is deprecated
+>
+> Starting in version 2.2.0, extension of the `MiddlewarePipe` class is
+> deprecated, as version 3.0.0 will mark the class `final.
+>
+> Instead of extension, we thus recommend composition.
+>
+> When doing so, you will implement the http-interop `MiddlewareInterface` (and,
+> in v3, the PSR-15 `MiddlewareInterface`), and compose the `MiddlewarePipe`
+> instance internally, delegating to it.
+>
+> As a complete example, combining the previous two examples:
+>
+> ```php
+> class CustomMiddleware imlements MiddlewareInterface
+> {
+>     private $pipeline;
+> 
+>     public function __construct($configuration)
+>     {
+>         // Do something with configuration ...
+> 
+>         // Create the pipeline:
+>         $this->pipeline = new MiddlewarePipe();
+> 
+>         // Attach some middleware ...
+>         $this->pipeline->pipe(/* some middleware */);
+>     }
+> 
+>     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
+>     {
+>         // perform some work...
+> 
+>         // delegate to parent
+>         $this->pipeline->process($request, $handler);
+> 
+>         // maybe do more work?
+>     }
+> }
+> ```

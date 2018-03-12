@@ -6,6 +6,114 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
+## 2.2.0 - 2018-03-12
+
+### Added
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) adds the
+  class `Zend\Stratigility\Middleware\CallableMiddlewareDecorator` for the
+  purpose of decorating callable, standards-signature middleware for use with
+  a `MiddlewarePipe` instance. Instantiate it directly, passing the callable
+  middleware as the sole argument, or use the `Zend\Stratigility\middleware()`
+  utility function to generate the instance: `middleware($callable)`.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) adds the
+  class `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator` for the
+  purpose of decorating callable, double-pass middleware for use with
+  a `MiddlewarePipe` instance. Instantiate it directly, passing the callable
+  middleware and a response instance as arguments, or use the
+  `Zend\Stratigility\doublePassMiddleware()` utility function to generate the
+  instance: `doublePassMiddleware($callable, $response)`.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) adds the
+  class `Zend\Stratigility\Middleware\PathMiddlewareDecorator` for the purposes
+  of creating path-segregated middleware. The constructor expects a string path
+  literal as the first argument, and an
+  `Interop\Http\Server\MiddlewareInterface` instance for the second argument.
+  Alternately, use the `Zend\Stratigility\path()` utility function to generate
+  the instance: `path('/foo', $middleware)`.
+
+  This decorator class replaces usage of the `$path` argument to
+  `MiddlewarePipe::pipe()`, and should be used to ensure your application is
+  forwards-compatible with the upcoming version 3 release.
+
+### Changed
+
+- Nothing.
+
+### Deprecated
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) deprecates
+  the class `Zend\Stratigility\Route`. This class is an internal detail, and will
+  be removed in version 3.0.0.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) deprecates
+  the class `Zend\Stratigility\Exception\InvalidMiddlewareException`. This class
+  will be removed in version 3.0.0 as it will no longer be necessary due to
+  typehint usage.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) deprecates
+  the class `Zend\Stratigility\Exception\InvalidRequestTypeException` as it is
+  no longer used by the package. It will be removed in version 3.0.0.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) deprecates
+  the class `Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper` as it is
+  based on interfaces that will no longer be used starting in version 3.0.0. It
+  will be removed in version 3.0.0. Please use the new class
+  `Zend\Stratigility\Middleware\CallableMiddlewareDecorator`, or the utility
+  function `middleware()`, to decorate callable standards-signature middleware.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) deprecates
+  the class `Zend\Stratigility\Middleware\CallableMiddlewareWrapper` as it is
+  based on interfaces that will no longer be used starting in version 3.0.0. It
+  will be removed in version 3.0.0. Please use the new class
+  `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator`, or the utility
+  function `doublePassMiddleware()`, to decorate callable double pass middleware.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) deprecates
+  the class `Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory` as
+  the class it is associated will be removed starting in version 3.0.0. The
+  class will be removed in version 3.0.0.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) deprecates
+  the class `Zend\Stratigility\NoopFinalHandler` as the class will be removed
+  starting in version 3.0.0.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) deprecates
+  the two-argument form of `Zend\Stratigility\MiddlewarePipe::pipe()`. If you
+  need to perform path segregation, use the
+  `Zend\Stratigility\Middleware\PathMiddlewareDecorator` class and/or the
+  `Zend\Stratigility\path()` function to decorate your middleware in order to
+  provide path segregation.
+
+- [#140](https://github.com/zendframework/zend-stratigility/pull/140) deprecates
+  the piping of double pass middleware directly to `pipe()`; decorate your
+  double-pass middleware using `Zend\Stratigility\Middleware\DoublePassMiddleware`
+  or `Zend\Stratigility\doublePassMiddleware()` prior to piping.
+
+- [#159](https://github.com/zendframework/zend-stratigility/pull/159) deprecates
+  `Zend\Stratigility\MiddlewarePipe::setCallableMiddlewareDecorator()`. Use
+  `Zend\Stratigility\doublePassMiddleware()` or  `Zend\Stratigility\Middleware\DoublePassMiddleware`
+  prior to passing your double-pass middleware to `MiddlewarePipe::pipe()`.
+
+- [#159](https://github.com/zendframework/zend-stratigility/pull/159) deprecates
+  `Zend\Stratigility\MiddlewarePipe::setResponsePrototype()`. This was used only
+  to seed an instance of `Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory`
+  previously; pass your response prototype directly to a new instance of
+  `Zend\Stratigility\Middleware\DoublePassMiddleware` or the ``Zend\Stratigility\doublePassMiddleware()`
+  function instead.
+
+- [#159](https://github.com/zendframework/zend-stratigility/pull/159) deprecates
+  `Zend\Stratigility\MiddlewarePipe::hasResponsePrototype()`.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- Nothing.
+
 ## 2.1.3 - TBD
 
 ### Added

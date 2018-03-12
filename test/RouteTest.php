@@ -1,7 +1,7 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2017 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2015-2018 Zend Technologies USA Inc. (http://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
@@ -11,19 +11,20 @@ use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewa
 use InvalidArgumentException;
 use OutOfRangeException;
 use PHPUnit\Framework\TestCase;
+use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 use Zend\Stratigility\Route;
 
 class RouteTest extends TestCase
 {
-    public function createEmptyMiddleware()
+    public function createEmptyMiddleware($path = '/')
     {
-        return $this->prophesize(ServerMiddlewareInterface::class)->reveal();
+        return new PathMiddlewareDecorator($path, $this->prophesize(ServerMiddlewareInterface::class)->reveal());
     }
 
     public function testPathAndHandlerAreAccessibleAfterInstantiation()
     {
         $path = '/foo';
-        $handler = $this->createEmptyMiddleware();
+        $handler = $this->createEmptyMiddleware($path);
 
         $route = new Route($path, $handler);
         $this->assertSame($path, $route->path);
@@ -50,14 +51,55 @@ class RouteTest extends TestCase
     public function testDoesNotAllowNonStringPaths($path)
     {
         $this->expectException(InvalidArgumentException::class);
-        new Route($path, $this->createEmptyMiddleware());
+        new Route($path, $this->createEmptyMiddleware($path));
     }
 
     public function testExceptionIsRaisedIfUndefinedPropertyIsAccessed()
     {
-        $route = new Route('/foo', $this->createEmptyMiddleware());
+        $route = new Route('/foo', $this->createEmptyMiddleware('/foo'));
 
         $this->expectException(OutOfRangeException::class);
         $route->foo;
+    }
+
+    public function testConstructorTriggersDeprecationErrorWhenNonEmptyPathProvidedWithoutPathMiddleware()
+    {
+        $error = (object) [];
+        set_error_handler(function ($errno, $errstr) use ($error) {
+            $error->type = $errno;
+            $error->message = $errstr;
+        }, E_USER_DEPRECATED);
+        new Route('/foo', $this->prophesize(ServerMiddlewareInterface::class)->reveal());
+        restore_error_handler();
+
+        $this->assertObjectHasAttribute('type', $error);
+        $this->assertSame(E_USER_DEPRECATED, $error->type);
+        $this->assertObjectHasAttribute('message', $error);
+        $this->assertContains(PathMiddlewareDecorator::class, $error->message);
+    }
+
+    public function invalidPathArguments()
+    {
+        return [
+            'null'       => [null],
+            'true'       => [true],
+            'false'      => [false],
+            'zero'       => [0],
+            'int'        => [1],
+            'zero-float' => [0.0],
+            'float'      => [1.1],
+            'array'      => [['string']],
+            'object'     => [(object) ['string' => 'string']],
+        ];
+    }
+
+    /**
+     * @dataProvider invalidPathArguments
+     */
+    public function testConstructorRaisesExceptionIfPathIsNotAString($path)
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Path must be a string');
+        new Route($path, $this->createEmptyMiddleware());
     }
 }
