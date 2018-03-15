@@ -10,95 +10,10 @@ details.
 
 ### Added
 
-- Nothing.
-
-### Changed
-
-- Nothing.
-
-### Deprecated
-
-- Nothing.
-
-### Removed
-
-- [#163](https://github.com/zendframework/zend-stratigility/pull/163) removes
-  `Zend\Stratigility\Middleware\PathRequestHandlerDecorator`, as it was
-  deprecated in 2.2, and no longer used with the 3.0 code base.
-
-### Fixed
-
-- Nothing.
-
-## 3.0.0rc1 - 2018-02-26
-
-### Added
-
-- Nothing.
-
-### Changed
-
-- [#155](https://github.com/zendframework/zend-stratigility/pull/155) modifies
-  each of the following classes to mark them `final`:
-
-  - `Zend\Stratigility\Middleware\CallableMiddlewareDecorator`
-  - `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator`
-  - `Zend\Stratigility\Middleware\HostMiddlewareDecorator`
-  - `Zend\Stratigility\Middleware\NotFoundHandler`
-  - `Zend\Stratigility\Middleware\OriginalMessages`
-  - `Zend\Stratigility\Middleware\PathMiddlewareDecorator`
-  - `Zend\Stratigility\Middleware\RequestHandlerMiddleware`
-  - `Zend\Stratigility\Next`
-
-- [#157](https://github.com/zendframework/zend-stratigility/pull/157) marks the
-  package as conflicting with zendframework/zend-diactoros versions less than
-  1.7.1. This is due to the fact that that version provides a bugfix for its
-  `Uri::getHost()` implementation that ensures it follows the PSR-7 and IETF RFC
-  3986 specifications.
-
-### Deprecated
-
-- Nothing.
-
-### Removed
-
-- Nothing.
-
-### Fixed
-
-- Nothing.
-
-## 3.0.0alpha4 - 2018-02-22
-
-### Added
-
-- Nothing.
-
-### Changed
-
-- [#153](https://github.com/zendframework/zend-stratigility/pull/153) modifies
-  the first argument of the `Zend\Expressive\Middleware\ErrorHandler` and
-  `NotFoundHandler` classes. Previously, they each expected a
-  `Psr\Http\Message\ResponseInterface` instance; they now both expect a PHP
-  callable capable of producing such an instance. This change was done to
-  simplify re-use of a service for producing unique response instances within
-  dependency injection containers.
-
-### Deprecated
-
-- Nothing.
-
-### Removed
-
-- Nothing.
-
-### Fixed
-
-- Nothing.
-
-## 3.0.0alpha3 - 2018-02-05
-
-### Added
+- [#146](https://github.com/zendframework/zend-stratigility/pull/146) adds a new
+  interface, `Zend\Stratigility\MiddlewarePipeInterface`. It extends the PSR-15
+  `MiddlewareInterface` and `RequestHandlerInterface`, and defines one
+  additional method, `pipe(MiddlewareInterface $middleware) : void`.
 
 - [#150](https://github.com/zendframework/zend-stratigility/pull/150) adds a new
   class, `Zend\Stratigility\Middleware\RequestHandlerMiddleware`. The class
@@ -109,31 +24,6 @@ details.
 
   This class can be useful for adapting request handlers to use within
   pipelines.
-
-### Changed
-
-- Nothing.
-
-### Deprecated
-
-- Nothing.
-
-### Removed
-
-- Nothing.
-
-### Fixed
-
-- Nothing.
-
-## 3.0.0alpha2 - 2018-01-25
-
-### Added
-
-- [#146](https://github.com/zendframework/zend-stratigility/pull/146) adds a new
-  interface, `Zend\Stratigility\MiddlewarePipeInterface`. It extends the PSR-15
-  `MiddlewareInterface` and `RequestHandlerInterface`, and defines one
-  additional method, `pipe(MiddlewareInterface $middleware) : void`.
 
 - [#142](https://github.com/zendframework/zend-stratigility/pull/142) adds a new
   class, `Zend\Stratigility\Middleware\HostMiddlewareDecorator`, which provides
@@ -152,45 +42,10 @@ details.
   $pipeline->pipe(host('example.com', $middleware));
   ```
 
-- [#134](https://github.com/zendframework/zend-stratigility/pull/134) adds a new
-  class, `Zend\Stratigility\Middleware\PathMiddlewareDecorator`, which provides
-  path segregation functionality for middleware, replacing the functionality
-  that was previously implemented in `MiddlewarePipe` and `Next`. Middleware
-  decorated in a `PathMiddlewareDecorator` will only be processed if the current
-  request URI path matches the path prefix provided to the decorator; if it does
-  match, the request passed to it will strip the path prefix from the URI.
-
-  ```php
-  // Only process $middleware if the request path matches '/foo':
-  $pipeline->pipe(new PathMiddlewareDecorator('/foo', $middleware));
-  ```
-
-  Additionally, the patch provides a utility function,
-  `Zend\Stratigility\path()`, to simplify the above declaration:
-
-  ```php
-  $pipeline->pipe(path('/foo', $middleware));
-  ```
-
-- [#136](https://github.com/zendframework/zend-stratigility/pull/136) adds the
-  utility function `Zend\Stratigility\middleware`; this function will decorate
-  callable middleware following the PSR-15 signature within a
-  `Zend\Stratigility\Middleware\CallableMiddlewareDecorator` instance:
-
-  ```php
-  $pipeline->pipe(middleware(function ($request, $handler) {
-  });
-  ```
-
-- [#136](https://github.com/zendframework/zend-stratigility/pull/136) adds the
-  utility function `Zend\Stratigility\doublePassMiddleware`; this function will
-  decorate callable middleware following the double-pass signature within a
-  `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator` instance:
-
-  ```php
-  $pipeline->pipe(doublePassMiddleware(function ($request, $response, $next) {
-  });
-  ```
+- [#128](https://github.com/zendframework/zend-stratigility/pull/128) adds a
+  marker interface, `Zend\Stratigility\Exception\ExceptionInterface`; all
+  package exceptions now implement this interface, allowing you to catch all
+  package-related exceptions by typehinting against it.
 
 ### Changed
 
@@ -208,6 +63,18 @@ details.
   implementation, or create a custom PSR-15 `MiddlewareInterface`
   implementation if piping is not necessary or will allow additional types.
 
+- [#155](https://github.com/zendframework/zend-stratigility/pull/155) modifies
+  each of the following classes to mark them `final`:
+
+  - `Zend\Stratigility\Middleware\CallableMiddlewareDecorator`
+  - `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator`
+  - `Zend\Stratigility\Middleware\HostMiddlewareDecorator`
+  - `Zend\Stratigility\Middleware\NotFoundHandler`
+  - `Zend\Stratigility\Middleware\OriginalMessages`
+  - `Zend\Stratigility\Middleware\PathMiddlewareDecorator`
+  - `Zend\Stratigility\Middleware\RequestHandlerMiddleware`
+  - `Zend\Stratigility\Next`
+
 - [#134](https://github.com/zendframework/zend-stratigility/pull/134),
   [#145](https://github.com/zendframework/zend-stratigility/pull/145), and
   [#146](https://github.com/zendframework/zend-stratigility/pull/146) update
@@ -217,64 +84,33 @@ details.
   it then processes the middleware.
 
 - [#134](https://github.com/zendframework/zend-stratigility/pull/134) removes
-  the ability to specify a path when calling `pipe()`; use the new
+  the ability to specify a path when calling `pipe()`; use the
   `PathMiddlewareDecorator` or `path()` utility function to pipe middleware with
   path segregation.
 
-### Deprecated
+- [#153](https://github.com/zendframework/zend-stratigility/pull/153) modifies
+  the first argument of the `Zend\Expressive\Middleware\ErrorHandler` and
+  `NotFoundHandler` classes. Previously, they each expected a
+  `Psr\Http\Message\ResponseInterface` instance; they now both expect a PHP
+  callable capable of producing such an instance. This change was done to
+  simplify re-use of a service for producing unique response instances within
+  dependency injection containers.
 
-- Nothing.
-
-### Removed
-
-- [#134](https://github.com/zendframework/zend-stratigility/pull/134) removes
-  the class `Zend\Stratigility\Route`. This was an internal message passed
-  between a `MiddlewarePipe` and `Next` instance, and its removal should not
-  affect end users.
-
-- [#134](https://github.com/zendframework/zend-stratigility/pull/134) removes
-  `Zend\Stratigility\Exception\InvalidMiddlewareException`, as the exception is
-  no longer raised by `MiddlewarePipe`.
-
-### Fixed
-
-- Nothing.
-
-## 3.0.0alpha1 - 2018-01-10
-
-### Added
-
-- [#124](https://github.com/zendframework/zend-stratigility/pull/124) adds the
-  following classes for decorating callable middleware:
-
-  - `Zend\Stratigility\Middleware\CallableMiddlewareDecorator` can decorate
-    PHP callables that have a signature the same as or compatible to the PSR-15
-    `MiddlewareInterface`.
-
-  - `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator` can decorate
-    PHP callables of the form `function ($request, $response, $next)` as PSR-15
-    `MiddlewareInterface` implementations. The class accepts an optional second
-    constructor argument, a `ResponseInterface`, for providing a response
-    prototype; if none is provided, it will create a zend-diactoros `Response`
-    instance internally.
-
-- [#128](https://github.com/zendframework/zend-stratigility/pull/128) adds a
-  marker interface, `Zend\Stratigility\Exception\ExceptionInterface`; all
-  package exceptions now implement this interface, allowing you to catch all
-  package-related exceptions by typehinting against it.
-
-### Changed
-
-- [#122](https://github.com/zendframework/zend-stratigility/pull/122) updates
-  the library to use `http-interop/http-server-middleware` instead of
-  `http-interop/http-middleware`, and implement and typehint against the new
-  package's interfaces.
+- [#157](https://github.com/zendframework/zend-stratigility/pull/157) marks the
+  package as conflicting with zendframework/zend-diactoros versions less than
+  1.7.1. This is due to the fact that that version provides a bugfix for its
+  `Uri::getHost()` implementation that ensures it follows the PSR-7 and IETF RFC
+  3986 specifications.
 
 ### Deprecated
 
 - Nothing.
 
 ### Removed
+
+- [#163](https://github.com/zendframework/zend-stratigility/pull/163) removes
+  `Zend\Stratigility\Middleware\PathRequestHandlerDecorator`, as it was
+  deprecated in 2.2, and no longer used with the 3.0 code base.
 
 - [#122](https://github.com/zendframework/zend-stratigility/pull/122) removes
   support for PHP versions 5.6, 7.0, as well as HHVM.
@@ -290,42 +126,14 @@ details.
   - `Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory`
   - `Zend\Stratigility\NoopFinalHandler`
 
-### Fixed
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134) removes
+  the class `Zend\Stratigility\Route`. This was an internal message passed
+  between a `MiddlewarePipe` and `Next` instance, and its removal should not
+  affect end users.
 
-- Nothing.
-
-## 2.2.0 - TBD
-
-### Added
-
-- Nothing.
-
-### Changed
-
-- Nothing.
-
-### Deprecated
-
-- Nothing.
-
-- [#159](https://github.com/zendframework/zend-stratigility/pull/159) deprecates
-  `Zend\Stratigility\MiddlewarePipe::setCallableMiddlewareDecorator()`. Use
-  `Zend\Stratigility\doublePassMiddleware()` or  `Zend\Stratigility\Middleware\DoublePassMiddleware`
-  prior to passing your double-pass middleware to `MiddlewarePipe::pipe()`.
-
-- [#159](https://github.com/zendframework/zend-stratigility/pull/159) deprecates
-  `Zend\Stratigility\MiddlewarePipe::setResponsePrototype()`. This was used only
-  to seed an instance of `Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory`
-  previously; pass your response prototype directly to a new instance of
-  `Zend\Stratigility\Middleware\DoublePassMiddleware` or the ``Zend\Stratigility\doublePassMiddleware()`
-  function instead.
-
-- [#159](https://github.com/zendframework/zend-stratigility/pull/159) deprecates
-  `Zend\Stratigility\MiddlewarePipe::hasResponsePrototype()`.
-
-### Removed
-
-- Nothing.
+- [#134](https://github.com/zendframework/zend-stratigility/pull/134) removes
+  `Zend\Stratigility\Exception\InvalidMiddlewareException`, as the exception is
+  no longer raised by `MiddlewarePipe`.
 
 ### Fixed
 
