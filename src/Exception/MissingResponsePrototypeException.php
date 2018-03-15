@@ -12,6 +12,8 @@ namespace Zend\Stratigility\Exception;
 use UnexpectedValueException;
 use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
 
+use function sprintf;
+
 /**
  * Exception thrown by the DoublePassMiddlewareDecorator when no response
  * prototype is provided, and Diactoros is not available to create a default.

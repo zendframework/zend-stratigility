@@ -23,6 +23,8 @@ use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 
+use function sprintf;
+use function var_export;
 use function Zend\Stratigility\path;
 
 class PathMiddlewareDecoratorTest extends TestCase
