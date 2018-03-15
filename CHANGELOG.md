@@ -6,6 +6,30 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
+## 3.0.0 - TBD
+
+### Added
+
+- Nothing.
+
+### Changed
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- [#163](https://github.com/zendframework/zend-stratigility/pull/163) removes
+  `Zend\Stratigility\Middleware\PathRequestHandlerDecorator`, as it was
+  deprecated in 2.2, and no longer used with the 3.0 code base.
+
+### Fixed
+
+- Nothing.
+
 ## 3.0.0rc1 - 2018-02-26
 
 ### Added
