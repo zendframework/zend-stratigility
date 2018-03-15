@@ -11,6 +11,11 @@ namespace Zend\Stratigility\Exception;
 
 use OutOfBoundsException;
 
+use function get_class;
+use function gettype;
+use function is_object;
+use function sprintf;
+
 /**
  * Exception thrown when the internal stack of Zend\Stratigility\Next is
  * exhausted, but no response returned.

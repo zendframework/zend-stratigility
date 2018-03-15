@@ -16,6 +16,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Zend\Diactoros\Response;
 use Zend\Stratigility\Exception;
 
+use function class_exists;
+
 /**
  * Decorate double-pass middleware as PSR-15 middleware.
  *

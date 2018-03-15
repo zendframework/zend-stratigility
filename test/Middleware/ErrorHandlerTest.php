@@ -21,6 +21,11 @@ use Zend\Escaper\Escaper;
 use Zend\Stratigility\Middleware\ErrorHandler;
 use Zend\Stratigility\Middleware\ErrorResponseGenerator;
 
+use function error_reporting;
+use function trigger_error;
+
+use const E_USER_DEPRECATED;
+
 class ErrorHandlerTest extends TestCase
 {
     /** @var ResponseInterface|ObjectProphecy */

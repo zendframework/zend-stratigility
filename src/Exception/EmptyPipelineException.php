@@ -11,6 +11,8 @@ namespace Zend\Stratigility\Exception;
 
 use OutOfBoundsException;
 
+use function sprintf;
+
 /**
  * Exception thrown when a MiddlewarePipe attempts to handle() a request,
  * but no middleware are composed in the instance.

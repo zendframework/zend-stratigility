@@ -13,6 +13,11 @@ use PHPUnit\Framework\TestCase;
 use Zend\Stratigility\Exception\MissingResponsePrototypeException;
 use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
 
+use function class_exists;
+use function spl_autoload_functions;
+use function spl_autoload_register;
+use function spl_autoload_unregister;
+
 class DoublePassMiddlewareDecoratorExceptionTest extends TestCase
 {
     /** @var array */
