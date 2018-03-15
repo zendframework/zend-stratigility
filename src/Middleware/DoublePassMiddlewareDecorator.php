@@ -1,20 +1,22 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2018 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2017-2018 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+
+declare(strict_types=1);
 
 namespace Zend\Stratigility\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as RequestHandlerInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Zend\Diactoros\Response;
 use Zend\Stratigility\Exception;
 
-use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
+use function class_exists;
 
 /**
  * Decorate double-pass middleware as PSR-15 middleware.
@@ -34,7 +36,7 @@ use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
  * Neither the arguments nor the return value need be typehinted; however, if
  * the signature is incompatible, a PHP Error will likely be thrown.
  */
-class DoublePassMiddlewareDecorator implements MiddlewareInterface
+final class DoublePassMiddlewareDecorator implements MiddlewareInterface
 {
     /**
      * @var callable
@@ -58,7 +60,7 @@ class DoublePassMiddlewareDecorator implements MiddlewareInterface
             throw Exception\MissingResponsePrototypeException::create();
         }
 
-        $this->responsePrototype = $responsePrototype ?: new Response();
+        $this->responsePrototype = $responsePrototype ?? new Response();
     }
 
     /**
@@ -66,10 +68,9 @@ class DoublePassMiddlewareDecorator implements MiddlewareInterface
      * @throws Exception\MissingResponseException if the decorated middleware
      *     fails to produce a response.
      */
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        $middleware = $this->middleware;
-        $response = $middleware(
+        $response = ($this->middleware)(
             $request,
             $this->responsePrototype,
             $this->decorateHandler($handler)
@@ -82,13 +83,10 @@ class DoublePassMiddlewareDecorator implements MiddlewareInterface
         return $response;
     }
 
-    /**
-     * @return callable
-     */
-    private function decorateHandler(RequestHandlerInterface $handler)
+    private function decorateHandler(RequestHandlerInterface $handler) : callable
     {
         return function ($request, $response) use ($handler) {
-            return $handler->{HANDLER_METHOD}($request);
+            return $handler->handle($request);
         };
     }
 }

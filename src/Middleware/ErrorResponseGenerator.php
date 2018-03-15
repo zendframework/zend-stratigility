@@ -1,13 +1,14 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2016 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2016 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
+declare(strict_types=1);
+
 namespace Zend\Stratigility\Middleware;
 
-use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
@@ -21,24 +22,19 @@ final class ErrorResponseGenerator
      */
     private $isDevelopmentMode;
 
-    /**
-     * @param bool $isDevelopmentMode
-     */
-    public function __construct($isDevelopmentMode = false)
+    public function __construct(bool $isDevelopmentMode = false)
     {
-        $this->isDevelopmentMode = (bool) $isDevelopmentMode;
+        $this->isDevelopmentMode = $isDevelopmentMode;
     }
 
     /**
      * Create/update the response representing the error.
-     *
-     * @param Throwable|Exception $e
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @return ResponseInterface
      */
-    public function __invoke($e, ServerRequestInterface $request, ResponseInterface $response)
-    {
+    public function __invoke(
+        Throwable $e,
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ) : ResponseInterface {
         $response = $response->withStatus(Utils::getStatusCode($e, $response));
         $body = $response->getBody();
 

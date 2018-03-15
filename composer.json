@@ -1,73 +1,78 @@
 {
-  "name": "zendframework/zend-stratigility",
-  "description": "Middleware for PHP",
-  "type": "library",
-  "license": "BSD-3-Clause",
-  "keywords": [
-    "http",
-    "psr-7",
-    "middleware",
-    "zf",
-    "zendframework"
-  ],
-  "homepage": "https://github.com/zendframework/zend-stratigility",
-  "support": {
-    "docs": "https://docs.zendframework.com/zend-stratigility/",
-    "issues": "https://github.com/zendframework/zend-stratigility/issues",
-    "source": "https://github.com/zendframework/zend-stratigility",
-    "rss": "https://github.com/zendframework/zend-stratigility/releases.atom",
-    "slack": "https://zendframework-slack.herokuapp.com",
-    "forum": "https://discourse.zendframework.com/c/questions/expressive"
-  },
-  "extra": {
-    "branch-alias": {
-      "dev-master": "2.2.x-dev",
-      "dev-develop": "3.0.x-dev"
-    }
-  },
-  "config": {
-    "sort-packages": true
-  },
-  "require": {
-    "php": "^5.6 || ^7.0",
-    "psr/http-message": "^1.0",
-    "webimpress/http-middleware-compatibility": "^0.1.4",
-    "zendframework/zend-escaper": "^2.3"
-  },
-  "require-dev": {
-    "malukenho/docheader": "^0.1.5",
-    "phpunit/phpunit": "^5.7.22 || ^6.4.1",
-    "zendframework/zend-coding-standard": "~1.0.0",
-    "zendframework/zend-diactoros": "^1.0"
-  },
-  "suggest": {
-    "psr/http-message-implementation": "Please install a psr/http-message-implementation to consume Stratigility; e.g., zendframework/zend-diactoros"
-  },
-  "autoload": {
-    "files": [
-      "src/functions/double-pass-middleware.php",
-      "src/functions/middleware.php",
-      "src/functions/path.php"
+    "name": "zendframework/zend-stratigility",
+    "description": "PSR-7 middleware foundation for building and dispatching middleware pipelines",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "http",
+        "psr-7",
+        "psr-15",
+        "middleware",
+        "zf",
+        "zendframework"
     ],
-    "psr-4": {
-      "Zend\\Stratigility\\": "src/"
+    "support": {
+        "docs": "https://docs.zendframework.com/zend-stratigility/",
+        "issues": "https://github.com/zendframework/zend-stratigility/issues",
+        "source": "https://github.com/zendframework/zend-stratigility",
+        "rss": "https://github.com/zendframework/zend-stratigility/releases.atom",
+        "slack": "https://zendframework-slack.herokuapp.com",
+        "forum": "https://discourse.zendframework.com/c/questions/expressive"
+    },
+    "require": {
+        "php": "^7.1",
+        "fig/http-message-util": "^1.1",
+        "psr/http-message": "^1.0",
+        "psr/http-server-middleware": "^1.0",
+        "zendframework/zend-escaper": "^2.3"
+    },
+    "require-dev": {
+        "malukenho/docheader": "^0.1.6",
+        "phpunit/phpunit": "^7.0.1",
+        "zendframework/zend-coding-standard": "~1.0.0",
+        "zendframework/zend-diactoros": "^1.7.1"
+    },
+    "suggest": {
+        "psr/http-message-implementation": "Please install a psr/http-message-implementation to consume Stratigility; e.g., zendframework/zend-diactoros"
+    },
+    "conflict": {
+        "zendframework/zend-diactoros": "<1.7.1"
+    },
+    "autoload": {
+        "files": [
+            "src/functions/double-pass-middleware.php",
+            "src/functions/host.php",
+            "src/functions/middleware.php",
+            "src/functions/path.php"
+        ],
+        "psr-4": {
+            "Zend\\Stratigility\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ZendTest\\Stratigility\\": "test/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "3.0-dev",
+            "dev-develop": "3.1-dev",
+            "dev-release-3.0.0": "3.0.x-dev"
+        }
+    },
+    "scripts": {
+        "check": [
+            "@license-check",
+            "@cs-check",
+            "@test"
+        ],
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf",
+        "test": "phpunit --colors=always",
+        "test-coverage": "phpunit --colors=always --coverage-clover clover.xml",
+        "license-check": "docheader check src/ test/"
     }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "ZendTest\\Stratigility\\": "test/"
-    }
-  },
-  "scripts": {
-    "check": [
-      "@license-check",
-      "@cs-check",
-      "@test"
-    ],
-    "cs-check": "phpcs",
-    "cs-fix": "phpcbf",
-    "license-check": "docheader check src/ test/",
-    "test": "phpunit --colors=always",
-    "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
-  }
 }

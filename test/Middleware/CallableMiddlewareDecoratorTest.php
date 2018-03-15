@@ -1,18 +1,22 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2018 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2017-2018 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+
+declare(strict_types=1);
 
 namespace ZendTest\Stratigility\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as RequestHandlerInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use Zend\Stratigility\Exception;
 use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
+
+use function Zend\Stratigility\middleware;
 
 class CallableMiddlewareDecoratorTest extends TestCase
 {
@@ -45,5 +49,16 @@ class CallableMiddlewareDecoratorTest extends TestCase
         $decorator = new CallableMiddlewareDecorator($middleware);
 
         $this->assertSame($response, $decorator->process($request, $handler));
+    }
+
+    public function testMiddlewareFunction()
+    {
+        $toDecorate = function ($request, $handler) {
+            return 'foo';
+        };
+
+        $middleware = middleware($toDecorate);
+        self::assertInstanceOf(CallableMiddlewareDecorator::class, $middleware);
+        self::assertAttributeSame($toDecorate, 'middleware', $middleware);
     }
 }

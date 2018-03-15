@@ -1,9 +1,11 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2018 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2015-2018 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
+
+declare(strict_types=1);
 
 namespace ZendTest\Stratigility;
 
@@ -12,75 +14,89 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use ReflectionProperty;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use SplQueue;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as DelegateInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface as ServerMiddlewareInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\Exception;
-use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
-use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 use Zend\Stratigility\Next;
-use Zend\Stratigility\Route;
 
 class NextTest extends TestCase
 {
+    use MiddlewareTrait;
+
+    /**
+     * @var SplQueue
+     */
+    private $queue;
+
+    /**
+     * @var Request
+     */
+    private $request;
+
+    /**
+     * @todo: do we need it?
+     */
     protected $errorHandler;
 
-    public function setUp()
+    protected function setUp()
     {
-        $this->queue     = new SplQueue();
-        $this->request   = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
-        $this->response  = new Response();
+        $this->queue   = new SplQueue();
+        $this->request = new Request([], [], 'http://example.com/', 'GET', 'php://memory');
+        $this->fallbackHandler = $this->createFallbackHandler();
+    }
+
+    public function createFallbackHandler(ResponseInterface $response = null) : RequestHandlerInterface
+    {
+        $response = $response ?: $this->createDefaultResponse();
+        return new class ($response) implements RequestHandlerInterface {
+            /** @var ResponseInterface */
+            private $response;
+
+            public function __construct(ResponseInterface $response)
+            {
+                $this->response = $response;
+            }
+
+            public function handle(ServerRequestInterface $request) : ResponseInterface
+            {
+                return $this->response;
+            }
+        };
+    }
+
+    public function createDefaultResponse() : ResponseInterface
+    {
+        $this->response = $this->prophesize(ResponseInterface::class);
+        return $this->response->reveal();
     }
 
     /**
-     * Decorate double-pass middleware to test against.
-     *
-     * @param callable $middleware
-     * @param null|string $path to segregate against
-     * @return ServerMiddlewareInterface
+     * @group http-interop
      */
-    public function decorateCallableMiddleware(callable $middleware, $path = null)
+    public function testNextImplementsRequestHandlerInterface()
     {
-        $middleware = new DoublePassMiddlewareDecorator($middleware, $this->response);
-        $middleware = $path ? new PathMiddlewareDecorator($path, $middleware) : $middleware;
-        return $middleware;
+        $next = new Next($this->queue, $this->fallbackHandler);
+        $this->assertInstanceOf(RequestHandlerInterface::class, $next);
     }
 
-    public function testMiddlewareReturningResponseShortcircuits()
+    /**
+     * @group 25
+     */
+    public function testNextShouldCloneQueueOnInstantiation()
     {
-        $route1 = new Route('/foo', $this->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                return $res;
-            },
-            '/foo'
-        ));
-        $route2 = new Route('/foo/bar', $this->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                $next($req, $res);
-                $this->fail('Should not hit route2 handler');
-            },
-            '/foo/bar'
-        ));
-        $route3 = new Route('/foo/baz', $this->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                $next($req, $res);
-                $this->fail('Should not hit route3 handler');
-            },
-            '/foo/baz'
-        ));
+        $next = new Next($this->queue, $this->fallbackHandler);
+        $this->assertAttributeNotSame($this->queue, 'queue', $next);
+        $this->assertAttributeEquals($this->queue, 'queue', $next);
+    }
 
-        $this->queue->enqueue($route1);
-        $this->queue->enqueue($route2);
-        $this->queue->enqueue($route3);
-
-        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-        $next = new Next($this->queue);
-        $result = $next($request);
-        $this->assertSame($this->response, $result);
+    public function testNextComposesAFallbackHandler()
+    {
+        $next = new Next($this->queue, $this->fallbackHandler);
+        $this->assertAttributeSame($this->fallbackHandler, 'fallbackHandler', $next);
     }
 
     public function testMiddlewareCallingNextWithRequestPassesRequestToNextMiddleware()
@@ -89,88 +105,83 @@ class NextTest extends TestCase
         $cannedRequest = clone $request;
         $cannedRequest = $cannedRequest->withMethod('POST');
 
-        $route1 = new Route('/foo/bar', $this->decorateCallableMiddleware(
-            function ($req, $res, $next) use ($cannedRequest) {
-                return $next($cannedRequest, $res);
-            },
-            '/foo/bar'
-        ));
-        $route2 = new Route('/foo/bar/baz', $this->decorateCallableMiddleware(
-            function ($req, $res, $next) use ($cannedRequest) {
-                $this->assertEquals($cannedRequest->getMethod(), $req->getMethod());
-                return $res;
-            },
-            '/foo/bar/baz'
-        ));
+        $middleware1 = new class($cannedRequest) implements MiddlewareInterface
+        {
+            private $cannedRequest;
 
-        $this->queue->enqueue($route1);
-        $this->queue->enqueue($route2);
+            public function __construct($cannedRequest)
+            {
+                $this->cannedRequest = $cannedRequest;
+            }
 
-        $next = new Next($this->queue);
-        $next($request);
-    }
+            public function process(ServerRequestInterface $req, RequestHandlerInterface $handler) : ResponseInterface
+            {
+                return $handler->handle($this->cannedRequest);
+            }
+        };
 
-    public function testNextShouldRaiseExceptionIfMiddlewareDoesNotReturnResponse()
-    {
-        $route1 = new Route('/foo', $this->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                // Explicitly not returning a value
-                $next($req, $res);
-            },
-            '/foo'
-        ));
-        $route2 = new Route('/foo/bar', $this->decorateCallableMiddleware(
-            function ($req, $res, $next) {
-                return $res;
-            },
-            '/foo/bar'
-        ));
+        $middleware2 = new class($cannedRequest) implements MiddlewareInterface
+        {
+            private $cannedRequest;
 
-        $this->queue->enqueue($route1);
-        $this->queue->enqueue($route2);
+            public function __construct($cannedRequest)
+            {
+                $this->cannedRequest = $cannedRequest;
+            }
 
-        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-        $next    = new Next($this->queue);
+            public function process(ServerRequestInterface $req, RequestHandlerInterface $handler) : ResponseInterface
+            {
+                Assert::assertEquals($this->cannedRequest->getMethod(), $req->getMethod());
+                return new Response();
+            }
+        };
 
-        $this->expectException(Exception\MissingResponseException::class);
-        $next($request);
-    }
+        $this->queue->enqueue($middleware1);
+        $this->queue->enqueue($middleware2);
 
-    /**
-     * @group 25
-     */
-    public function testNextShouldCloneQueueOnInstantiation()
-    {
-        $next = new Next($this->queue);
-
-        $r = new ReflectionProperty($next, 'queue');
-        $r->setAccessible(true);
-        $queue = $r->getValue($next);
-
-        $this->assertNotSame($this->queue, $queue);
-        $this->assertEquals($this->queue, $queue);
+        $next = new Next($this->queue, $this->fallbackHandler);
+        $response = $next->handle($request);
+        $this->assertNotSame($this->response, $response);
     }
 
     /**
      * @group http-interop
      */
-    public function testNextImplementsDelegateInterface()
+    public function testNextDelegatesToFallbackHandlerWhenQueueIsEmpty()
     {
-        $next = new Next($this->queue);
-
-        $this->assertInstanceOf(DelegateInterface::class, $next);
+        $expectedResponse = $this->prophesize(ResponseInterface::class)->reveal();
+        $fallbackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallbackHandler
+            ->handle($this->request)
+            ->willReturn($expectedResponse)->shouldBeCalled();
+        $next = new Next($this->queue, $fallbackHandler->reveal());
+        $this->assertSame($expectedResponse, $next->handle($this->request));
     }
 
     /**
      * @group http-interop
      */
-    public function testExceptionIsRaisedWhenQueueIsExhaustedAndNoNextDelegatePresent()
+    public function testNextProcessesEnqueuedMiddleware()
     {
-        $next = new Next($this->queue);
+        $fallbackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallbackHandler
+            ->handle(Argument::any())
+            ->shouldNotBeCalled();
 
-        $this->expectException(Exception\MissingResponseException::class);
-        $this->expectExceptionMessage('exhausted');
-        $next->process($this->request);
+        $response = $this->prophesize(ResponseInterface::class)->reveal();
+
+        $middleware = $this->prophesize(MiddlewareInterface::class);
+        $middleware
+            ->process($this->request, Argument::type(Next::class))
+            ->willReturn($response);
+
+        $this->queue->enqueue($middleware->reveal());
+
+        // Creating after middleware enqueued, as Next clones the queue during
+        // instantiation.
+        $next = new Next($this->queue, $fallbackHandler->reveal());
+
+        $this->assertSame($response, $next->handle($this->request));
     }
 
     /**
@@ -178,47 +189,29 @@ class NextTest extends TestCase
      */
     public function testMiddlewareReturningResponseShortCircuitsProcess()
     {
-        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
+        $fallbackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallbackHandler
+            ->handle(Argument::any())
+            ->shouldNotBeCalled();
+
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
-        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route1 = $this->prophesize(MiddlewareInterface::class);
         $route1
-            ->process(Argument::that(function ($arg) {
-                Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
-                return true;
-            }), Argument::type(DelegateInterface::class))
+            ->process($this->request, Argument::type(Next::class))
             ->willReturn($response);
-        $this->queue->enqueue(new Route('/foo', new PathMiddlewareDecorator('/foo', $route1->reveal())));
+        $this->queue->enqueue($route1->reveal());
 
-        $route2 = $this->prophesize(ServerMiddlewareInterface::class);
+        $route2 = $this->prophesize(MiddlewareInterface::class);
         $route2
             ->process(Argument::type(RequestInterface::class), Argument::type(Next::class))
             ->shouldNotBeCalled();
-        $this->queue->enqueue(new Route('/foo/bar', new PathMiddlewareDecorator('/foo/bar', $route2->reveal())));
+        $this->queue->enqueue($route2->reveal());
 
-        $next = new Next($this->queue);
-        $this->assertSame($response, $next->process($request));
-    }
+        // Creating after middleware enqueued, as Next clones the queue during
+        // instantiation.
+        $next = new Next($this->queue, $fallbackHandler->reveal());
 
-    /**
-     * @group http-interop
-     */
-    public function testProcessRaisesExceptionIfNoResponseReturnedByMiddleware()
-    {
-        $request = $this->request->withUri(new Uri('http://example.com/foo/bar/baz'));
-
-        $route1 = $this->prophesize(ServerMiddlewareInterface::class);
-        $route1
-            ->process(Argument::that(function ($arg) {
-                Assert::assertEquals('/bar/baz', $arg->getUri()->getPath());
-                return true;
-            }), Argument::type(DelegateInterface::class))
-            ->willReturn('foobar');
-        $this->queue->enqueue(new Route('/foo', new PathMiddlewareDecorator('/foo', $route1->reveal())));
-
-        $next = new Next($this->queue);
-
-        $this->expectException(Exception\MissingResponseException::class);
-        $next->process($request);
+        $this->assertSame($response, $next->handle($this->request));
     }
 }

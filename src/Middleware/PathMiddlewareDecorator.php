@@ -1,20 +1,25 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2018 Zend Technologies USA Inc. (http://www.zend.com)
+ * @copyright Copyright (c) 2018 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
+declare(strict_types=1);
+
 namespace Zend\Stratigility\Middleware;
 
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Webimpress\HttpMiddlewareCompatibility\HandlerInterface as RequestHandlerInterface;
-use Webimpress\HttpMiddlewareCompatibility\MiddlewareInterface;
-use Zend\Stratigility\Exception;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
-use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
+use function rtrim;
+use function strlen;
+use function strtolower;
+use function substr;
 
-class PathMiddlewareDecorator implements MiddlewareInterface
+final class PathMiddlewareDecorator implements MiddlewareInterface
 {
     /** @var MiddlewareInterface */
     private $middleware;
@@ -22,45 +27,34 @@ class PathMiddlewareDecorator implements MiddlewareInterface
     /** @var string Path prefix under which the middleware is segregated.  */
     private $prefix;
 
-    /**
-     * @param string $prefix
-     */
-    public function __construct($prefix, MiddlewareInterface $middleware)
+    public function __construct(string $prefix, MiddlewareInterface $middleware)
     {
-        if (! is_string($prefix)) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                '$prefix argument to %s must be a string; received %s',
-                __CLASS__,
-                is_object($prefix) ? get_class($prefix) : gettype($prefix)
-            ));
-        }
         $this->prefix = $this->normalizePrefix($prefix);
         $this->middleware = $middleware;
     }
 
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        $path = $request->getUri()->getPath();
-        $path = $path ?: '/';
+        $path = $request->getUri()->getPath() ?: '/';
 
         // Current path is shorter than decorator path
         if (strlen($path) < strlen($this->prefix)) {
-            return $handler->{HANDLER_METHOD}($request);
+            return $handler->handle($request);
         }
 
         // Current path does not match decorator path
         if (substr(strtolower($path), 0, strlen($this->prefix)) !== strtolower($this->prefix)) {
-            return $handler->{HANDLER_METHOD}($request);
+            return $handler->handle($request);
         }
 
-        // Skip if match is not at a border ('/', '.', or end)
+        // Skip if match is not at a border ('/' or end)
         $border = $this->getBorder($path);
-        if ($border && '/' !== $border && '.' !== $border) {
-            return $handler->{HANDLER_METHOD}($request);
+        if ($border && '/' !== $border) {
+            return $handler->handle($request);
         }
 
-        // Trim off the part of the url that matches the prefix if it is non-empty
-        $requestToProcess = (! empty($this->prefix) && $this->prefix !== '/')
+        // Trim off the part of the url that matches the prefix if it is not / only
+        $requestToProcess = $this->prefix !== '/'
             ? $this->prepareRequestWithTruncatedPrefix($request)
             : $request;
 
@@ -70,15 +64,11 @@ class PathMiddlewareDecorator implements MiddlewareInterface
         // layer.
         return $this->middleware->process(
             $requestToProcess,
-            new PathRequestHandlerDecorator($handler, $request)
+            $this->prepareHandlerForOriginalRequest($handler, $request)
         );
     }
 
-    /**
-     * @param string $path
-     * @return string
-     */
-    private function getBorder($path)
+    private function getBorder(string $path) : string
     {
         if ($this->prefix === '/') {
             return '/';
@@ -88,10 +78,7 @@ class PathMiddlewareDecorator implements MiddlewareInterface
         return strlen($path) > $length ? $path[$length] : '';
     }
 
-    /**
-     * @return ServerRequestInterface
-     */
-    private function prepareRequestWithTruncatedPrefix(ServerRequestInterface $request)
+    private function prepareRequestWithTruncatedPrefix(ServerRequestInterface $request) : ServerRequestInterface
     {
         $uri  = $request->getUri();
         $path = $this->getTruncatedPath($this->prefix, $uri->getPath());
@@ -99,43 +86,58 @@ class PathMiddlewareDecorator implements MiddlewareInterface
         return $request->withUri($new);
     }
 
-    /**
-     * @param string $segment
-     * @param string $path
-     * @return string
-     * @throws Exception\PathOutOfSyncException if path prefix is longer than
-     *     the path
-     */
-    private function getTruncatedPath($segment, $path)
+    private function getTruncatedPath(string $segment, string $path) : string
     {
         if ($segment === $path) {
             // Decorated path and current path are the same; return empty string
             return '';
         }
 
-        $length = strlen($segment);
-        if (strlen($path) > $length) {
-            // Strip decorated path from start of current path
-            return substr($path, $length);
-        }
+        // Strip decorated path from start of current path
+        return substr($path, strlen($segment));
+    }
 
-        if ('/' === substr($segment, -1)) {
-            // Re-try by submitting with / stripped from end of segment
-            return $this->getTruncatedPath(rtrim($segment, '/'), $path);
-        }
+    private function prepareHandlerForOriginalRequest(
+        RequestHandlerInterface $handler,
+        ServerRequestInterface $originalRequest
+    ) : RequestHandlerInterface {
+        return new class ($handler, $originalRequest) implements RequestHandlerInterface {
+            /** @var RequestHandlerInterface */
+            private $handler;
 
-        // Segment is longer than path; this is a problem.
-        throw Exception\PathOutOfSyncException::forPath($this->prefix, $path);
+            /** @var ServerRequestInterface */
+            private $originalRequest;
+
+            public function __construct(RequestHandlerInterface $handler, ServerRequestInterface $originalRequest)
+            {
+                $this->handler = $handler;
+                $this->originalRequest = $originalRequest;
+            }
+
+            /**
+             * Invokes the composed handler with a request using the original URI.
+             *
+             * The decorated middleware may provide an altered response. However,
+             * we want to reset the path to the original path on invocation, as
+             * that is the part we originally modified, and is a part the decorated
+             * middleware should not modify.
+             *
+             * {@inheritDoc}
+             */
+            public function handle(ServerRequestInterface $request) : ResponseInterface
+            {
+                $uri = $request->getUri()
+                    ->withPath($this->originalRequest->getUri()->getPath());
+                return $this->handler->handle($request->withUri($uri));
+            }
+        };
     }
 
     /**
      * Ensures that the right-most slash is trimmed for prefixes of more than
      * one character, and that the prefix begins with a slash.
-     *
-     * @param string $prefix
-     * @return string
      */
-    private function normalizePrefix($prefix)
+    private function normalizePrefix(string $prefix) : string
     {
         $prefix = strlen($prefix) > 1 ? rtrim($prefix, '/') : $prefix;
         if ('/' !== substr($prefix, 0, 1)) {
