@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="zend-stratigility">  
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    <title>Middleware - zend-stratigility</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../../css/styles-288837cc22.css">
+
+    
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+            <span class="navbar-brand">
+                <a class="logo-link" href="https://framework.zend.com/" data-toggle="tooltip" data-placement="bottom" title="Go to the ZF homepage"><img src="../../img/zf-logo-mark.svg" height="28" alt="Zend Framework" /></a>
+                <a href="../..">zend-stratigility</a>
+            </span>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                
+                
+                    <li >
+                        <a href="../../v3/intro/">Intro</a>
+                    </li>
+                
+                
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+
+<li >
+    <a href="../../v3/install/">Installation and Requirements</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v3/usage/">Usage</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v3/middleware/">Middleware</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v3/error-handlers/">Error Handlers</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v3/creating-middleware/">Creating Middleware</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v3/executing-middleware/">Composing middleware</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v3/api/">API Reference</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v3/migration/">Migration</a>
+</li>
+
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">v1 <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+
+<li >
+    <a href="../install/">Installation and Requirements</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../usage/">Usage</a>
+</li>
+
+
+                        
+                            
+
+<li class="active">
+    <a href="./">Middleware</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../error-handlers/">Error Handlers</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../creating-middleware/">Creating Middleware</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../executing-middleware/">Executing and composing middleware</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../api/">API Reference</a>
+</li>
+
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">v2 <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+
+<li >
+    <a href="../../v2/install/">Installation and Requirements</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v2/usage/">Usage</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v2/middleware/">Middleware</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v2/error-handlers/">Error Handlers</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v2/creating-middleware/">Creating Middleware</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v2/executing-middleware/">Executing and composing middleware</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v2/api/">API Reference</a>
+</li>
+
+
+                        
+                            
+
+<li >
+    <a href="../../v2/migration/">Migration</a>
+</li>
+
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                
+                
+                </ul>
+            
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" class="component-toggle" data-toggle="tooltip" data-placement="bottom" title="Show component list">
+                        <i class="fa fa-book"></i> Components
+                    </a>
+                </li>
+
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                
+                    <li>
+                        <a href="https://github.com/zendframework/zend-stratigility/">
+                            
+                                <i class="fa fa-github"></i>
+                            
+                            GitHub
+                        </a>
+                    </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <!-- content:begin -->
+    <div id="page-top" class="container docs">
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#middleware">Middleware</a></li>
+        
+            <li><a href="#http-interop-middleware">http-interop middleware</a></li>
+        
+    
+    </ul>
+
+    
+    <ul class="pager hidden-print">
+      <li class="previous">
+        <a rel="prev" href="../usage/"><i class="fa fa-arrow-left"></i> Previous</a>
+      </li>
+      <li class="next">
+        <a rel="next" href="../error-handlers/">Next <i class="fa fa-arrow-right"></i></a>
+      </li>
+    </ul>
+    
+</div></div>
+        <div class="col-md-9" role="main">
+
+<ol class="breadcrumb" role="navigation" aria-label="breadcrumbs navigation">
+  <li><a href="../..">zend-stratigility</a></li>
+  
+    
+      
+        <li>v1</li>
+      
+    
+  
+  <li class="active">Middleware</li>
+</ol>
+
+<h1 id="middleware">Middleware</h1>
+<p>What is middleware?</p>
+<p>Middleware is code that exists between the request and response, and which can
+take the incoming request, perform actions based on it, and either complete the
+response or pass delegation on to the next middleware in the queue.</p>
+<pre class="codehilite"><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
+use Zend\Diactoros\Server;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$app    = new MiddlewarePipe();
+$server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
+
+// Landing page
+$app-&gt;pipe('/', function ($req, $res, $next) {
+    if (! in_array($req-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
+        return $next($req, $res);
+    }
+    $res-&gt;getBody()-&gt;write('Hello world!');
+    return $res;
+});
+
+// Another page
+$app-&gt;pipe('/foo', function ($req, $res, $next) {
+    $res-&gt;getBody()-&gt;write('FOO!');
+    return $res;
+});
+
+$server-&gt;listen();</code></pre>
+
+<p>In the above example, we have two examples of middleware. The first is a
+landing page, and listens at the root path. If the request path is empty or
+<code>/</code>, it completes the response. If it is not, it delegates to the next
+middleware in the stack. The second middleware matches on the path <code>/foo</code>
+&mdash; meaning it will match <code>/foo</code>, <code>/foo/</code>, and any path beneath. In that
+case, it will complete the response with its own message. If no paths match at
+this point, a "final handler" is composed by default to report 404 status.</p>
+<p>So, concisely put, <em>middleware are PHP callables that accept a request and
+response object, and do something with it</em>.</p>
+<blockquote>
+<h3 id="http-interop-middleware">http-interop middleware</h3>
+<p>The above example demonstrates the legacy (pre-1.3.0) signature for
+middleware, which is also widely used across other middleware frameworks
+such as Slim, Relay, Adroit, etc.</p>
+<p>http-interop is a project attempting to standardize middleware signatures.
+The signature it uses for server-side middleware is:</p>
+<pre class="codehilite"><code class="language-php">namespace Interop\Http\Middleware;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+interface ServerMiddlewareInterface
+{
+    public function process(
+        ServerRequestInterface $request,
+        DelegateInterface $delegate
+    ) : ResponseInterface;
+}</code></pre>
+
+<p>where <code>DelegateInterface</code> is defined as:</p>
+<pre class="codehilite"><code class="language-php">namespace Interop\Http\Middleware;
+
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+interface DelegateInterface
+{
+    public function process(
+        RequestInterface $request
+    ) : ResponseInterface;
+}</code></pre>
+
+<p>Stratigility allows you to implement <code>ServerMiddlewareInterface</code> to provide
+middleware.  Additionally, you can define <code>callable</code> middleware with the
+following signature, and it will be dispatched as http-interop middleware:</p>
+<pre class="codehilite"><code class="language-php">function(
+    ServerRequestInterface $request,
+    DelegateInterface $delegate
+) : ResponseInterface;</code></pre>
+
+<p>(The <code>$request</code> argument does not require a typehint when defining callable
+middleware, but we encourage its use.)</p>
+<p>As such, the above example can also be written as follows:</p>
+<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
+use Zend\Diactoros\Response\TextResponse;
+
+$app-&gt;pipe('/', function ($req, DelegateInterface $delegate) {
+    if (! in_array($req-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
+        return $delegate-&gt;process($req);
+    }
+    return new TextResponse('Hello world!');
+});</code></pre>
+
+</blockquote>
+<p>Middleware can decide more processing can be performed by calling the <code>$next</code>
+callable (or, when defining http-interop middleware, <code>$delegate</code>) passed during
+invocation. With this paradigm, you can build a workflow engine for handling
+requests &mdash; for instance, you could have middleware perform the following:</p>
+<ul>
+<li>Handle authentication details</li>
+<li>Perform content negotiation</li>
+<li>Perform HTTP negotiation</li>
+<li>Route the path to a more appropriate, specific handler</li>
+</ul>
+<p>Each middleware can itself be middleware, and can attach to specific paths,
+allowing you to mix and match applications under a common domain. As an
+example, you could put API middleware next to middleware that serves its
+documentation, next to middleware that serves files, and segregate each by URI:</p>
+<pre class="codehilite"><code class="language-php">$app-&gt;pipe('/api', $apiMiddleware);
+$app-&gt;pipe('/docs', $apiDocMiddleware);
+$app-&gt;pipe('/files', $filesMiddleware);</code></pre>
+
+<p>The handlers in each middleware attached this way will see a URI with that path
+segment stripped, allowing them to be developed separately and re-used under
+any path you wish.</p>
+<p>Within Stratigility, middleware can be:</p>
+<ul>
+<li>Any PHP callable that accepts, minimally, a
+  <a href="https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-7-http-message.md">PSR-7</a>
+  ServerRequest and Response (in that order), and, optionally, a callable (for
+  invoking the next middleware in the queue, if any).</li>
+<li>Any <a href="https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9">http-interop 0.2.0 - middleware</a>.
+  <code>Zend\Stratigility\MiddlewarePipe</code> implements
+  <code>Interop\Http\Middleware\ServerMiddlewareInterface</code>.</li>
+<li>An object implementing <code>Zend\Stratigility\MiddlewareInterface</code>.
+  <code>Zend\Stratigility\MiddlewarePipe</code> implements this interface.
+  (Legacy; this interface is deprecated starting in 1.3.0.)</li>
+</ul>
+
+<hr />
+
+
+<nav>
+  <ul class="pager hidden-print">
+    <li class="previous">
+      <a rel="prev" href="../usage/"><i class="fa fa-arrow-left"></i> Previous</a>
+    </li>
+    <li class="next">
+      <a rel="next" href="../error-handlers/">Next <i class="fa fa-arrow-right"></i></a>
+    </li>
+  </ul>
+</nav>
+</div>
+        
+    </div>
+    <!-- content:end -->
+
+    <div id="footerwrap">
+    <div class="container">
+        <div class="row site-map">
+            <div class="col-lg-3">
+              <p>
+                <strong>Zend Framework</strong><br />
+                <a href="https://framework.zend.com/">framework.zend.com</a><br />
+                <a href="https://docs.zendframework.com">docs.zendframework.com</a><br />
+                <a href="https://packages.zendframework.com">packages.zendframework.com</a><br />
+                <a href="https://apigility.org">apigility.org</a><br />
+              </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 centered">
+                <a class="back-to-top" href="#page-top"><i class="fa fa-chevron-circle-up fa-4" aria-hidden="true"></i></a>
+            </div>
+        </div>
+
+        <div class="spacing"></div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <h4>Copyright</h4>
+                <div class="hline-w"></div>
+
+                <p>&copy; 2006-2017 by <a href="https://www.zend.com/">Zend</a>, a <a href="https://www.roguewave.com/">Rogue Wave Company</a>.</p>
+            </div>
+
+            <div class="col-lg-4">
+                <h4>Contacts</h4>
+                <div class="hline-w"></div>
+                <p>
+                    <a href="https://discourse.zendframework.com" class="btn-social btn-outline" alt="Forum" title="Forum"><i class="fa fa-comments"></i></a>
+                    <a href="https://zendframework-slack.herokuapp.com" class="btn-social btn-outline" alt="Slack" title="Slack"><i class="fa fa-slack"></i></a>
+                    <a href="https://github.com/zendframework" class="btn-social btn-outline" alt="Github" title="Github"><i class="fa fa-github"></i></a>
+                    <a href="https://twitter.com/zfdevteam" class="btn-social btn-outline" alt="Twitter" title="Twitter"><i class="fa fa-twitter"></i></a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@2.2.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"></script>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/scripts-0b6185f4a5.js"></script>
+    <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
+        <script src="../../search/require.js"></script>
+        <script src="../../search/search.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        From here you can search these documents. Enter your search terms below.
+                    </p>
+                    <form role="form">
+                        <div class="form-group">
+                            <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                        </div>
+                    </form>
+                    <div id="mkdocs-search-results"></div>
+                </div>
+                <div class="modal-footer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="zf-components">
+  <div class="zf-components-grid">
+    <div class="zf-logo">
+      <a href="https://framework.zend.com" data-toggle="tooltip" data-placement="bottom" title="Go to the ZF homepage"><img src="../../img/zf-logo-mark.svg" alt="Zend Framework" width="250" /></a>
+    </div>
+
+    <div class="component-list"></div>
+
+    <p class="zf-components-rollup"><a href="#">Hide list</a></p>
+  </div>
+</div>
+
+</body>
+
+
+</html>
