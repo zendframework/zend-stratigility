@@ -24,6 +24,12 @@ use Zend\Stratigility\Exception;
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\MiddlewarePipeInterface;
 
+use function get_class;
+use function sort;
+use function spl_object_hash;
+use function strpos;
+use function var_export;
+
 class MiddlewarePipeTest extends TestCase
 {
     use MiddlewareTrait;

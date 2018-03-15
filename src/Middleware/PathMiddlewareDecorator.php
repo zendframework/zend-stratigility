@@ -14,6 +14,11 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
+use function rtrim;
+use function strlen;
+use function strtolower;
+use function substr;
+
 final class PathMiddlewareDecorator implements MiddlewareInterface
 {
     /** @var MiddlewareInterface */

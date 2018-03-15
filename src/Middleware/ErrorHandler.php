@@ -17,6 +17,11 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use Zend\Stratigility\Exception\MissingResponseException;
 
+use function error_reporting;
+use function in_array;
+use function restore_error_handler;
+use function set_error_handler;
+
 /**
  * Error handler middleware.
  *

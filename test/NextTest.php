@@ -22,7 +22,6 @@ use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Next;
-use Zend\Stratigility\Route;
 
 class NextTest extends TestCase
 {
