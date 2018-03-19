@@ -2,13 +2,6 @@
 
 The following make up the primary API of Stratigility.
 
-> ### http-server-middleware
->
-> - Affects: version 3.0.0alpha1
->
-> Starting with version 3.0.0, support for http-interop/http-middleware has been
-> replaced with support for psr/http-server-middleware.
-
 ## Middleware
 
 `Zend\Stratigility\MiddlewarePipe` is the primary application interface, and
