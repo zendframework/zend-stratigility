@@ -419,9 +419,10 @@ middleware definition:</p>
     ResponseInterface $response
 ) : ResponseInterface</code></pre>
 
-<p>The latter is the origin of the term "double-pass", as the implementation passes
-not a single argument, but two. (The <code>$response</code> argument was often used as a
-response prototype for middleware that needed to return a response.)</p>
+<p>The latter interface is the origin of the term "double-pass", as the
+implementation passes not a single argument, but two. (The <code>$response</code> argument
+was often used as a response prototype for middleware that needed to return a
+response.)</p>
 <p><code>Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator</code> allows decorating
 such middleware within a PSR-15 <code>MiddlewareInterface</code> implementation, allowing
 it to be used in your Stratigility application.</p>
