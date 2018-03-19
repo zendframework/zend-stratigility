@@ -83,9 +83,10 @@ function (
 ) : ResponseInterface
 ```
 
-The latter is the origin of the term "double-pass", as the implementation passes
-not a single argument, but two. (The `$response` argument was often used as a
-response prototype for middleware that needed to return a response.)
+The latter interface is the origin of the term "double-pass", as the
+implementation passes not a single argument, but two. (The `$response` argument
+was often used as a response prototype for middleware that needed to return a
+response.)
 
 `Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator` allows decorating
 such middleware within a PSR-15 `MiddlewareInterface` implementation, allowing
