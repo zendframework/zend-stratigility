@@ -64,7 +64,7 @@ final class PathMiddlewareDecorator implements MiddlewareInterface
         // layer.
         return $this->middleware->process(
             $requestToProcess,
-            $this->prepareHandlerForOriginalRequest($handler, $request)
+            $this->prepareHandlerForOriginalRequest($handler)
         );
     }
 
@@ -97,27 +97,18 @@ final class PathMiddlewareDecorator implements MiddlewareInterface
         return substr($path, strlen($segment));
     }
 
-    private function prepareHandlerForOriginalRequest(
-        RequestHandlerInterface $handler,
-        ServerRequestInterface $originalRequest
-    ) : RequestHandlerInterface {
-        return new class ($handler, $originalRequest, $this->prefix) implements RequestHandlerInterface {
+    private function prepareHandlerForOriginalRequest(RequestHandlerInterface $handler) : RequestHandlerInterface
+    {
+        return new class ($handler, $this->prefix) implements RequestHandlerInterface {
             /** @var RequestHandlerInterface */
             private $handler;
-
-            /** @var ServerRequestInterface */
-            private $originalRequest;
 
             /** @var string */
             private $prefix;
 
-            public function __construct(
-                RequestHandlerInterface $handler,
-                ServerRequestInterface $originalRequest,
-                string $prefix
-            ) {
+            public function __construct(RequestHandlerInterface $handler, string $prefix)
+            {
                 $this->handler = $handler;
-                $this->originalRequest = $originalRequest;
                 $this->prefix = $prefix;
             }
 
