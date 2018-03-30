@@ -440,12 +440,13 @@ class PathMiddlewareDecoratorTest extends TestCase
     public function testUpdatesInPathInsideNestedMiddlewareAreRespected()
     {
         $request = new ServerRequest([], [], 'http://local.example.com/foo/bar', 'GET', 'php://memory');
-        $middleware = new PathMiddlewareDecorator('/foo', middleware(function (
+        $decoratedMiddleware = middleware(function (
             ServerRequestInterface $request,
             RequestHandlerInterface $handler
         ) {
             return $handler->handle($request->withUri(new Uri('/changed/path')));
-        }));
+        });
+        $middleware = new PathMiddlewareDecorator('/foo', $decoratedMiddleware);
 
         $handler = $this->prophesize(RequestHandlerInterface::class);
         $handler->handle(Argument::that(function (ServerRequestInterface $received) {
