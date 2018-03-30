@@ -101,17 +101,24 @@ final class PathMiddlewareDecorator implements MiddlewareInterface
         RequestHandlerInterface $handler,
         ServerRequestInterface $originalRequest
     ) : RequestHandlerInterface {
-        return new class ($handler, $originalRequest) implements RequestHandlerInterface {
+        return new class ($handler, $originalRequest, $this->prefix) implements RequestHandlerInterface {
             /** @var RequestHandlerInterface */
             private $handler;
 
             /** @var ServerRequestInterface */
             private $originalRequest;
 
-            public function __construct(RequestHandlerInterface $handler, ServerRequestInterface $originalRequest)
-            {
+            /** @var string */
+            private $prefix;
+
+            public function __construct(
+                RequestHandlerInterface $handler,
+                ServerRequestInterface $originalRequest,
+                string $prefix
+            ) {
                 $this->handler = $handler;
                 $this->originalRequest = $originalRequest;
+                $this->prefix = $prefix;
             }
 
             /**
@@ -126,8 +133,8 @@ final class PathMiddlewareDecorator implements MiddlewareInterface
              */
             public function handle(ServerRequestInterface $request) : ResponseInterface
             {
-                $uri = $request->getUri()
-                    ->withPath($this->originalRequest->getUri()->getPath());
+                $uri = $request->getUri();
+                $uri = $uri->withPath($this->prefix . $uri->getPath());
                 return $this->handler->handle($request->withUri($uri));
             }
         };
