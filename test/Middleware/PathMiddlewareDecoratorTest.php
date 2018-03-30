@@ -21,6 +21,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
+use function Zend\Stratigility\middleware;
 use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 
 use function sprintf;
@@ -434,5 +435,25 @@ class PathMiddlewareDecoratorTest extends TestCase
         self::assertInstanceOf(PathMiddlewareDecorator::class, $middleware);
         self::assertAttributeSame('/foo', 'prefix', $middleware);
         self::assertAttributeSame($toDecorate, 'middleware', $middleware);
+    }
+
+    public function testUpdatesInPathInsideNestedMiddlewareAreRespected()
+    {
+        $request = new ServerRequest([], [], 'http://local.example.com/foo/bar', 'GET', 'php://memory');
+        $middleware = new PathMiddlewareDecorator('/foo', middleware(function (
+            ServerRequestInterface $request,
+            RequestHandlerInterface $handler
+        ) {
+            return $handler->handle($request->withUri(new Uri('/changed/path')));
+        }));
+
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+        $handler->handle(Argument::that(function (ServerRequestInterface $received) {
+            Assert::assertEquals('/foo/changed/path', $received->getUri()->getPath());
+
+            return $received;
+        }));
+
+        $middleware->process($request, $handler->reveal());
     }
 }
