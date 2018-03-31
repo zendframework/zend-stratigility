@@ -13,6 +13,7 @@ use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
 use Zend\Stratigility\Middleware\NotFoundHandler;
 use Zend\Stratigility\MiddlewarePipe;
+
 use function Zend\Stratigility\middleware;
 use function Zend\Stratigility\path;
 
