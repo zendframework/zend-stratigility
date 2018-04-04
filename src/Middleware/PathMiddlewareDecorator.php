@@ -70,7 +70,7 @@ class PathMiddlewareDecorator implements MiddlewareInterface
         // layer.
         return $this->middleware->process(
             $requestToProcess,
-            new PathRequestHandlerDecorator($handler, $request)
+            new PathRequestHandlerDecorator($handler, $this->prefix)
         );
     }
 

@@ -33,14 +33,17 @@ class PathRequestHandlerDecorator implements RequestHandlerInterface
     private $handler;
 
     /**
-     * @var ServerRequestInterface
+     * @var string
      */
-    private $originalRequest;
+    private $prefix;
 
-    public function __construct(RequestHandlerInterface $handler, ServerRequestInterface $originalRequest)
+    /**
+     * @param string $prefix
+     */
+    public function __construct(RequestHandlerInterface $handler, $prefix)
     {
         $this->handler = $handler;
-        $this->originalRequest = $originalRequest;
+        $this->prefix = $prefix;
     }
 
     /**
@@ -49,8 +52,8 @@ class PathRequestHandlerDecorator implements RequestHandlerInterface
      */
     public function handle(ServerRequestInterface $request)
     {
-        $uri = $request->getUri()
-            ->withPath($this->originalRequest->getUri()->getPath());
+        $uri = $request->getUri();
+        $uri = $uri->withPath($this->prefix . $uri->getPath());
         return $this->handler->{HANDLER_METHOD}($request->withUri($uri));
     }
 
