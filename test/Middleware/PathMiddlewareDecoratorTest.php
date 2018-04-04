@@ -379,13 +379,13 @@ class PathMiddlewareDecoratorTest extends TestCase
             ServerRequestInterface $request,
             RequestHandlerInterface $handler
         ) {
-            return $handler->handle($request->withUri(new Uri('/changed/path')));
+            return $handler->{HANDLER_METHOD}($request->withUri(new Uri('/changed/path')));
         });
         $middleware = new PathMiddlewareDecorator('/foo', $decoratedMiddleware);
 
         $handler = $this->prophesize(RequestHandlerInterface::class);
         $handler
-            ->handle(Argument::that(function (ServerRequestInterface $received) {
+            ->{HANDLER_METHOD}(Argument::that(function (ServerRequestInterface $received) {
                 Assert::assertEquals('/foo/changed/path', $received->getUri()->getPath());
 
                 return $received;
