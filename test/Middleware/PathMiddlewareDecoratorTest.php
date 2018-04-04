@@ -25,6 +25,7 @@ use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 
 use function sprintf;
 use function var_export;
+use function Zend\Stratigility\middleware;
 use function Zend\Stratigility\path;
 
 class PathMiddlewareDecoratorTest extends TestCase
@@ -434,5 +435,26 @@ class PathMiddlewareDecoratorTest extends TestCase
         self::assertInstanceOf(PathMiddlewareDecorator::class, $middleware);
         self::assertAttributeSame('/foo', 'prefix', $middleware);
         self::assertAttributeSame($toDecorate, 'middleware', $middleware);
+    }
+
+    public function testUpdatesInPathInsideNestedMiddlewareAreRespected()
+    {
+        $request = new ServerRequest([], [], 'http://local.example.com/foo/bar', 'GET', 'php://memory');
+        $decoratedMiddleware = middleware(function (
+            ServerRequestInterface $request,
+            RequestHandlerInterface $handler
+        ) {
+            return $handler->handle($request->withUri(new Uri('/changed/path')));
+        });
+        $middleware = new PathMiddlewareDecorator('/foo', $decoratedMiddleware);
+
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+        $handler->handle(Argument::that(function (ServerRequestInterface $received) {
+            Assert::assertEquals('/foo/changed/path', $received->getUri()->getPath());
+
+            return $received;
+        }));
+
+        $middleware->process($request, $handler->reveal());
     }
 }
