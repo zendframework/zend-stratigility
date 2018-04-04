@@ -25,6 +25,10 @@ use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 use Zend\Stratigility\Next;
 use Zend\Stratigility\Route;
 
+use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
+
+use function Zend\Stratigility\middleware;
+
 class NextTest extends TestCase
 {
     protected $errorHandler;
@@ -89,18 +93,16 @@ class NextTest extends TestCase
         $cannedRequest = clone $request;
         $cannedRequest = $cannedRequest->withMethod('POST');
 
-        $route1 = new Route('/foo/bar', $this->decorateCallableMiddleware(
+        $route1 = new Route('/', $this->decorateCallableMiddleware(
             function ($req, $res, $next) use ($cannedRequest) {
                 return $next($cannedRequest, $res);
-            },
-            '/foo/bar'
+            }
         ));
-        $route2 = new Route('/foo/bar/baz', $this->decorateCallableMiddleware(
+        $route2 = new Route('/', $this->decorateCallableMiddleware(
             function ($req, $res, $next) use ($cannedRequest) {
                 $this->assertEquals($cannedRequest->getMethod(), $req->getMethod());
                 return $res;
-            },
-            '/foo/bar/baz'
+            }
         ));
 
         $this->queue->enqueue($route1);
