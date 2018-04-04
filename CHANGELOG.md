@@ -26,7 +26,26 @@ details.
 
 ### Fixed
 
-- Nothing.
+- [#165](https://github.com/zendframework/zend-stratigility/pull/165) fixes an
+  issue with the `PathMiddlewareDecorator` whereby it was using the original
+  request when invoking the handler it creates, instead of prepending the
+  configured path prefix to the request URI created. With the fix, if middleware
+  alters the request path passed to the handler, the changes will now propagate
+  to later middleware. As an example:
+
+  ```php
+  new PathMiddlewareDecorator('/api', middleware(function ($request, $handler) {
+      $uri = $request->getUri();
+      if (! preg_match('#^/v\d+/#', $uri->getPath())) {
+          $request = $request->withUri($uri->withPath('/v1' . $uri->getPath()));
+      }
+      return $handler->handle($request);
+  }));
+  ```
+
+  For the request path `/api/books`, the above will now correctly result in
+  `/api/v1/books` being propagated to lower layers of the application, instead
+  of `/api/books`.
 
 ## 3.0.0 - 2018-03-15
 
