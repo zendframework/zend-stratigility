@@ -22,6 +22,8 @@ use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
 
 use const Webimpress\HttpMiddlewareCompatibility\HANDLER_METHOD;
 
+use function Zend\Stratigility\middleware;
+
 class PathMiddlewareDecoratorTest extends TestCase
 {
     public function setUp()
@@ -366,5 +368,30 @@ class PathMiddlewareDecoratorTest extends TestCase
             $expectedResponse,
             $decoratedMiddleware->process($request, $finalHandler->reveal())
         );
+    }
+
+    public function testUpdatesInPathInsideNestedMiddlewareAreRespected()
+    {
+        $request = new ServerRequest([], [], 'http://local.example.com/foo/bar', 'GET', 'php://memory');
+        $response = new Response();
+
+        $decoratedMiddleware = middleware(function (
+            ServerRequestInterface $request,
+            RequestHandlerInterface $handler
+        ) {
+            return $handler->handle($request->withUri(new Uri('/changed/path')));
+        });
+        $middleware = new PathMiddlewareDecorator('/foo', $decoratedMiddleware);
+
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+        $handler
+            ->handle(Argument::that(function (ServerRequestInterface $received) {
+                Assert::assertEquals('/foo/changed/path', $received->getUri()->getPath());
+
+                return $received;
+            }))
+            ->willReturn($response);
+
+        $this->assertSame($response, $middleware->process($request, $handler->reveal()));
     }
 }
