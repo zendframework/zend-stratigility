@@ -7,10 +7,10 @@ take the incoming request, perform actions based on it, and either complete the
 response or pass delegation on to the next middleware in the queue.
 
 ```php
-use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
+// In public/index.php:
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
+use Zend\Stratigility\Middleware\NotFoundHandler;
 use Zend\Stratigility\MiddlewarePipe;
 
 use function Zend\Stratigility\middleware;
@@ -20,7 +20,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $app = new MiddlewarePipe();
 
-$server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
+$server = Server::createServer([$app, 'handle'], $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
 
 // Landing page
 $app->pipe(middleware(function ($req, $handler) {
@@ -30,6 +30,7 @@ $app->pipe(middleware(function ($req, $handler) {
 
     $response = new Response();
     $response->getBody()->write('Hello world!');
+
     return $response;
 }));
 
@@ -37,14 +38,17 @@ $app->pipe(middleware(function ($req, $handler) {
 $app->pipe(path('/foo', middleware(function ($req, $handler) {
     $response = new Response();
     $response->getBody()->write('FOO!');
+
     return $response;
 })));
 
 // 404 handler
-$app->pipe(new NotFoundHandler(new Response());
+$app->pipe(new NotFoundHandler(function () {
+    return new Response();
+}));
 
 $server->listen(function ($req, $res) {
-  return $res;
+    return $res;
 });
 ```
 
