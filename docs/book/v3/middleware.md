@@ -7,8 +7,7 @@ take the incoming request, perform actions based on it, and either complete the
 response or pass delegation on to the next middleware in the queue.
 
 ```php
-require __DIR__ . '/vendor/autoload.php';
-
+// In public/index.php:
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
 use Zend\Stratigility\Middleware\NotFoundHandler;
@@ -16,6 +15,8 @@ use Zend\Stratigility\MiddlewarePipe;
 
 use function Zend\Stratigility\middleware;
 use function Zend\Stratigility\path;
+
+require __DIR__ . '/../vendor/autoload.php';
 
 $app = new MiddlewarePipe();
 
@@ -43,10 +44,7 @@ $app->pipe(path('/foo', middleware(function ($req, $handler) {
 
 // 404 handler
 $app->pipe(new NotFoundHandler(function () {
-    $response = new Response();
-    $response->getBody()->write('Not found!');
-
-    return $response->withStatus(404);
+    return new Response();
 }));
 
 $server->listen(function ($req, $res) {
