@@ -457,4 +457,30 @@ class PathMiddlewareDecoratorTest extends TestCase
 
         $middleware->process($request, $handler->reveal());
     }
+
+    public function testProcessesMatchedPathsWithoutCaseSensitivity()
+    {
+        $finalHandler = $this->prophesize(RequestHandlerInterface::class);
+        $finalHandler->handle(Argument::any())->willReturn(new Response());
+
+        // Note that the path requested is ALL CAPS:
+        $request  = new ServerRequest([], [], 'http://local.example.com/MYADMIN', 'GET', 'php://memory');
+
+        $middleware = $this->prophesize(MiddlewareInterface::class);
+        $middleware
+            ->process(
+                Argument::that(function (ServerRequestInterface $req) {
+                    Assert::assertSame('', $req->getUri()->getPath());
+
+                    return true;
+                }),
+                Argument::any()
+            )
+            ->willReturn(new Response())
+            ->shouldBeCalledTimes(1);
+
+        // Note that the path to match is lowercase:
+        $decorator = new PathMiddlewareDecorator('/myadmin', $middleware->reveal());
+        $decorator->process($request, $finalHandler->reveal());
+    }
 }
