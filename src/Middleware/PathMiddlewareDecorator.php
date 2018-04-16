@@ -108,7 +108,7 @@ class PathMiddlewareDecorator implements MiddlewareInterface
      */
     private function getTruncatedPath($segment, $path)
     {
-        if ($segment === $path) {
+        if (strtolower($segment) === strtolower($path)) {
             // Decorated path and current path are the same; return empty string
             return '';
         }
