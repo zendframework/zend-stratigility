@@ -6,6 +6,30 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
+## 2.2.2 - 2018-04-16
+
+### Added
+
+- Nothing.
+
+### Changed
+
+- Nothing.
+
+### Deprecated
+
+- Nothing.
+
+### Removed
+
+- Nothing.
+
+### Fixed
+
+- [#169](https://github.com/zendframework/zend-stratigility/pull/169) fixes an issue with how the PathMiddlewareDecorator attempts to truncate the path
+  when the path is matched case insensitively. Previously, an exception was incorrectly raised;
+  now it identifies and truncates correctly.
+
 ## 2.2.1 - 2018-04-04
 
 ### Added
