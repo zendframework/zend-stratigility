@@ -43,7 +43,7 @@ final class PathMiddlewareDecorator implements MiddlewareInterface
         }
 
         // Current path does not match decorator path
-        if (substr(strtolower($path), 0, strlen($this->prefix)) !== strtolower($this->prefix)) {
+        if (0 !== stripos($path, $this->prefix)) {
             return $handler->handle($request);
         }
 
@@ -138,7 +138,7 @@ final class PathMiddlewareDecorator implements MiddlewareInterface
     private function normalizePrefix(string $prefix) : string
     {
         $prefix = strlen($prefix) > 1 ? rtrim($prefix, '/') : $prefix;
-        if ('/' !== substr($prefix, 0, 1)) {
+        if (0 !== strpos($prefix, '/')) {
             $prefix = '/' . $prefix;
         }
         return $prefix;
