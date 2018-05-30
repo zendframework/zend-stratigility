@@ -4,7 +4,7 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -12,7 +12,7 @@
     
     <url>
      <loc>/v3/intro/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -21,49 +21,49 @@
         
     <url>
      <loc>/v3/install/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v3/usage/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v3/middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v3/error-handlers/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v3/creating-middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v3/executing-middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v3/api/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v3/migration/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -73,43 +73,43 @@
         
     <url>
      <loc>/v1/install/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v1/usage/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v1/middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v1/error-handlers/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v1/creating-middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v1/executing-middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v1/api/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -119,49 +119,49 @@
         
     <url>
      <loc>/v2/install/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v2/usage/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v2/middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v2/error-handlers/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v2/creating-middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v2/executing-middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v2/api/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/v2/migration/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -171,49 +171,49 @@
         
     <url>
      <loc>/install/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/usage/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/error-handlers/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/creating-middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/executing-middleware/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/api/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/migration/</loc>
-     <lastmod>2018-05-22</lastmod>
+     <lastmod>2018-05-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
