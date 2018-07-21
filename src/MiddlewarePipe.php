@@ -69,13 +69,12 @@ final class MiddlewarePipe implements MiddlewarePipeInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        if ($this->pipeline->isEmpty()) {
-            throw Exception\EmptyPipelineException::forClass(__CLASS__);
-        }
-
-        $nextHandler = clone $this;
-        $middleware = $nextHandler->pipeline->dequeue();
-        return $middleware->process($request, $nextHandler);
+        return $this->process($request, new class implements RequestHandlerInterface {
+            public function handle(ServerRequestInterface $request) : ResponseInterface
+            {
+                throw Exception\EmptyPipelineException::forClass(__CLASS__);
+            }
+        });
     }
 
     /**
