@@ -69,12 +69,7 @@ final class MiddlewarePipe implements MiddlewarePipeInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        return $this->process($request, new class implements RequestHandlerInterface {
-            public function handle(ServerRequestInterface $request) : ResponseInterface
-            {
-                throw Exception\EmptyPipelineException::forClass(__CLASS__);
-            }
-        });
+        return $this->process($request, new EmptyPipelineHandler(__CLASS__));
     }
 
     /**
@@ -85,9 +80,7 @@ final class MiddlewarePipe implements MiddlewarePipeInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        $next = new Next($this->pipeline, $handler);
-
-        return $next->handle($request);
+        return (new Next($this->pipeline, $handler))->handle($request);
     }
 
     /**
