@@ -15,14 +15,15 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 final class EmptyPipelineHandler implements RequestHandlerInterface
 {
-    private $class;
+    private $className;
 
-    public function __construct(string $class)
+    public function __construct(string $className)
     {
-        $this->class = $class;
+        $this->className = $className;
     }
+
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        throw Exception\EmptyPipelineException::forClass($this->class);
+        throw Exception\EmptyPipelineException::forClass($this->className);
     }
 }
