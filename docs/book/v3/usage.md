@@ -15,10 +15,10 @@ require __DIR__ . '/../vendor/autoload.php';
 $app    = new MiddlewarePipe();
 $server = Server::createServer(
   [$app, 'handle'],
-  $_SERVER,
-  $_GET,
-  $_POST,
-  $_COOKIE,
+  filter_input_array(INPUT_SERVER) ?? [],
+  filter_input_array(INPUT_GET) ?? [],
+  filter_input_array(INPUT_POST) ?? [],
+  filter_input_array(INPUT_COOKIE) ?? [],
   $_FILES
 );
 
