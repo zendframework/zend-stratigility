@@ -44,7 +44,8 @@ details.
 
 ### Removed
 
-- Nothing.
+- [#177](https://github.com/zendframework/zend-stratigility/pull/177) removes a conditional from `Zend\Stratigility\Middleware\ErrorHandler` that can
+  never be reached.
 
 ### Fixed
 

@@ -141,10 +141,6 @@ final class ErrorHandler implements MiddlewareInterface
 
         try {
             $response = $handler->handle($request);
-
-            if (! $response instanceof ResponseInterface) {
-                throw new MissingResponseException('Application did not return a response');
-            }
         } catch (Throwable $e) {
             $response = $this->handleThrowable($e, $request);
         }
