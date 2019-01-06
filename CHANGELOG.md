@@ -10,7 +10,7 @@ details.
 
 ### Added
 
-- Nothing.
+- [#184](https://github.com/zendframework/zend-stratigility/pull/184) adds support for PHP 7.3.
 
 ### Changed
 
