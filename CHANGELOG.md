@@ -28,11 +28,11 @@ details.
 
 - Nothing.
 
-## 3.0.3 - TBD
+## 3.0.3 - 2019-02-06
 
 ### Added
 
-- Nothing.
+- [#184](https://github.com/zendframework/zend-stratigility/pull/184) adds support for PHP 7.3.
 
 ### Changed
 
