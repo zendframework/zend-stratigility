@@ -14,7 +14,8 @@ details.
 
 ### Changed
 
-- Nothing.
+- [#185](https://github.com/zendframework/zend-stratigility/pull/185) removes the "final" declaration from the `ErrorHandler` class, to allow
+  more easily mocking it for testing.
 
 ### Deprecated
 
