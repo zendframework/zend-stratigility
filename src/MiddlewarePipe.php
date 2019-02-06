@@ -1,7 +1,7 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2018 Zend Technologies USA Inc. (https://www.zend.com)
+ * @copyright Copyright (c) 2015-2019 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
@@ -69,13 +69,7 @@ final class MiddlewarePipe implements MiddlewarePipeInterface
      */
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
-        if ($this->pipeline->isEmpty()) {
-            throw Exception\EmptyPipelineException::forClass(__CLASS__);
-        }
-
-        $nextHandler = clone $this;
-        $middleware = $nextHandler->pipeline->dequeue();
-        return $middleware->process($request, $nextHandler);
+        return $this->process($request, new EmptyPipelineHandler(__CLASS__));
     }
 
     /**
@@ -86,9 +80,7 @@ final class MiddlewarePipe implements MiddlewarePipeInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
-        $next = new Next($this->pipeline, $handler);
-
-        return $next->handle($request);
+        return (new Next($this->pipeline, $handler))->handle($request);
     }
 
     /**
