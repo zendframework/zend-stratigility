@@ -10,9 +10,18 @@ details.
 
 ### Added
 
-- Nothing.
+- [#178](https://github.com/zendframework/zend-stratigility/pull/178) adds the class `Zend\Stratigility\EmptyPipelineHandler`, which raises an
+  `EmptyPipelineException` when it handles an incoming request. It's primary
+  purpose is for use in the `MiddlewarePipe` as a fallback handler during
+  `handle()` operations.
 
 ### Changed
+
+- [#178](https://github.com/zendframework/zend-stratigility/pull/178) provides some performance improvements to `MiddlewarePipe::handle()` by
+  having it create an instance of `EmptyPipelineHandler` to use as a fallback
+  handler when it calls `process()` on itself. This prevents cloning of the
+  pipeline in this scenario, which is used when it acts as an application
+  entrypoint.
 
 - [#185](https://github.com/zendframework/zend-stratigility/pull/185) removes the "final" declaration from the `ErrorHandler` class, to allow
   more easily mocking it for testing.
