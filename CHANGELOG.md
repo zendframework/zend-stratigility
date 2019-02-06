@@ -6,11 +6,11 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 3.0.3 - TBD
+## 3.0.3 - 2019-02-06
 
 ### Added
 
-- Nothing.
+- [#184](https://github.com/zendframework/zend-stratigility/pull/184) adds support for PHP 7.3.
 
 ### Changed
 
