@@ -9,7 +9,7 @@
     <meta name="description" content="zend-stratigility">  
     <link rel="shortcut icon" href="../../img/favicon.ico">
 
-    <title>Error Handlers - zend-stratigility</title>
+    <title>Preparing for version 3 - zend-stratigility</title>
 
     <link rel="stylesheet" href="../../css/styles-18b942728f.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/4.2.0/anchor.min.js"></script>
@@ -212,7 +212,7 @@
 
                             
                                 
-    <li class="subnavigation__list-item subnavigation__list-item--active">
+    <li class="subnavigation__list-item ">
         <a href="v2/error-handlers/" class="subnavigation__link">Error Handlers</a>
     </li>
 
@@ -324,12 +324,8 @@
             <li><a href="">zend-stratigility</a></li>
 
             
-                
-                    <li>v2</li>
-                
-            
 
-            <li class="active">Error Handlers</li>
+            <li class="active">Preparing for version 3</li>
         
     
 </ol>
@@ -345,11 +341,15 @@
             <ul class="toc__list">
                 
                     <li class="toc__entry">
-                        <a href="#handling-404-conditions" class="toc__link">Handling 404 conditions</a>
+                        <a href="#middlewarepipe-and-path-segregation" class="toc__link">MiddlewarePipe and path segregation</a>
                     </li>
                 
                     <li class="toc__entry">
-                        <a href="#handling-php-errors-and-exceptions" class="toc__link">Handling PHP errors and exceptions</a>
+                        <a href="#extending-middlewarepipe" class="toc__link">Extending MiddlewarePipe</a>
+                    </li>
+                
+                    <li class="toc__entry">
+                        <a href="#deprecated-classes" class="toc__link">Deprecated classes</a>
                     </li>
                 
             </ul>
@@ -357,213 +357,177 @@
     
 
 
-    <h1 id="error-handlers">Error Handlers</h1>
-<p>In your application, you may need to handle error conditions:</p>
+    <h1 id="preparing-for-version-3">Preparing for version 3</h1>
 <ul>
-<li>Errors raised by PHP itself (e.g., inability to open a file or database
-  connection).</li>
-<li>Exceptions/throwables raised by PHP and/or code you write or consume.</li>
-<li>Inability of any middleware to handle a request.</li>
+<li>Since 2.2.0</li>
 </ul>
-<p>You can typically handle these conditions via middleware itself.</p>
-<h2 id="handling-404-conditions">Handling 404 conditions</h2>
-<p>If no middleware is able to handle the incoming request, this is typically
-representative of an HTTP 404 status. Stratigility provides a barebones
-middleware that you may register in an innermost layer that will return a 404
-condition, <code>Zend\Stratigility\Middleware\NotFoundHandler</code>. The class requires a
-response prototype instance that it will use to provide the 404 status and a
-message indicating the request method and URI used:</p>
-<pre class="codehilite"><code class="language-php">// setup layers
-$app-&gt;pipe(/* ... */);
-$app-&gt;pipe(/* ... */);
-$app-&gt;pipe(new NotFoundHandler(new Response());
-
-// execute application</code></pre>
-
-<p>Note that it is the last middleware piped into the application! Since it returns
-a response, no deeper nested layers will execute once it has been invoked.</p>
-<p>If you would like a templated response, you will need to write your own
-middleware; such middleware might look like the following:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-
-class NotFoundMiddleware implements ServerMiddlewareInterface
-{
-    private $renderer;
-
-    public function __construct(
-        TemplateRendererInterface $renderer,
-        ResponseInterface $response
-    ) {
-        $this-&gt;renderer = $renderer;
-        $this-&gt;response = $response;
-    }
-
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
-    {
-        $response = $this-&gt;response-&gt;withStatus(404);
-        $response-&gt;getBody()-&gt;write(
-            $this-&gt;renderer-&gt;render('error::404')
-        );
-        return $response;
-    }
-}</code></pre>
-
-<h2 id="handling-php-errors-and-exceptions">Handling PHP errors and exceptions</h2>
-<p><code>Zend\Stratigility\Middleware\ErrorHandler</code> is a middleware implementation to
-register as the <em>outermost layer</em> of your application (or close to the outermost
-layer). It does the following:</p>
-<ul>
-<li>Creates a PHP error handler that catches any errors in the <code>error_handling()</code>
-  mask and throws them as <code>ErrorException</code> instances.</li>
-<li>Wraps the invocation of the delegate in a try/catch block:</li>
-<li>if no exception is caught, and the result is a response, it returns it.</li>
-<li>if no exception is caught, it raises an exception, which will be caught.</li>
-<li>any caught exception is transformed into an error response.</li>
-</ul>
-<p>To generate the error response, we provide the ability to inject a callable with
-the following signature into the <code>ErrorHandler</code> during instantiation:</p>
-<pre class="codehilite"><code class="language-php">Psr\Http\Message\ResponseInterface;
-Psr\Http\Message\ServerRequestInterface;
-
-function (
-    Throwable|Exception $e,
-    ServerRequestInterface $request,
-    ResponseInterface $response
-) : ResponseInterface</code></pre>
-
-<p>We provide a default implementation, <code>Zend\Stratigility\Middleware\ErrorResponseGenerator</code>,
-which generates an error response with a <code>5XX</code> series status code and a message
-derived from the reason phrase, if any is present. You may pass a boolean flag
-to its constructor indicating the application is in development mode; if so, the
-response will have the stack trace included in the body.</p>
-<p>In order to work, the <code>ErrorHandler</code> needs a prototype response instance, and,
-optionally, an error response generator (if none is provided,
-<code>ErrorResponseGenerator</code> is used, in production mode):</p>
-<pre class="codehilite"><code class="language-php">// setup error handling
-$app-&gt;pipe(new ErrorHandler(new Response(), new ErrorResponseGenerator($isDevelopmentMode));
-
-// setup layers
-$app-&gt;pipe(/* ... */);
-$app-&gt;pipe(/* ... */);</code></pre>
-
-<p>As a full example, you can combine the two middleware into the same application
-as separate layers:</p>
-<pre class="codehilite"><code class="language-php">// setup error handling
-$app-&gt;pipe(new ErrorHandler(new Response(), new ErrorResponseGenerator($isDevelopmentMode));
-
-// setup layers
-$app-&gt;pipe(/* ... */);
-$app-&gt;pipe(/* ... */);
-
-// setup 404 handling
-$app-&gt;pipe(new NotFoundHandler(new Response());
-
-// execute application</code></pre>
-
-<p>The <code>ErrorResponseGenerator</code> provides no templating facilities, and only
-responds as <code>text/html</code>. If you want to provide a templated response, or a
-different serialization and/or markup format, you will need to write your own
-error response generator.</p>
-<p>As an example:</p>
-<pre class="codehilite"><code class="language-php">use ErrorException;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Throwable;
-use Zend\Stratigility\Exception\MissingResponseException;
-use Zend\Stratigility\Middleware\ErrorHandler;
-
-class TemplatedErrorResponseGenerator
-{
-    private $isDevelopmentMode;
-    private $renderer;
-
-    public function __construct(
-        TemplateRendererInterface $renderer,
-        $isDevelopmentMode = false
-    ) {
-        $this-&gt;renderer = $renderer;
-        $this-&gt;isDevelopmentMode = $isDevelopmentMode;
-    }
-
-    public function __invoke($e, ServerRequestInterface $request, ResponseInterface $response)
-    {
-        $response = $response-&gt;withStatus(500);
-        $response-&gt;getBody()-&gt;write($this-&gt;renderer-&gt;render('error::error', [
-            'exception'        =&gt; $e,
-            'development_mode' =&gt; $this-&gt;isDevelopmentMode,
-        ]));
-        return $response;
-    }
-}</code></pre>
-
-<p>You would then pass this to the <code>ErrorHandler</code>:</p>
-<pre class="codehilite"><code class="language-php">$app-&gt;pipe(new ErrorHandler(
-    new Response(),
-    new TemplatedErrorResponseGenerator($renderer, $isDevelopmentMode)
-));</code></pre>
-
-<h3 id="errorhandler-listeners">ErrorHandler Listeners</h3>
-<p><code>Zend\Stratigility\Middleware\ErrorHandler</code> provides the ability to attach
-<em>listeners</em>; these are triggered when an error or exception is caught, and
-provided with the exception/throwable raised, the original request, and the
-final response. These instances are considered immutable, so listeners are for
-purposes of logging/monitoring only.</p>
-<p>Listeners must implement the following signature:</p>
-<pre class="codehilite"><code class="language-php">Psr\Http\Message\ResponseInterface;
-Psr\Http\Message\ServerRequestInterface;
-
-function (
-    Throwable|Exception $e,
-    ServerRequestInterface $request,
-    ResponseInterface $response
+<p>Version 3 simplifies <code>MiddlewarePipe</code> and <code>Next</code> dramatically by restricting
+them to <a href="https://github.com/php-fig/fig-standards/tree/4b417c91b89fbedaf3283620ce432b6f51c80cc0/proposed/http-handlers">PSR-15</a>
+interface implementations and typehints. However, this also means a number of
+backwards compatibility breaks are coming.</p>
+<p>To help prepare you for the new version, we have provided a number of features
+you can adopt today in order to make your code forwards-compatible.
+Additionally, we have marked classes and methods as deprecated where necessary,
+and trigger <code>E_USER_DEPRECATED</code> errors when using functionality which will no
+longer be available.</p>
+<p>Below, we list the various changes, and propose ways in which you can update
+your code to be forwards-compatible.</p>
+<h2 id="middlewarepipe-and-path-segregation">MiddlewarePipe and path segregation</h2>
+<p>Starting in version 3, <code>MiddlewarePipe</code> and <code>Next</code> have significantly
+different behavior.</p>
+<p>First, the signature of <code>MiddlewarePipe::pipe()</code> will change to:</p>
+<pre class="codehilite"><code class="language-php">public function pipe(
+    MiddlewareInterface $middleware
 ) : void</code></pre>
 
-<p>Attach listeners using <code>ErrorHandler::attachListener()</code>:</p>
-<pre class="codehilite"><code class="language-php">$errorHandler-&gt;attachListener(function ($throwable, $request, $response) use ($logger) {
-    $message = sprintf(
-        '[%s] %s %s: %s',
-        date('Y-m-d H:i:s'),
-        $request-&gt;getMethod(),
-        (string) $request-&gt;getUri(),
-        $throwable-&gt;getMessage()
-    );
-    $logger-&gt;error($message);
-});</code></pre>
+<p>This means the following:</p>
+<ul>
+<li>You can no longer use <code>pipe()</code> to perform path segregation.</li>
+<li>You can no longer pipe callable middleware of any type.</li>
+</ul>
+<p>To support path segregation, we have introduced
+<code>Zend\Stratigility\Middleware\PathMiddlewareDecorator</code>. This class accepts two
+arguments to its constructor: a string <code>$pathPrefix</code> (previously, the <code>$path</code>
+argument to <code>MiddlewarePipe::pipe()</code>), and a middleware implementation. This
+class has been backported to version 2.2.0, with usage as follows:</p>
+<pre class="codehilite"><code class="language-php">// Previously:
+$pipeline-&gt;pipe('/api', $apiMiddleware);
+
+// Version 2.2.0+:
+use Zend\Stratigility\Middleware\PathMiddlewareDecorator;
+$pipeline-&gt;pipe(new PathMiddlewareDecorator('/api', $apiMiddleware));
+
+// OR:
+use Zend\Stratigility\path;
+$pipeline-&gt;pipe(path('/api', $apiMiddleware));</code></pre>
+
+<p>Path segregation using this middleware works exactly as it has in previous
+versions. (Internally, if you provide both a <code>$path</code> and <code>$middleware</code> argument,
+<code>MiddlewarePipe::pipe()</code> creates a <code>PathMiddlewareDecorator</code> instance from the
+two arguments).</p>
+<p><strong>Decorate middleware you need to segregate by path using
+<code>PathMiddlewareDecorator</code> or the <code>path()</code> utility function.</strong></p>
+<p>To support callable middleware, we have introduced two classes:</p>
+<ul>
+<li>
+<p><code>Zend\Stratigility\Middleware\CallableMiddlewareDecorator</code> can be used to
+  decorate callable middleware following the PSR-15 signature. It replaces the
+  class <code>CallableInteropMiddlewareWrapper</code>.</p>
+</li>
+<li>
+<p><code>Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator</code> can be used to
+  decorate callable middleware following the double-pass signature. It replaces
+  the class <code>CallableMiddlewareWrapper</code>.</p>
+</li>
+</ul>
+<p>Use these classes to decorate your callable middleware when piping them:</p>
+<pre class="codehilite"><code class="language-php">// Previously (interop middleware):
+$pipeline-&gt;pipe(function ($request, $delegate) {
+    /* ... */
+});
+
+// Version 2.2.0+:
+use Zend\Stratigility\Middleware\CallableMiddlewareDecorator;
+use Zend\Stratigility\middleware;
+$pipeline-&gt;pipe(new CallableMiddlewareDecorator(function ($request, $delegate) {
+    /* ... */
+}));
+// or:
+$pipeline-&gt;pipe(middleware(function ($request, $delegate) {
+    /* ... */
+}));
+
+// Previously (double-pass middleware):
+$pipeline-&gt;pipe(function ($request, $response, $next) {
+    /* ... */
+});
+
+// Version 2.2.0+:
+use Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator;
+use Zend\Stratigility\doublePassMiddleware;
+$pipeline-&gt;pipe(new DoublePassMiddlewareDecorator(function ($request, $response, $next) {
+    /* ... */
+}));
+// or:
+$pipeline-&gt;pipe(doublePassMiddleware(function ($request, $response, $next) {
+    /* ... */
+}));</code></pre>
+
+<p>If you pipe callables directly, you will now trigger an <code>E_USER_DEPRECATION</code>
+error. Internally, <code>MiddlewarePipe::pipe()</code> will decorate them using the classes
+noted above.</p>
+<p><strong>Decorate callable middleware before piping using either
+<code>CallableMiddlewareDecorator</code> or <code>DoublePassMiddlewareDecorator</code> or the relevant
+utility functions as noted in the examples above.</strong></p>
+<h2 id="extending-middlewarepipe">Extending MiddlewarePipe</h2>
+<p>Starting in version 3, <code>Zend\Stratigility\MiddlewarePipe</code> is marked as <code>final</code>.
+This means you will no longer be able to directly extend it.</p>
+<p>We recommend the following:</p>
+<ul>
+<li>
+<p>If you are extending the class for the sole purpose of piping specific
+  middleware, create a PSR-15 <code>MiddlewareInterface</code> implementation, and compose
+  a <code>MiddlewarePipe</code> internally; have your <code>process()</code> method proxy to it.
+  (You could also optionally implement <code>RequestHandlerInterface</code>, which
+  <code>MiddlewarePipe</code> does in version 3.)</p>
+</li>
+<li>
+<p>If you are extending the class in order to provide additional features or
+  override methods, create your own PSR-15 <code>MiddlewareInterface</code> implementation
+  to do so, and copy and paste methods from <code>MiddlewarePipe</code> as needed,
+  providing the changes you need within your version.</p>
+</li>
+</ul>
+<h2 id="deprecated-classes">Deprecated classes</h2>
+<p>The following classes are now marked as deprecated. Where alternatives are
+available, we note them. If no alternative is available, we note why.</p>
+<h3 id="zendstratigilitymiddlewareinterface"><code>Zend\Stratigility\MiddlewareInterface</code></h3>
+<p>This interface has been marked as deprecated since 2.0.0, and unused internally
+since that release. It is removed with version 3.0.0.</p>
+<h3 id="zendstratigilityroute"><code>Zend\Stratigility\Route</code></h3>
+<p>This is an internal message shared between a <code>MiddlewarePipe</code> and a <code>Next</code>
+instance for purposes of path segregation. In general, it should never be
+consumed directly; however, it was never marked as internal or final previously.</p>
+<p>If you are extending this class or manipulating instances manually, be aware
+that this class is removed in version 3 as it is no longer used internally.</p>
+<h3 id="zendstratigilityexceptioninvalidmiddlewareexception"><code>Zend\Stratigility\Exception\InvalidMiddlewareException</code></h3>
+<p>This was thrown by <code>MiddlewarePipe::pipe()</code>. In version 3, since the sole
+argument to that method is type-hinted against the PSR-15 <code>MiddlewareInterface</code>,
+it is no longer used.</p>
+<h3 id="zendstratigilityexceptioninvalidrequesttypeexception"><code>Zend\Stratigility\Exception\InvalidRequestTypeException</code></h3>
+<p>This has not been used internally since before version 2.</p>
+<h3 id="zendstratigilitydelegatecallabledelegatedecorator"><code>Zend\Stratigility\Delegate\CallableDelegateDecorator</code></h3>
+<p>This was an internal class used by several classes when they were being used
+within double-pass systems in order to cast a <code>callable $next</code> argument into a
+<code>Interop\Http\ServerMiddleware\DelegateInterface</code> instance. Since version 3 will
+no longer support operation directly within a double-pass architecture, this
+class will be removed.</p>
+<p>Methods that produce an instance include:
+- <code>MiddlewarePipe::__invoke()</code>
+- <code>NotFoundHandler::__invoke()</code>
+- <code>ErrorHandler::__invoke()</code></p>
+<h3 id="zendstratigilitymiddlewarecallableinteropmiddlewarewrapper"><code>Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper</code></h3>
+<p>This class has been deprecated in favor of a new class,
+<code>Zend\Stratigility\Middleware\CallableMiddlewareDecorator</code>.</p>
+<h3 id="zendstratigilitymiddlewarecallablemiddlewarewrapper"><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapper</code></h3>
+<p>This class has been deprecated in favor of a new class,
+<code>Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator</code>.</p>
+<h3 id="zendstratigilitymiddlewarecallablemiddlewarewrapperfactory"><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory</code></h3>
+<p>The primary purpose of this class was for composition within a <code>MiddlewarePipe</code>
+for purposes of decorating callable double-pass middleware. Since
+<code>MiddlewarePipe::pipe()</code> will no longer accept callables, it will also no longer
+need to compose this factory.</p>
+<h3 id="zendstratigilitymiddlewarenoopfinalfactory"><code>Zend\Stratigility\Middleware\NoopFinalFactory</code></h3>
+<p>This class has no internal usage, and is removed in version 3.</p>
 
 
-
-    <nav>
-    <ul class="page-nav hidden-print">
-
-        
-        <li class="page-nav__item">
-            
-                <a rel="prev" class="page-nav__link page-nav__link--prev" href="v2/middleware/">
-                    <i class="fa fa-chevron-left"></i> Previous
-                </a>
-            
-        </li>
-
-        
-        <li class="page-nav__item">
-            
-                <a rel="next" class="page-nav__link page-nav__link--next" href="v2/creating-middleware/">
-                    Next <i class="fa fa-chevron-right"></i>
-                </a>
-            
-        </li>
-    </ul>
-</nav>
 
 
 
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v2/error-handlers.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/migration/preparing-for-v3.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>
@@ -730,7 +694,7 @@ function (
 
                             
                                 
-    <li class="subnavigation__list-item subnavigation__list-item--active">
+    <li class="subnavigation__list-item ">
         <a href="v2/error-handlers/" class="subnavigation__link">Error Handlers</a>
     </li>
 
