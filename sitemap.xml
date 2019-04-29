@@ -51,41 +51,6 @@
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/install/</loc>
-     <lastmod>2019-04-29</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/usage/</loc>
-     <lastmod>2019-04-29</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/middleware/</loc>
-     <lastmod>2019-04-29</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/error-handlers/</loc>
-     <lastmod>2019-04-29</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/creating-middleware/</loc>
-     <lastmod>2019-04-29</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/executing-middleware/</loc>
-     <lastmod>2019-04-29</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/api/</loc>
-     <lastmod>2019-04-29</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-    <url>
      <loc>https://docs.zendframework.com/zend-stratigility/v2/install/</loc>
      <lastmod>2019-04-29</lastmod>
      <changefreq>daily</changefreq>
@@ -122,6 +87,41 @@
     </url>
     <url>
      <loc>https://docs.zendframework.com/zend-stratigility/v2/migration/</loc>
+     <lastmod>2019-04-29</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://docs.zendframework.com/zend-stratigility/v1/install/</loc>
+     <lastmod>2019-04-29</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://docs.zendframework.com/zend-stratigility/v1/usage/</loc>
+     <lastmod>2019-04-29</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://docs.zendframework.com/zend-stratigility/v1/middleware/</loc>
+     <lastmod>2019-04-29</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://docs.zendframework.com/zend-stratigility/v1/error-handlers/</loc>
+     <lastmod>2019-04-29</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://docs.zendframework.com/zend-stratigility/v1/creating-middleware/</loc>
+     <lastmod>2019-04-29</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://docs.zendframework.com/zend-stratigility/v1/executing-middleware/</loc>
+     <lastmod>2019-04-29</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://docs.zendframework.com/zend-stratigility/v1/api/</loc>
      <lastmod>2019-04-29</lastmod>
      <changefreq>daily</changefreq>
     </url>
