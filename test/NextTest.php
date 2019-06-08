@@ -223,13 +223,14 @@ class NextTest extends TestCase
         $fallBackHandler
             ->handle(Argument::any())
             ->shouldBeCalledTimes(1);
-            
+
         // Middleware calling $handler->handle() twice. The first call will empty the
         // middleware queue while the second call will raise the empty pipline exception.
         $middleware = (new class () implements MiddlewareInterface {
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
-                $handler->handle($request);
-                return $handler->handle($request);
+            public function process(ServerRequestInterface $req, RequestHandlerInterface $h): ResponseInterface
+            {
+                $h->handle($req);
+                return $h->handle($req);
             }
         });
         $this->queue->push($middleware);
