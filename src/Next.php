@@ -42,7 +42,7 @@ final class Next implements RequestHandlerInterface
         $this->queue           = clone $queue;
         $this->fallbackHandler = $fallbackHandler;
         $this->queue->push(
-            new RequestHandlerMiddleware($fallbackHandler),
+            new RequestHandlerMiddleware($fallbackHandler)
         );
     }
 
