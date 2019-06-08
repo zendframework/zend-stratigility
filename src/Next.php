@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Zend\Stratigility;
 
+use Zend\Stratigility\Middleware\RequestHandlerMiddleware;
+use Zend\Stratigility\Exception\EmptyPipelineException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -39,12 +41,15 @@ final class Next implements RequestHandlerInterface
     {
         $this->queue           = clone $queue;
         $this->fallbackHandler = $fallbackHandler;
+        $this->queue->push(
+            new RequestHandlerMiddleware($fallbackHandler),
+        );
     }
 
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
         if ($this->queue->isEmpty()) {
-            return $this->fallbackHandler->handle($request);
+            throw EmptyPipelineException::forClass(__CLASS__);
         }
 
         $middleware = $this->queue->dequeue();

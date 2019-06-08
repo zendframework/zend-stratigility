@@ -22,6 +22,7 @@ use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Next;
+use Zend\Stratigility\Exception\EmptyPipelineException;
 
 class NextTest extends TestCase
 {
@@ -213,5 +214,27 @@ class NextTest extends TestCase
         $next = new Next($this->queue, $fallbackHandler->reveal());
 
         $this->assertSame($response, $next->handle($this->request));
+    }
+
+    public function testCallingContinuationMoreThanOnceRaisesException()
+    {
+        $this->expectException(EmptyPipelineException::class);
+        $fallBackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallBackHandler
+            ->handle(Argument::any())
+            ->shouldBeCalledTimes(1);
+            
+        // Middleware calling $handler->handle() twice. The first call will empty the
+        // middleware queue while the second call will raise the empty pipline exception.
+        $middleware = (new class () implements MiddlewareInterface {
+            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+                $handler->handle($request);
+                return $handler->handle($request);
+            }
+        });
+        $this->queue->push($middleware);
+
+        $next = new Next($this->queue, $fallBackHandler->reveal());
+        $next->handle($this->request);
     }
 }
