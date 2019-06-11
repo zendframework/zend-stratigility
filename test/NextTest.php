@@ -264,7 +264,7 @@ class NextTest extends TestCase
         $middleware
             ->process(
                 Argument::type(ServerRequestInterface::class),
-                Argument::type(RequestHandlerInterface::class),
+                Argument::type(RequestHandlerInterface::class)
             )
             ->will(function (array $args): ResponseInterface {
                 return $args[1]->handle($args[0]);
