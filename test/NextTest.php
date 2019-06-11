@@ -22,7 +22,9 @@ use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
 use Zend\Stratigility\Next;
-use Zend\Stratigility\Exception\EmptyPipelineException;
+use Zend\Stratigility\Exception\MiddlewarePipeNextHandlerAlreadyCalledException;
+use ZendTest\Stratigility\TestAsset\ShortCircuitingMiddleware;
+use ZendTest\Stratigility\TestAsset\DelegatingMiddleware;
 
 class NextTest extends TestCase
 {
@@ -216,16 +218,40 @@ class NextTest extends TestCase
         $this->assertSame($response, $next->handle($this->request));
     }
 
-    public function testCallingContinuationMoreThanOnceRaisesException()
+    public function testFallBackHandlerCannotBeInvokedTwice()
     {
-        $this->expectException(EmptyPipelineException::class);
+        $this->expectException(MiddlewarePipeNextHandlerAlreadyCalledException::class);
+
         $fallBackHandler = $this->prophesize(RequestHandlerInterface::class);
         $fallBackHandler
             ->handle(Argument::any())
             ->shouldBeCalledTimes(1);
 
-        // Middleware calling $handler->handle() twice. The first call will empty the
-        // middleware queue while the second call will raise the empty pipline exception.
+        // RequestHandlerInterface passed in this middleware points to the Next::$fallbackHandler
+        $middleware = (new class () implements MiddlewareInterface {
+            public function process(ServerRequestInterface $req, RequestHandlerInterface $h): ResponseInterface
+            {
+                $h->handle($req);
+                return $h->handle($req);
+            }
+        });
+        $this->queue->push(new DelegatingMiddleware);
+        $this->queue->push($middleware);
+
+        $next = new Next($this->queue, $fallBackHandler->reveal());
+        $next->handle($this->request);
+    }
+
+    public function testMiddlewareCannotBeInvokedTwice()
+    {
+        $this->expectException(MiddlewarePipeNextHandlerAlreadyCalledException::class);
+
+        $fallBackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallBackHandler
+            ->handle(Argument::any())
+            ->shouldBeCalledTimes(1);
+
+        // RequestHandlerInterface passed in this middleware points to the Next::$fallbackHandler
         $middleware = (new class () implements MiddlewareInterface {
             public function process(ServerRequestInterface $req, RequestHandlerInterface $h): ResponseInterface
             {
@@ -234,8 +260,53 @@ class NextTest extends TestCase
             }
         });
         $this->queue->push($middleware);
+        $this->queue->push(new DelegatingMiddleware);
 
         $next = new Next($this->queue, $fallBackHandler->reveal());
+        $next->handle($this->request);
+    }
+
+    public function testMiddlewareCannotBeInvokedTwiceWhenMiddlewareShortCircuitsTheProcess()
+    {
+        $this->expectException(MiddlewarePipeNextHandlerAlreadyCalledException::class);
+
+        $fallBackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallBackHandler
+            ->handle(Argument::any())
+            ->shouldNotBeCalled();
+
+        $middleware = (new class () implements MiddlewareInterface {
+            public function process(ServerRequestInterface $req, RequestHandlerInterface $h): ResponseInterface
+            {
+                $h->handle($req);
+                return $h->handle($req);
+            }
+        });
+        $this->queue->push($middleware);
+        $this->queue->push(new ShortCircuitingMiddleware);
+
+        // The middleware above shorcircuits (when handler is invoked first in $middleware)
+        // The middlewares below still exists in the queue (when handler is invoked again in $middleware)
+        $this->queue->push(new DelegatingMiddleware);
+        $this->queue->push(new DelegatingMiddleware);
+
+        $next = new Next($this->queue, $fallBackHandler->reveal());
+        $next->handle($this->request);
+    }
+
+    public function testFallbackHandlerCannotBeInvokedTwiceWhenMiddlewareQueueIsEmpty()
+    {
+
+        $this->expectException(MiddlewarePipeNextHandlerAlreadyCalledException::class);
+
+        $fallBackHandler = $this->prophesize(RequestHandlerInterface::class);
+        $fallBackHandler
+            ->handle(Argument::any())
+            ->shouldBeCalledTimes(1);
+
+        $next = new Next($this->queue, $fallBackHandler->reveal());
+
+        $next->handle($this->request);
         $next->handle($this->request);
     }
 }

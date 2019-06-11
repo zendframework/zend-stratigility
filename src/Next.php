@@ -9,12 +9,11 @@ declare(strict_types=1);
 
 namespace Zend\Stratigility;
 
-use Zend\Stratigility\Middleware\RequestHandlerMiddleware;
-use Zend\Stratigility\Exception\EmptyPipelineException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SplQueue;
+use Zend\Stratigility\Exception\MiddlewarePipeNextHandlerAlreadyCalledException;
 
 /**
  * Iterate a queue of middlewares and execute them.
@@ -41,19 +40,23 @@ final class Next implements RequestHandlerInterface
     {
         $this->queue           = clone $queue;
         $this->fallbackHandler = $fallbackHandler;
-        $this->queue->push(
-            new RequestHandlerMiddleware($fallbackHandler)
-        );
     }
 
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
+        if ($this->queue === null) {
+            throw MiddlewarePipeNextHandlerAlreadyCalledException::create();
+        }
+
         if ($this->queue->isEmpty()) {
-            throw EmptyPipelineException::forClass(__CLASS__);
+            $this->queue = null;
+            return $this->fallbackHandler->handle($request);
         }
 
         $middleware = $this->queue->dequeue();
+        $next = clone $this;
+        $this->queue = null;
 
-        return $middleware->process($request, $this);
+        return $middleware->process($request, $next);
     }
 }
