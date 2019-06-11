@@ -10,7 +10,10 @@ details.
 
 ### Added
 
-- Nothing.
+- [#186](https://github.com/zendframework/zend-stratigility/pull/186) adds safeguard
+  to middleware pipe Next handler, preventing it from being called multiple
+  times, which causes undefined behavior after queue of middlewares was
+  exhausted on the first pass.
 
 ### Changed
 
