@@ -1,7 +1,7 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2018 Zend Technologies USA Inc. (https://www.zend.com)
+ * @copyright Copyright (c) 2015-2019 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
@@ -26,7 +26,7 @@ final class Next implements RequestHandlerInterface
     private $fallbackHandler;
 
     /**
-     * @var SplQueue
+     * @var null|SplQueue
      */
     private $queue;
 

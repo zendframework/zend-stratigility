@@ -1,7 +1,7 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2018 Zend Technologies USA Inc. (https://www.zend.com)
+ * @copyright Copyright (c) 2015-2019 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
@@ -225,22 +225,12 @@ class NextTest extends TestCase
         $fallbackHandler = $this->prophesize(RequestHandlerInterface::class);
         $fallbackHandler
             ->handle(Argument::any())
-            ->willReturn(new Response)
-            ->shouldBeCalledTimes(1);
+            ->willReturn(new Response());
 
-        $middleware = (new class () implements MiddlewareInterface {
-            public function process(ServerRequestInterface $req, RequestHandlerInterface $h): ResponseInterface
-            {
-                $h->handle($req);
-                return $h->handle($req);
-            }
-        });
-
-        $this->queue->push(new DelegatingMiddleware);
-        $this->queue->push($middleware);
-        $this->queue->push(new DelegatingMiddleware);
+        $this->queue->push(new DelegatingMiddleware());
 
         $next = new Next($this->queue, $fallbackHandler->reveal());
+        $next->handle($this->request);
         $next->handle($this->request);
     }
 
@@ -251,20 +241,13 @@ class NextTest extends TestCase
         $fallBackHandler = $this->prophesize(RequestHandlerInterface::class);
         $fallBackHandler
             ->handle(Argument::any())
+            ->willReturn(new Response())
             ->shouldBeCalledTimes(1);
 
-        // RequestHandlerInterface passed in this middleware points to the Next::$fallbackHandler
-        $middleware = (new class () implements MiddlewareInterface {
-            public function process(ServerRequestInterface $req, RequestHandlerInterface $h): ResponseInterface
-            {
-                $h->handle($req);
-                return $h->handle($req);
-            }
-        });
-        $this->queue->push(new DelegatingMiddleware);
-        $this->queue->push($middleware);
+        $this->queue->push(new DelegatingMiddleware());
 
         $next = new Next($this->queue, $fallBackHandler->reveal());
+        $next->handle($this->request);
         $next->handle($this->request);
     }
 
@@ -275,20 +258,23 @@ class NextTest extends TestCase
         $fallBackHandler = $this->prophesize(RequestHandlerInterface::class);
         $fallBackHandler
             ->handle(Argument::any())
+            ->willReturn(new Response());
+
+        $middleware = $this->prophesize(MiddlewareInterface::class);
+        $middleware
+            ->process(
+                Argument::type(ServerRequestInterface::class),
+                Argument::type(RequestHandlerInterface::class),
+            )
+            ->will(function (array $args): ResponseInterface {
+                return $args[1]->handle($args[0]);
+            })
             ->shouldBeCalledTimes(1);
 
-        // RequestHandlerInterface passed in this middleware points to the Next::$fallbackHandler
-        $middleware = (new class () implements MiddlewareInterface {
-            public function process(ServerRequestInterface $req, RequestHandlerInterface $h): ResponseInterface
-            {
-                $h->handle($req);
-                return $h->handle($req);
-            }
-        });
-        $this->queue->push($middleware);
-        $this->queue->push(new DelegatingMiddleware);
+        $this->queue->push($middleware->reveal());
 
         $next = new Next($this->queue, $fallBackHandler->reveal());
+        $next->handle($this->request);
         $next->handle($this->request);
     }
 
@@ -299,35 +285,28 @@ class NextTest extends TestCase
         $fallBackHandler = $this->prophesize(RequestHandlerInterface::class);
         $fallBackHandler
             ->handle(Argument::any())
+            ->willReturn(new Response())
             ->shouldNotBeCalled();
 
-        $middleware = (new class () implements MiddlewareInterface {
-            public function process(ServerRequestInterface $req, RequestHandlerInterface $h): ResponseInterface
-            {
-                $h->handle($req);
-                return $h->handle($req);
-            }
-        });
-        $this->queue->push($middleware);
-        $this->queue->push(new ShortCircuitingMiddleware);
+        $this->queue->push(new ShortCircuitingMiddleware());
 
-        // The middleware above shorcircuits (when handler is invoked first in $middleware)
-        // The middlewares below still exist in the queue (when handler is invoked again in $middleware)
-        $this->queue->push(new DelegatingMiddleware);
-        $this->queue->push(new DelegatingMiddleware);
+        // The middleware above shorcircuits (when handler is invoked first)
+        // The middleware below still exists in the queue (when handler is invoked again)
+        $this->queue->push(new DelegatingMiddleware());
 
         $next = new Next($this->queue, $fallBackHandler->reveal());
+        $next->handle($this->request);
         $next->handle($this->request);
     }
 
     public function testSecondInvocationAttemptWithEmptyQueueDoesNotInvokeFinalHandler()
     {
-
         $this->expectException(MiddlewarePipeNextHandlerAlreadyCalledException::class);
 
         $fallBackHandler = $this->prophesize(RequestHandlerInterface::class);
         $fallBackHandler
             ->handle(Argument::any())
+            ->willReturn(new Response())
             ->shouldBeCalledTimes(1);
 
         $next = new Next($this->queue, $fallBackHandler->reveal());
