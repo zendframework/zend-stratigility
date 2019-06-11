@@ -286,7 +286,7 @@ class NextTest extends TestCase
         $this->queue->push(new ShortCircuitingMiddleware);
 
         // The middleware above shorcircuits (when handler is invoked first in $middleware)
-        // The middlewares below still exists in the queue (when handler is invoked again in $middleware)
+        // The middlewares below still exist in the queue (when handler is invoked again in $middleware)
         $this->queue->push(new DelegatingMiddleware);
         $this->queue->push(new DelegatingMiddleware);
 

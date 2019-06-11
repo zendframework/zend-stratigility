@@ -54,8 +54,8 @@ final class Next implements RequestHandlerInterface
         }
 
         $middleware = $this->queue->dequeue();
-        $next = clone $this;
-        $this->queue = null;
+        $next = clone $this; // deep clone is not used intentionally
+        $this->queue = null; // mark queue as processed at this nesting level
 
         return $middleware->process($request, $next);
     }

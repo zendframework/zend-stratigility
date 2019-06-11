@@ -9,9 +9,9 @@ declare(strict_types=1);
 
 namespace Zend\Stratigility\Exception;
 
-use BadMethodCallException;
+use DomainException;
 
-class MiddlewarePipeNextHandlerAlreadyCalledException extends BadMethodCallException implements ExceptionInterface
+class MiddlewarePipeNextHandlerAlreadyCalledException extends DomainException implements ExceptionInterface
 {
 
     public static function create(): self
