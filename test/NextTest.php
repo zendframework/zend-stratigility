@@ -18,13 +18,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SplQueue;
+use ZendTest\Stratigility\TestAsset\DelegatingMiddleware;
+use ZendTest\Stratigility\TestAsset\ShortCircuitingMiddleware;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest as Request;
 use Zend\Diactoros\Uri;
-use Zend\Stratigility\Next;
 use Zend\Stratigility\Exception\MiddlewarePipeNextHandlerAlreadyCalledException;
-use ZendTest\Stratigility\TestAsset\ShortCircuitingMiddleware;
-use ZendTest\Stratigility\TestAsset\DelegatingMiddleware;
+use Zend\Stratigility\Next;
 
 class NextTest extends TestCase
 {
