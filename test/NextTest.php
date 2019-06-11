@@ -218,7 +218,7 @@ class NextTest extends TestCase
         $this->assertSame($response, $next->handle($this->request));
     }
 
-    public function testFallBackHandlerCannotBeInvokedTwice()
+    public function testSecondInvocationDoesNotInvokeFinalHandler()
     {
         $this->expectException(MiddlewarePipeNextHandlerAlreadyCalledException::class);
 
@@ -242,7 +242,7 @@ class NextTest extends TestCase
         $next->handle($this->request);
     }
 
-    public function testMiddlewareCannotBeInvokedTwice()
+    public function testSecondInvocationDoesNotInvokeMiddleware()
     {
         $this->expectException(MiddlewarePipeNextHandlerAlreadyCalledException::class);
 
@@ -266,7 +266,7 @@ class NextTest extends TestCase
         $next->handle($this->request);
     }
 
-    public function testMiddlewareCannotBeInvokedTwiceWhenMiddlewareShortCircuitsTheProcess()
+    public function testShortCircuitingMiddlewareDoesNotEnableSecondInvocation()
     {
         $this->expectException(MiddlewarePipeNextHandlerAlreadyCalledException::class);
 
@@ -294,7 +294,7 @@ class NextTest extends TestCase
         $next->handle($this->request);
     }
 
-    public function testFallbackHandlerCannotBeInvokedTwiceWhenMiddlewareQueueIsEmpty()
+    public function testSecondInvocationWithEmptyQueueDoesNotInvokeFinalHandler()
     {
 
         $this->expectException(MiddlewarePipeNextHandlerAlreadyCalledException::class);
