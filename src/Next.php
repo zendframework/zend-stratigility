@@ -1,7 +1,7 @@
 <?php
 /**
  * @see       https://github.com/zendframework/zend-stratigility for the canonical source repository
- * @copyright Copyright (c) 2015-2018 Zend Technologies USA Inc. (https://www.zend.com)
+ * @copyright Copyright (c) 2015-2019 Zend Technologies USA Inc. (https://www.zend.com)
  * @license   https://github.com/zendframework/zend-stratigility/blob/master/LICENSE.md New BSD License
  */
 
@@ -13,6 +13,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SplQueue;
+use Zend\Stratigility\Exception\MiddlewarePipeNextHandlerAlreadyCalledException;
 
 /**
  * Iterate a queue of middlewares and execute them.
@@ -25,7 +26,7 @@ final class Next implements RequestHandlerInterface
     private $fallbackHandler;
 
     /**
-     * @var SplQueue
+     * @var null|SplQueue
      */
     private $queue;
 
@@ -43,12 +44,19 @@ final class Next implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request) : ResponseInterface
     {
+        if ($this->queue === null) {
+            throw MiddlewarePipeNextHandlerAlreadyCalledException::create();
+        }
+
         if ($this->queue->isEmpty()) {
+            $this->queue = null;
             return $this->fallbackHandler->handle($request);
         }
 
         $middleware = $this->queue->dequeue();
+        $next = clone $this; // deep clone is not used intentionally
+        $this->queue = null; // mark queue as processed at this nesting level
 
-        return $middleware->process($request, $this);
+        return $middleware->process($request, $next);
     }
 }
