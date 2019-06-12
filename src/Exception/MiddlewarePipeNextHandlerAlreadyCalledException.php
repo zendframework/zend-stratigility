@@ -16,6 +16,6 @@ class MiddlewarePipeNextHandlerAlreadyCalledException extends DomainException im
 
     public static function create(): self
     {
-        return new self("Cannot invoke Next handler more than once");
+        return new self('Cannot invoke pipeline handler $handler->handle() more than once');
     }
 }
