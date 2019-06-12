@@ -6,7 +6,7 @@ Versions prior to 1.0 were originally released as `phly/conduit`; please visit
 its [CHANGELOG](https://github.com/phly/conduit/blob/master/CHANGELOG.md) for
 details.
 
-## 3.2.0 - TBD
+## 3.2.0 - 2019-06-12
 
 ### Added
 
@@ -59,28 +59,6 @@ details.
   If you depended on calling `$handler->handle()` multiple times in succession
   within middleware, we recommend that you compose the specific pipeline(s)
   and/or handler(s) you wish to call as class dependencies.
-
-### Deprecated
-
-- Nothing.
-
-### Removed
-
-- Nothing.
-
-### Fixed
-
-- Nothing.
-
-## 3.1.1 - TBD
-
-### Added
-
-- Nothing.
-
-### Changed
-
-- Nothing.
 
 ### Deprecated
 
@@ -966,26 +944,6 @@ details.
   usage of error middleware, and thus deprecates the `$err` argument to `$next`;
   explicitly invoking error middleware using that argument to `$next` will now
   raise a deprecation notice.
-
-### Removed
-
-- Nothing.
-
-### Fixed
-
-- Nothing.
-
-## 1.2.2 - TBD
-
-### Added
-
-- [#58](https://github.com/zendframework/zend-stratigility/pull/58) updates the
-  documentation to use mkdocs for generation, and pushes the documentation to
-  https://zendframework.github.io/zend-stratigility/
-
-### Deprecated
-
-- Nothing.
 
 ### Removed
 
