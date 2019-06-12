@@ -10,14 +10,55 @@ details.
 
 ### Added
 
-- [#186](https://github.com/zendframework/zend-stratigility/pull/186) adds safeguard
-  to middleware pipe Next handler, preventing it from being called multiple
-  times, which causes undefined behavior after queue of middlewares was
-  exhausted on the first pass.
+- Nothing.
 
 ### Changed
 
-- Nothing.
+- [#186](https://github.com/zendframework/zend-stratigility/pull/186) adds a safeguard to middleware pipes to prevent them from being called
+  multiple times within the same middleware. As an example, consider the
+  following middleware:
+
+  ```php
+  public function process(
+      ServerRequestInterface $request,
+      RequestHandlerInterface $handler
+  ) : Response Interface {
+      $session = $request->getAttribute('session');
+      if (! $session) {
+          $response = $handler->handle($request);
+      }
+
+      // Inject another attribute before handling
+      $response = $handler->handle($request->withAttribute(
+          'sessionWasEnabled',
+          true
+      );
+      return $response;
+  }
+  ```
+
+  When using Stratigility, the `$handler` is an instance of
+  `Zend\Stratigility\Next`, which encapsulates the middleware pipeline and
+  advances through it on each call to `handle()`.
+
+  The example demonstrates a subtle error: the response from the first
+  conditional should have been returned, but wasn't, which has led to invoking
+  the handler a second time. This scenario can have unexpected behaviors,
+  including always returning a "not found" response, or returning a response
+  from a handler that was not supposed to execute (as an earlier middleware
+  already returned early in the original call).
+
+  These bugs are hard to locate, as calling `handle()` is a normal part of any
+  middleware, and multiple conditional calls to it are a standard workflow.
+  
+  With this new version, `Next` will pass a **clone** of itself to the next
+  middleware in the pipeline, and unset its own internal pipeline queue. Any
+  subsequent requests to `handle()` within the same scope will therefore result
+  in the exception `Zend\Stratigility\Exception\MiddlewarePipeNextHandlerAlreadyCalledException`.
+
+  If you depended on calling `$handler->handle()` multiple times in succession
+  within middleware, we recommend that you compose the specific pipeline(s)
+  and/or handler(s) you wish to call as class dependencies.
 
 ### Deprecated
 
