@@ -70,7 +70,7 @@ use function set_error_handler;
  *
  * @todo Mark this error middleware as final in v4
  */
-/* final */ class ErrorMiddleware implements MiddlewareInterface
+/* final */ class ErrorHandlerMiddleware implements MiddlewareInterface
 {
     /**
      * @var callable[]
