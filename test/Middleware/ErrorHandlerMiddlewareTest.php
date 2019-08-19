@@ -26,7 +26,7 @@ use function trigger_error;
 
 use const E_USER_DEPRECATED;
 
-class ErrorMiddlewareTest extends TestCase
+class ErrorHandlerMiddlewareTest extends TestCase
 {
     /** @var ResponseInterface|ObjectProphecy */
     private $response;
