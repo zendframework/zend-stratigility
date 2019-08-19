@@ -67,8 +67,10 @@ use function set_error_handler;
  *
  * Listeners are attached using the attachListener() method, and triggered
  * in the order attached.
+ *
+ * @todo Mark this error middleware as final in v4
  */
-class ErrorMiddleware implements MiddlewareInterface
+/* final */ class ErrorMiddleware implements MiddlewareInterface
 {
     /**
      * @var callable[]
