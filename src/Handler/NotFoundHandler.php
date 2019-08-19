@@ -17,9 +17,6 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 use function sprintf;
 
-/**
- * @todo Remove the `MiddlewareInterface` implementation in v4.
- */
 final class NotFoundHandler implements RequestHandlerInterface
 {
     /**
