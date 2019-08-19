@@ -34,6 +34,26 @@ class ErrorHandlerTest extends TestCase
     /** @var callable */
     private $responseFactory;
 
+    /**
+     * @var ObjectProphecy|ServerRequestInterface
+     */
+    private $request;
+
+    /**
+     * @var ObjectProphecy|StreamInterface
+     */
+    private $body;
+
+    /**
+     * @var ObjectProphecy|RequestHandlerInterface
+     */
+    private $handler;
+
+    /**
+     * @var int
+     */
+    private $errorReporting;
+
     public function setUp()
     {
         $this->response = $this->prophesize(ResponseInterface::class);
