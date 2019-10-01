@@ -18,7 +18,7 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use RuntimeException;
 use Zend\Escaper\Escaper;
-use Zend\Stratigility\Middleware\ErrorHandler;
+use Zend\Stratigility\Middleware\ErrorHandlerMiddleware;
 use Zend\Stratigility\Middleware\ErrorResponseGenerator;
 
 use function error_reporting;
@@ -26,13 +26,33 @@ use function trigger_error;
 
 use const E_USER_DEPRECATED;
 
-class ErrorHandlerTest extends TestCase
+class ErrorHandlerMiddlewareTest extends TestCase
 {
     /** @var ResponseInterface|ObjectProphecy */
     private $response;
 
     /** @var callable */
     private $responseFactory;
+
+    /**
+     * @var ObjectProphecy|ServerRequestInterface
+     */
+    private $request;
+
+    /**
+     * @var ObjectProphecy|StreamInterface
+     */
+    private $body;
+
+    /**
+     * @var ObjectProphecy|RequestHandlerInterface
+     */
+    private $handler;
+
+    /**
+     * @var int
+     */
+    private $errorReporting;
 
     public function setUp()
     {
@@ -54,7 +74,7 @@ class ErrorHandlerTest extends TestCase
     public function createMiddleware($isDevelopmentMode = false)
     {
         $generator = new ErrorResponseGenerator($isDevelopmentMode);
-        return new ErrorHandler($this->responseFactory, $generator);
+        return new ErrorHandlerMiddleware($this->responseFactory, $generator);
     }
 
     public function testReturnsResponseFromHandlerWhenNoProblemsOccur()
@@ -219,7 +239,7 @@ class ErrorHandlerTest extends TestCase
         $this->response->getBody()->will([$this->body, 'reveal']);
         $this->body->write('The client messed up')->shouldBeCalled();
 
-        $middleware = new ErrorHandler($this->responseFactory, $generator);
+        $middleware = new ErrorHandlerMiddleware($this->responseFactory, $generator);
         $result = $middleware->process($this->request->reveal(), $this->handler->reveal());
 
         $this->assertSame($this->response->reveal(), $result);
