@@ -361,7 +361,7 @@ class MyMiddleware implements MiddlewareInterface
 }</code></pre></p>
 <h2 id="anonymous-middleware">Anonymous middleware</h2>
 <p>For one-off middleware, particularly when debugging, you can use an anonymous
-class to implement <code>MiddleareInterface</code>:</p>
+class to implement <code>MiddlewareInterface</code>:</p>
 <p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(new class implements MiddlewareInterface {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
