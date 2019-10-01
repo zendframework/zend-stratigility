@@ -399,7 +399,7 @@ extended. Decorate an instance if you wish to provide alternate behavior, or
 create your own <code>MiddlewareInterface</code> implementation to provide alternate
 internal logic.</p>
 <h2 id="changes-in-public-interfaces">Changes in public interfaces</h2>
-<h3 id="signature-changes">Signature changes</h3>
+<h3>Signature changes</h3>
 <ul>
 <li>
 <p><code>Next::__construct()</code>: the second parameter now typehints against the
@@ -437,7 +437,7 @@ internal logic.</p>
   mutability of the response body).</p>
 </li>
 </ul>
-<h3 id="class-additions">Class additions</h3>
+<h3>Class additions</h3>
 <ul>
 <li>
 <p><code>Zend\Stratigility\MiddlewarePipeInterface</code> extends
@@ -451,9 +451,9 @@ internal logic.</p>
   if a particular host matches.</p>
 </li>
 </ul>
-<pre class="codehilite"><code class="language-php">// Segregate to hosts matching 'example.com':
-$pipeline-&gt;pipe(new HostMiddlewareDecorator('example.com', $middleware));</code></pre>
-
+<p><code>php
+  // Segregate to hosts matching 'example.com':
+  $pipeline-&gt;pipe(new HostMiddlewareDecorator('example.com', $middleware));</code></p>
 <p>Alternately, use the <code>host()</code> utility function to generate the instance; <a href="#host">see
   below</a>.</p>
 <ul>
@@ -461,9 +461,9 @@ $pipeline-&gt;pipe(new HostMiddlewareDecorator('example.com', $middleware));</co
   middleware by a static URI path prefix. This allows executing middleware only
   if a particular path matches, or segregating a sub-application by path.</li>
 </ul>
-<pre class="codehilite"><code class="language-php">// Segregate to paths matching '/foo' as the prefix:
-$pipeline-&gt;pipe(new PathMiddlewareDecorator('/foo', $middleware));</code></pre>
-
+<p><code>php
+  // Segregate to paths matching '/foo' as the prefix:
+  $pipeline-&gt;pipe(new PathMiddlewareDecorator('/foo', $middleware));</code></p>
 <p>Alternately, use the <code>path()</code> utility function to generate the instance; <a href="#path">see
   below</a>.</p>
 <ul>
@@ -474,13 +474,13 @@ $pipeline-&gt;pipe(new PathMiddlewareDecorator('/foo', $middleware));</code></pr
   signatures to the PSR-15 <code>MiddlewareInterface</code>. This allows for one-off piping
   of middleware:</li>
 </ul>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
-    // do some work
-    $response = $next($req, $handler);
-    // do some work
-    return $response;
-});</code></pre>
-
+<p><code>php
+  $pipeline-&gt;pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
+      // do some work
+      $response = $next($req, $handler);
+      // do some work
+      return $response;
+  });</code></p>
 <p>The arguments and return value can be type-hinted, but do not need to be. The
   decorator provides some checking on the return value in order to raise an
   exception if a response is not returned.</p>
@@ -493,13 +493,13 @@ $pipeline-&gt;pipe(new PathMiddlewareDecorator('/foo', $middleware));</code></pr
   optional, and falls back to a zend-diactoros response instance if that library
   is installed. Internally, it decorates the <code>$handler</code> as a callable.</li>
 </ul>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
-    // do some work
-    $response = $next($req, $res);
-    // do some work
-    return $response;
-});</code></pre>
-
+<p><code>php
+  $pipeline-&gt;pipe(new DoublePassMiddlewareDecorator(function ($req, $res, $next) {
+      // do some work
+      $response = $next($req, $res);
+      // do some work
+      return $response;
+  });</code></p>
 <p>Per recommendations in previous versions, if you are using double-pass
   middleware, do not operate on the response passed to the middleware; instead,
   only operate on the response returned by <code>$next</code>, or produce a concrete
@@ -510,7 +510,7 @@ $pipeline-&gt;pipe(new PathMiddlewareDecorator('/foo', $middleware));</code></pr
 <li><code>Zend\Stratigility\Exception\ExceptionInterface</code> - marker for
   package-specific exceptions.</li>
 </ul>
-<h3 id="removed-classes-and-exceptions">Removed classes and exceptions</h3>
+<h3>Removed classes and exceptions</h3>
 <p>The following classes have been removed:</p>
 <ul>
 <li><code>Zend\Stratigility\Delegate\CallableDelegateDecorator</code></li>
@@ -529,7 +529,7 @@ $pipeline-&gt;pipe(new PathMiddlewareDecorator('/foo', $middleware));</code></pr
   thrown by <code>MiddlewarePipe</code>, and thus no longer necessary).</li>
 <li><code>Zend\Stratigility\Exception\InvalidRequestTypeException</code></li>
 </ul>
-<h3 id="removed-methods">Removed methods</h3>
+<h3>Removed methods</h3>
 <ul>
 <li>
 <p><code>MiddlewarePipe::__invoke()</code>: the class is no longer invokable.
@@ -578,56 +578,48 @@ $pipeline-&gt;pipe(new PathMiddlewareDecorator('/foo', $middleware));</code></pr
   slated for removal with this version.</p>
 </li>
 </ul>
-<h3 id="function-additions">Function additions</h3>
+<h3>Function additions</h3>
 <p>Release 3.0 adds the following utility functions:</p>
-<h4 id="host">host</h4>
-<pre class="codehilite"><code class="language-php">function Zend\Stratigility\host(
+<h4>host</h4>
+<p> <pre class=codehilite><code class=language-php>function Zend\Stratigility\host(
   string $host,
   Psr\Http\Server\MiddlewareInterface $middleware
-) : Zend\Stratigility\Middleware\HostMiddlewareDecorator</code></pre>
-
+) : Zend\Stratigility\Middleware\HostMiddlewareDecorator</code></pre></p>
 <p>This is a convenience wrapper around instantiation of a
 <code>Zend\Stratigility\Middleware\HostMiddlewareDecorator</code> instance:</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(host('example.com', $middleware));</code></pre>
-
-<h4 id="path">path</h4>
-<pre class="codehilite"><code class="language-php">function Zend\Stratigility\path(
+<p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(host('example.com', $middleware));</code></pre></p>
+<h4>path</h4>
+<p> <pre class=codehilite><code class=language-php>function Zend\Stratigility\path(
   string $pathPrefix,
   Psr\Http\Server\MiddlewareInterface $middleware
-) : Zend\Stratigility\Middleware\PathMiddlewareDecorator</code></pre>
-
+) : Zend\Stratigility\Middleware\PathMiddlewareDecorator</code></pre></p>
 <p>This is a convenience wrapper around instantiation of a
 <code>Zend\Stratigility\Middleware\PathMiddlewareDecorator</code> instance:</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(path('/foo', $middleware));</code></pre>
-
-<h4 id="middleware">middleware</h4>
-<pre class="codehilite"><code class="language-php">function Zend\Stratigility\middleware(
+<p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(path('/foo', $middleware));</code></pre></p>
+<h4>middleware</h4>
+<p> <pre class=codehilite><code class=language-php>function Zend\Stratigility\middleware(
     callable $middleware
-) : Zend\Stratigility\Middleware\CallableMiddlewareDecorator</code></pre>
-
+) : Zend\Stratigility\Middleware\CallableMiddlewareDecorator</code></pre></p>
 <p><code>middleware()</code> provides a convenient way to decorate callable middleware that
 implements the PSR-15 middleware signature when piping it to your application.</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(middleware(function ($request, $handler) {
+<p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(middleware(function ($request, $handler) {
   // ...
-});</code></pre>
-
-<h4 id="doublepassmiddleware">doublePassMiddleware</h4>
-<pre class="codehilite"><code class="language-php">function Zend\Stratigility\doublePassMiddleware(
+});</code></pre></p>
+<h4>doublePassMiddleware</h4>
+<p> <pre class=codehilite><code class=language-php>function Zend\Stratigility\doublePassMiddleware(
     callable $middleware,
     Psr\Http\Message\ResponseInterface $responsePrototype = null
-) : Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator</code></pre>
-
+) : Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator</code></pre></p>
 <p><code>doublePassMiddleware()</code> provides a convenient way to decorate middleware that
 implements the double pass middleware signature when piping it to your application.</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(doublePassMiddleware(function ($request, $response, $next) {
+<p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(doublePassMiddleware(function ($request, $response, $next) {
   // ...
-});</code></pre>
-
+});</code></pre></p>
 <p>If you are not using zend-diactoros as a PSR-7 implementation, you will need to
 pass a response prototype as well:</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(doublePassMiddleware(function ($request, $response, $next) {
+<p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(doublePassMiddleware(function ($request, $response, $next) {
   // ...
-}, $response);</code></pre>
+}, $response);</code></pre></p>
 
 
 
@@ -661,7 +653,7 @@ pass a response prototype as well:</p>
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v3/migration.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v3/migration.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

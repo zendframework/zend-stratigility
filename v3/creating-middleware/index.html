@@ -343,7 +343,7 @@
     <h1 id="creating-middleware">Creating Middleware</h1>
 <p>Middleware piped to a <code>MiddlewarePipe</code> <strong>MUST</strong> implement the
 PSR-15 middleware interface.</p>
-<pre class="codehilite"><code class="language-php">use Psr\Http\Message\ResponseInterface;
+<p> <pre class=codehilite><code class=language-php>use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -358,32 +358,29 @@ class MyMiddleware implements MiddlewareInterface
         // or call request handler:
         // return $handler-&gt;handle($request);
     }
-}</code></pre>
-
+}</code></pre></p>
 <h2 id="anonymous-middleware">Anonymous middleware</h2>
 <p>For one-off middleware, particularly when debugging, you can use an anonymous
 class to implement <code>MiddleareInterface</code>:</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(new class implements MiddlewareInterface {
+<p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(new class implements MiddlewareInterface {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
     {
         $response = $handler-&gt;handle($request);
         return $response-&gt;withHeader('X-Clacks-Overhead', 'GNU Terry Pratchett');
     }
-});</code></pre>
-
+});</code></pre></p>
 <h2 id="callable-middleware">Callable middleware</h2>
 <p>Sometimes it's easier to eschew the <code>MiddlewareInterface</code>, particularly when
 creating a one-off middleware for debugging purposes. In those cases, you can
 create a PHP callable that follows the same signature of
 <code>MiddlewareInterface::process()</code>, and wrap it in a
 <code>Zend\Stratigility\Middleware\CallableMiddlewareDecorator</code> instance:</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
+<p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
     // do some work
     $response = $handler-&gt;($req);
     // do some work
     return $response;
-});</code></pre>
-
+});</code></pre></p>
 <p>The typehints for the arguments are optional, but such callable middleware will
 receive <code>ServerRequestInterface</code> and <code>RequestHandlerInterface</code> instances,
 in that order.</p>
@@ -392,18 +389,16 @@ CallableMiddlewareDecorator()</code>.</p>
 <h2 id="double-pass-middleware">Double-Pass middleware</h2>
 <p>Prior to PSR-15, many PSR-7 frameworks and projects adopted a "double-pass"
 middleware definition:</p>
-<pre class="codehilite"><code class="language-php">function (
+<p> <pre class=codehilite><code class=language-php>function (
     ServerRequestInterface $request,
     ResponseInterface $response,
     callable $next
-) : ResponseInterface</code></pre>
-
+) : ResponseInterface</code></pre></p>
 <p>where <code>$next</code> had the signature:</p>
-<pre class="codehilite"><code class="language-php">function (
+<p> <pre class=codehilite><code class=language-php>function (
     ServerRequestInterface $request,
     ResponseInterface $response
-) : ResponseInterface</code></pre>
-
+) : ResponseInterface</code></pre></p>
 <p>The latter interface is the origin of the term "double-pass", as the
 implementation passes not a single argument, but two. (The <code>$response</code> argument
 was often used as a response prototype for middleware that needed to return a
@@ -415,20 +410,18 @@ it to be used in your Stratigility application.</p>
 <code>$handler</code> instance as a callable.</p>
 <p>To use the decorator, pass it the double-pass middleware to decorate via the
 constructor:</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(new DoublePassMiddlewareDecorator($middleware));</code></pre>
-
+<p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(new DoublePassMiddlewareDecorator($middleware));</code></pre></p>
 <p>If you are not using zend-diactoros for your PSR-7 implementation, the decorator
 also accepts a second argument, a PSR-7 <code>ResponseInterface</code> prototype instance
 to pass to the double-pass middleware:</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(new DoublePassMiddlewareDecorator(
+<p> <pre class=codehilite><code class=language-php>$pipeline-&gt;pipe(new DoublePassMiddlewareDecorator(
     $middleware,
     $responsePrototype
-));</code></pre>
-
+));</code></pre></p>
 <p>You may also use the <code>doublePassMiddleware()</code> utility function in place of <code>new
 DoublePassMiddlewareDecorator()</code>.</p>
 <blockquote>
-<h3 id="beware-of-operating-on-the-response">Beware of operating on the response</h3>
+<h3>Beware of operating on the response</h3>
 <p>In many cases, poorly written double-pass middleware will manipulate the
 response provided to them and pass the manipulated version to <code>$next</code>.</p>
 <p>This is problematic if you mix standard PSR-15 and double-pass middleware, as
@@ -471,7 +464,7 @@ returned response.</p>
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v3/creating-middleware.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v3/creating-middleware.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

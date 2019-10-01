@@ -294,10 +294,9 @@ your code to be forwards-compatible.</p>
 <p>Starting in version 3, <code>MiddlewarePipe</code> and <code>Next</code> have significantly
 different behavior.</p>
 <p>First, the signature of <code>MiddlewarePipe::pipe()</code> will change to:</p>
-<pre class="codehilite"><code class="language-php">public function pipe(
+<p> <pre class=codehilite><code class=language-php>public function pipe(
     MiddlewareInterface $middleware
-) : void</code></pre>
-
+) : void</code></pre></p>
 <p>This means the following:</p>
 <ul>
 <li>You can no longer use <code>pipe()</code> to perform path segregation.</li>
@@ -308,7 +307,7 @@ different behavior.</p>
 arguments to its constructor: a string <code>$pathPrefix</code> (previously, the <code>$path</code>
 argument to <code>MiddlewarePipe::pipe()</code>), and a middleware implementation. This
 class has been backported to version 2.2.0, with usage as follows:</p>
-<pre class="codehilite"><code class="language-php">// Previously:
+<p> <pre class=codehilite><code class=language-php>// Previously:
 $pipeline-&gt;pipe('/api', $apiMiddleware);
 
 // Version 2.2.0+:
@@ -317,8 +316,7 @@ $pipeline-&gt;pipe(new PathMiddlewareDecorator('/api', $apiMiddleware));
 
 // OR:
 use Zend\Stratigility\path;
-$pipeline-&gt;pipe(path('/api', $apiMiddleware));</code></pre>
-
+$pipeline-&gt;pipe(path('/api', $apiMiddleware));</code></pre></p>
 <p>Path segregation using this middleware works exactly as it has in previous
 versions. (Internally, if you provide both a <code>$path</code> and <code>$middleware</code> argument,
 <code>MiddlewarePipe::pipe()</code> creates a <code>PathMiddlewareDecorator</code> instance from the
@@ -339,7 +337,7 @@ two arguments).</p>
 </li>
 </ul>
 <p>Use these classes to decorate your callable middleware when piping them:</p>
-<pre class="codehilite"><code class="language-php">// Previously (interop middleware):
+<p> <pre class=codehilite><code class=language-php>// Previously (interop middleware):
 $pipeline-&gt;pipe(function ($request, $delegate) {
     /* ... */
 });
@@ -369,8 +367,7 @@ $pipeline-&gt;pipe(new DoublePassMiddlewareDecorator(function ($request, $respon
 // or:
 $pipeline-&gt;pipe(doublePassMiddleware(function ($request, $response, $next) {
     /* ... */
-}));</code></pre>
-
+}));</code></pre></p>
 <p>If you pipe callables directly, you will now trigger an <code>E_USER_DEPRECATION</code>
 error. Internally, <code>MiddlewarePipe::pipe()</code> will decorate them using the classes
 noted above.</p>
@@ -399,22 +396,22 @@ This means you will no longer be able to directly extend it.</p>
 <h2 id="deprecated-classes">Deprecated classes</h2>
 <p>The following classes are now marked as deprecated. Where alternatives are
 available, we note them. If no alternative is available, we note why.</p>
-<h3 id="zendstratigilitymiddlewareinterface"><code>Zend\Stratigility\MiddlewareInterface</code></h3>
+<h3><code>Zend\Stratigility\MiddlewareInterface</code></h3>
 <p>This interface has been marked as deprecated since 2.0.0, and unused internally
 since that release. It is removed with version 3.0.0.</p>
-<h3 id="zendstratigilityroute"><code>Zend\Stratigility\Route</code></h3>
+<h3><code>Zend\Stratigility\Route</code></h3>
 <p>This is an internal message shared between a <code>MiddlewarePipe</code> and a <code>Next</code>
 instance for purposes of path segregation. In general, it should never be
 consumed directly; however, it was never marked as internal or final previously.</p>
 <p>If you are extending this class or manipulating instances manually, be aware
 that this class is removed in version 3 as it is no longer used internally.</p>
-<h3 id="zendstratigilityexceptioninvalidmiddlewareexception"><code>Zend\Stratigility\Exception\InvalidMiddlewareException</code></h3>
+<h3><code>Zend\Stratigility\Exception\InvalidMiddlewareException</code></h3>
 <p>This was thrown by <code>MiddlewarePipe::pipe()</code>. In version 3, since the sole
 argument to that method is type-hinted against the PSR-15 <code>MiddlewareInterface</code>,
 it is no longer used.</p>
-<h3 id="zendstratigilityexceptioninvalidrequesttypeexception"><code>Zend\Stratigility\Exception\InvalidRequestTypeException</code></h3>
+<h3><code>Zend\Stratigility\Exception\InvalidRequestTypeException</code></h3>
 <p>This has not been used internally since before version 2.</p>
-<h3 id="zendstratigilitydelegatecallabledelegatedecorator"><code>Zend\Stratigility\Delegate\CallableDelegateDecorator</code></h3>
+<h3><code>Zend\Stratigility\Delegate\CallableDelegateDecorator</code></h3>
 <p>This was an internal class used by several classes when they were being used
 within double-pass systems in order to cast a <code>callable $next</code> argument into a
 <code>Interop\Http\ServerMiddleware\DelegateInterface</code> instance. Since version 3 will
@@ -424,18 +421,18 @@ class will be removed.</p>
 - <code>MiddlewarePipe::__invoke()</code>
 - <code>NotFoundHandler::__invoke()</code>
 - <code>ErrorHandler::__invoke()</code></p>
-<h3 id="zendstratigilitymiddlewarecallableinteropmiddlewarewrapper"><code>Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper</code></h3>
+<h3><code>Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper</code></h3>
 <p>This class has been deprecated in favor of a new class,
 <code>Zend\Stratigility\Middleware\CallableMiddlewareDecorator</code>.</p>
-<h3 id="zendstratigilitymiddlewarecallablemiddlewarewrapper"><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapper</code></h3>
+<h3><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapper</code></h3>
 <p>This class has been deprecated in favor of a new class,
 <code>Zend\Stratigility\Middleware\DoublePassMiddlewareDecorator</code>.</p>
-<h3 id="zendstratigilitymiddlewarecallablemiddlewarewrapperfactory"><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory</code></h3>
+<h3><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapperFactory</code></h3>
 <p>The primary purpose of this class was for composition within a <code>MiddlewarePipe</code>
 for purposes of decorating callable double-pass middleware. Since
 <code>MiddlewarePipe::pipe()</code> will no longer accept callables, it will also no longer
 need to compose this factory.</p>
-<h3 id="zendstratigilitymiddlewarenoopfinalfactory"><code>Zend\Stratigility\Middleware\NoopFinalFactory</code></h3>
+<h3><code>Zend\Stratigility\Middleware\NoopFinalFactory</code></h3>
 <p>This class has no internal usage, and is removed in version 3.</p>
 
 
@@ -447,7 +444,7 @@ need to compose this factory.</p>
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/migration/preparing-for-v3.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/migration/preparing-for-v3.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

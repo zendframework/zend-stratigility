@@ -296,17 +296,6 @@
 
     
     
-        <div class="toc">
-            <h6 class="toc__headline">In This Article</h6>
-            <ul class="toc__list">
-                
-                    <li class="toc__entry">
-                        <a href="#request-path-changes-when-path-matched" class="toc__link">Request path changes when path matched</a>
-                    </li>
-                
-            </ul>
-        </div>
-    
 
     </div>
 
@@ -315,14 +304,13 @@
 <code>Zend\Stratigility\MiddlewarePipe</code> instance. You can nest <code>MiddlewarePipe</code>
 instances to create groups of related middleware, and attach them using a base
 path so they only execute if that path is matched.</p>
-<pre class="codehilite"><code class="language-php">$api = new MiddlewarePipe();  // API middleware collection
+<p> <pre class=codehilite><code class=language-php>$api = new MiddlewarePipe();  // API middleware collection
 $api-&gt;pipe(/* ... */);        // repeat as necessary
 
 $app = new MiddlewarePipe();  // Middleware representing the application
-$app-&gt;pipe('/api', $api);     // API middleware attached to the path "/api"</code></pre>
-
+$app-&gt;pipe('/api', $api);     // API middleware attached to the path &quot;/api&quot;</code></pre></p>
 <blockquote>
-<h3 id="request-path-changes-when-path-matched">Request path changes when path matched</h3>
+<h3>Request path changes when path matched</h3>
 <p>When you pipe middleware using a path (other than '' or '/'), the middleware
 is dispatched with a request that strips the matched segment(s) from the start
 of the path. Using the previous example, if the path <code>/api/users/foo</code> is
@@ -335,7 +323,7 @@ itself, particularly if you want to allow attaching other middleware to your
 own middleware. In such a case, you will generally override the <code>process()</code>
 method to perform any additional logic you have, and then call on the parent in
 order to iterate through your stack of middleware:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
+<p> <pre class=codehilite><code class=language-php>use Interop\Http\Middleware\DelegateInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Zend\Stratigility\MiddlewarePipe;
@@ -351,13 +339,12 @@ class CustomMiddleware extends MiddlewarePipe
 
         // maybe do more work?
     }
-}</code></pre>
-
+}</code></pre></p>
 <p>Another approach using this method would be to override the constructor to add
 in specific middleware, perhaps using configuration provided. In this case,
 make sure to also call <code>parent::__construct()</code> to ensure the middleware queue
 is initialized; we recommend doing this as the first action of the method.</p>
-<pre class="codehilite"><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
+<p> <pre class=codehilite><code class=language-php>use Zend\Stratigility\MiddlewarePipe;
 
 class CustomMiddleware extends MiddlewarePipe
 {
@@ -371,8 +358,7 @@ class CustomMiddleware extends MiddlewarePipe
 
         $this-&gt;pipe(/* some middleware */);
     }
-}</code></pre>
-
+}</code></pre></p>
 <p>These approaches are particularly suited for cases where you may want to
 implement a specific workflow for an application segment using existing
 middleware, but do not necessarily want that middleware applied to all requests
@@ -410,7 +396,7 @@ in the application.</p>
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v1/executing-middleware.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v1/executing-middleware.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

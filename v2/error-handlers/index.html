@@ -336,18 +336,17 @@ middleware that you may register in an innermost layer that will return a 404
 condition, <code>Zend\Stratigility\Middleware\NotFoundHandler</code>. The class requires a
 response prototype instance that it will use to provide the 404 status and a
 message indicating the request method and URI used:</p>
-<pre class="codehilite"><code class="language-php">// setup layers
+<p> <pre class=codehilite><code class=language-php>// setup layers
 $app-&gt;pipe(/* ... */);
 $app-&gt;pipe(/* ... */);
 $app-&gt;pipe(new NotFoundHandler(new Response());
 
-// execute application</code></pre>
-
+// execute application</code></pre></p>
 <p>Note that it is the last middleware piped into the application! Since it returns
 a response, no deeper nested layers will execute once it has been invoked.</p>
 <p>If you would like a templated response, you will need to write your own
 middleware; such middleware might look like the following:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\ServerMiddleware\DelegateInterface;
+<p> <pre class=codehilite><code class=language-php>use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -372,8 +371,7 @@ class NotFoundMiddleware implements ServerMiddlewareInterface
         );
         return $response;
     }
-}</code></pre>
-
+}</code></pre></p>
 <h2 id="handling-php-errors-and-exceptions">Handling PHP errors and exceptions</h2>
 <p><code>Zend\Stratigility\Middleware\ErrorHandler</code> is a middleware implementation to
 register as the <em>outermost layer</em> of your application (or close to the outermost
@@ -388,15 +386,14 @@ layer). It does the following:</p>
 </ul>
 <p>To generate the error response, we provide the ability to inject a callable with
 the following signature into the <code>ErrorHandler</code> during instantiation:</p>
-<pre class="codehilite"><code class="language-php">Psr\Http\Message\ResponseInterface;
+<p> <pre class=codehilite><code class=language-php>Psr\Http\Message\ResponseInterface;
 Psr\Http\Message\ServerRequestInterface;
 
 function (
     Throwable|Exception $e,
     ServerRequestInterface $request,
     ResponseInterface $response
-) : ResponseInterface</code></pre>
-
+) : ResponseInterface</code></pre></p>
 <p>We provide a default implementation, <code>Zend\Stratigility\Middleware\ErrorResponseGenerator</code>,
 which generates an error response with a <code>5XX</code> series status code and a message
 derived from the reason phrase, if any is present. You may pass a boolean flag
@@ -405,16 +402,15 @@ response will have the stack trace included in the body.</p>
 <p>In order to work, the <code>ErrorHandler</code> needs a prototype response instance, and,
 optionally, an error response generator (if none is provided,
 <code>ErrorResponseGenerator</code> is used, in production mode):</p>
-<pre class="codehilite"><code class="language-php">// setup error handling
+<p> <pre class=codehilite><code class=language-php>// setup error handling
 $app-&gt;pipe(new ErrorHandler(new Response(), new ErrorResponseGenerator($isDevelopmentMode));
 
 // setup layers
 $app-&gt;pipe(/* ... */);
-$app-&gt;pipe(/* ... */);</code></pre>
-
+$app-&gt;pipe(/* ... */);</code></pre></p>
 <p>As a full example, you can combine the two middleware into the same application
 as separate layers:</p>
-<pre class="codehilite"><code class="language-php">// setup error handling
+<p> <pre class=codehilite><code class=language-php>// setup error handling
 $app-&gt;pipe(new ErrorHandler(new Response(), new ErrorResponseGenerator($isDevelopmentMode));
 
 // setup layers
@@ -424,14 +420,13 @@ $app-&gt;pipe(/* ... */);
 // setup 404 handling
 $app-&gt;pipe(new NotFoundHandler(new Response());
 
-// execute application</code></pre>
-
+// execute application</code></pre></p>
 <p>The <code>ErrorResponseGenerator</code> provides no templating facilities, and only
 responds as <code>text/html</code>. If you want to provide a templated response, or a
 different serialization and/or markup format, you will need to write your own
 error response generator.</p>
 <p>As an example:</p>
-<pre class="codehilite"><code class="language-php">use ErrorException;
+<p> <pre class=codehilite><code class=language-php>use ErrorException;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
@@ -460,32 +455,29 @@ class TemplatedErrorResponseGenerator
         ]));
         return $response;
     }
-}</code></pre>
-
+}</code></pre></p>
 <p>You would then pass this to the <code>ErrorHandler</code>:</p>
-<pre class="codehilite"><code class="language-php">$app-&gt;pipe(new ErrorHandler(
+<p> <pre class=codehilite><code class=language-php>$app-&gt;pipe(new ErrorHandler(
     new Response(),
     new TemplatedErrorResponseGenerator($renderer, $isDevelopmentMode)
-));</code></pre>
-
-<h3 id="errorhandler-listeners">ErrorHandler Listeners</h3>
+));</code></pre></p>
+<h3>ErrorHandler Listeners</h3>
 <p><code>Zend\Stratigility\Middleware\ErrorHandler</code> provides the ability to attach
 <em>listeners</em>; these are triggered when an error or exception is caught, and
 provided with the exception/throwable raised, the original request, and the
 final response. These instances are considered immutable, so listeners are for
 purposes of logging/monitoring only.</p>
 <p>Listeners must implement the following signature:</p>
-<pre class="codehilite"><code class="language-php">Psr\Http\Message\ResponseInterface;
+<p> <pre class=codehilite><code class=language-php>Psr\Http\Message\ResponseInterface;
 Psr\Http\Message\ServerRequestInterface;
 
 function (
     Throwable|Exception $e,
     ServerRequestInterface $request,
     ResponseInterface $response
-) : void</code></pre>
-
+) : void</code></pre></p>
 <p>Attach listeners using <code>ErrorHandler::attachListener()</code>:</p>
-<pre class="codehilite"><code class="language-php">$errorHandler-&gt;attachListener(function ($throwable, $request, $response) use ($logger) {
+<p> <pre class=codehilite><code class=language-php>$errorHandler-&gt;attachListener(function ($throwable, $request, $response) use ($logger) {
     $message = sprintf(
         '[%s] %s %s: %s',
         date('Y-m-d H:i:s'),
@@ -494,7 +486,7 @@ function (
         $throwable-&gt;getMessage()
     );
     $logger-&gt;error($message);
-});</code></pre>
+});</code></pre></p>
 
 
 
@@ -528,7 +520,7 @@ function (
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v2/error-handlers.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v2/error-handlers.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

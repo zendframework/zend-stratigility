@@ -318,17 +318,6 @@
 
     
     
-        <div class="toc">
-            <h6 class="toc__headline">In This Article</h6>
-            <ul class="toc__list">
-                
-                    <li class="toc__entry">
-                        <a href="#psr-15-middleware" class="toc__link">PSR-15 middleware</a>
-                    </li>
-                
-            </ul>
-        </div>
-    
 
     </div>
 
@@ -337,7 +326,7 @@
 <p>Middleware is code that exists between the request and response, and which can
 take the incoming request, perform actions based on it, and either complete the
 response or pass delegation on to the next middleware in the queue.</p>
-<pre class="codehilite"><code class="language-php">// In public/index.php:
+<p> <pre class=codehilite><code class=language-php>// In public/index.php:
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Server;
 use Zend\Stratigility\Middleware\NotFoundHandler;
@@ -379,8 +368,7 @@ $app-&gt;pipe(new NotFoundHandler(function () {
 
 $server-&gt;listen(function ($req, $res) {
     return $res;
-});</code></pre>
-
+});</code></pre></p>
 <p>In the above example, we have two examples of middleware. The first is a
 landing page, and listens at the root path. If the request path is empty or
 <code>/</code>, it completes the response. If it is not, it delegates to the next
@@ -392,7 +380,7 @@ this point, a "final handler" is composed by default to report 404 status.</p>
 and do something with it, optionally delegating creation of a response to
 another handler</em>.</p>
 <blockquote>
-<h3 id="psr-15-middleware">PSR-15 middleware</h3>
+<h3>PSR-15 middleware</h3>
 <p>Stratigility supports only <a href="https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-15-request-handlers.md">PSR-15</a>
 middleware.</p>
 </blockquote>
@@ -412,10 +400,9 @@ demonstrated in the initial example), you can also attach middleware to specific
 paths, allowing you to mix and match applications under a common domain. As an
 example, you could put API middleware next to middleware that serves its
 documentation, next to middleware that serves files, and segregate each by URI:</p>
-<pre class="codehilite"><code class="language-php">$app-&gt;pipe(path('/api', $apiMiddleware));
+<p> <pre class=codehilite><code class=language-php>$app-&gt;pipe(path('/api', $apiMiddleware));
 $app-&gt;pipe(path('/docs', $apiDocMiddleware));
-$app-&gt;pipe(path('/files', $filesMiddleware));</code></pre>
-
+$app-&gt;pipe(path('/files', $filesMiddleware));</code></pre></p>
 <p>The handlers in each middleware attached this way will see a URI with that path
 segment stripped, allowing them to be developed separately and re-used under
 any path you wish.</p>
@@ -456,7 +443,7 @@ any path you wish.</p>
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v3/middleware.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v3/middleware.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

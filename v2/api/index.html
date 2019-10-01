@@ -337,7 +337,7 @@
 <h2 id="middleware">Middleware</h2>
 <p><code>Zend\Stratigility\MiddlewarePipe</code> is the primary application interface, and
 has been discussed previously. Its API is:</p>
-<pre class="codehilite"><code class="language-php">namespace Zend\Stratigility;
+<p> <pre class=codehilite><code class=language-php>namespace Zend\Stratigility;
 
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;
@@ -361,15 +361,14 @@ class MiddlewarePipe implements ServerMiddlewareInterface
         ServerRequestInterface $request,
         DelegateInterface $delegate
     ) : ResponseInterface;
-}</code></pre>
-
+}</code></pre></p>
 <p><code>pipe()</code> takes up to two arguments. If only one argument is provided,
 <code>$middleware</code> will be assigned that value, and <code>$path</code> will be re-assigned to
 the value <code>/</code>; this is an indication that the <code>$middleware</code> should be invoked
 for any path. If <code>$path</code> is provided, the <code>$middleware</code> will only be executed
 for that path and any subpaths.</p>
 <blockquote>
-<h3 id="request-path-changes-when-path-matched">Request path changes when path matched</h3>
+<h3>Request path changes when path matched</h3>
 <p>When you pipe middleware using a path (other than '' or '/'), the middleware
 is dispatched with a request that strips the matched segment(s) from the start
 of the path.</p>
@@ -386,14 +385,13 @@ expecting http-interop middleware signatures (via the <code>process()</code> met
 <p>When using <code>__invoke()</code>, the callable <code>$out</code> argument should either implement
 delegator/request handler interface from <code>http-interop/http-middleware</code>
 (depends on version you are using), or use the signature:</p>
-<pre class="codehilite"><code class="language-php">use Psr\Http\Message\ResponseInterface;
+<p> <pre class=codehilite><code class=language-php>use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 function (
     ServerRequestInterface $request,
     ResponseInterface $response
-) : ResponseInterface</code></pre>
-
+) : ResponseInterface</code></pre></p>
 <p>Most often, you can pass an instance of <code>Zend\Stratigility\NoopFinalHandler</code> for
 <code>$out</code> if invoking a middleware pipeline manually; otherwise, a suitable
 callback will be provided for you (typically an instance of
@@ -412,37 +410,35 @@ as it also implements that interface.</p>
 <p>Internally, for both <code>__invoke()</code> and <code>process()</code>, <code>MiddlewarePipe</code> creates an
 instance of <code>Zend\Stratigility\Next</code> (feeding it its queue), executes it, and
 returns its response.</p>
-<h3 id="response-prototype">Response prototype</h3>
+<h3>Response prototype</h3>
 <p>You may compose a "response prototype" in the <code>MiddlewarePipe</code>. When present,
 any callable middleware piped to the instance will be wrapped in a decorator
 (see the <a href="#middleware-decorators">section on middleware decorators</a>, below) such
 that it will now conform to http-interop middleware interfaces.</p>
 <p>To use this functionality, inject the prototype before piping middleware:</p>
-<pre class="codehilite"><code class="language-php">$pipeline = new MiddlewarePipe();
-$pipeline-&gt;setResponsePrototype(new Response());</code></pre>
-
+<p> <pre class=codehilite><code class=language-php>$pipeline = new MiddlewarePipe();
+$pipeline-&gt;setResponsePrototype(new Response());</code></pre></p>
 <h2 id="next">Next</h2>
 <p><code>Zend\Stratigility\Next</code> is primarily an implementation detail of middleware,
 and exists to allow delegating to middleware registered later in the stack. It
 is implemented both as a functor and as an http-interop/http-middleware
 <code>DelegateInterface</code>.</p>
-<h3 id="functor-invocation">Functor invocation</h3>
+<h3>Functor invocation</h3>
 <p>Because <code>Psr\Http\Message</code>'s interfaces are immutable, if you make changes to
 your Request and/or Response instances, you will have new instances, and will
 need to make these known to the next middleware in the chain. <code>Next</code> expects
 these arguments for every invocation.</p>
-<pre class="codehilite"><code class="language-php">class Next
+<p> <pre class=codehilite><code class=language-php>class Next
 {
     public function __invoke(
         Psr\Http\Message\ServerRequestInterface $request,
         Psr\Http\Message\ResponseInterface $response
     ) : Psr\Http\Message\ResponseInterface;
-}</code></pre>
-
+}</code></pre></p>
 <p>You should <strong>always</strong> either capture or return the return value of <code>$next()</code>
 when calling it in your application, or return a response yourself.</p>
 <blockquote>
-<h3 id="response-argument">$response argument</h3>
+<h3>$response argument</h3>
 <p>Using the <code>$response</code> argument is unsafe when using delegation, as an inner
 layer could return an entirely different response, ignoring any changes you
 may have introduced previously. Additionally, when manipulating the response
@@ -456,11 +452,11 @@ following:</p>
 <li>For middleware delegating to another layer, operate on the <em>returned</em>
   response instead:</li>
 </ul>
-<pre class="codehilite"><code class="language-php">$response = $next($request, $response);
-return $response-&gt;withHeader('X-Foo', 'Bar');</code></pre>
-
+<p><code>php
+  $response = $next($request, $response);
+  return $response-&gt;withHeader('X-Foo', 'Bar');</code></p>
 </blockquote>
-<h3 id="delegate-invocation">Delegate invocation</h3>
+<h3>Delegate invocation</h3>
 <p>When invoked as a <code>DelegateInterface</code>, the <code>process()</code> method will be invoked, and
 passed a <code>ServerRequestInterface</code> instance <em>only</em>. If you need to return a response,
 you will need to:</p>
@@ -470,8 +466,8 @@ you will need to:</p>
 <li>Create and return a concrete response type, OR</li>
 <li>Operate on a response returned by invoking the delegate.</li>
 </ul>
-<h3 id="providing-an-altered-request">Providing an altered request:</h3>
-<pre class="codehilite"><code class="language-php">// Standard invokable:
+<h3>Providing an altered request:</h3>
+<p> <pre class=codehilite><code class=language-php>// Standard invokable:
 function ($request, $response, $next) use ($bodyParser)
 {
     $bodyParams = $bodyParser($request);
@@ -490,10 +486,9 @@ function ($request, DelegateInterface $delegate) use ($bodyParser)
     return $delegate-&gt;process(
         $request-&gt;withBodyParams($bodyParams)
     );
-}</code></pre>
-
-<h3 id="providing-an-altered-request-and-operating-on-the-returned-response">Providing an altered request and operating on the returned response:</h3>
-<pre class="codehilite"><code class="language-php">function ($request, $response, $next) use ($bodyParser)
+}</code></pre></p>
+<h3>Providing an altered request and operating on the returned response:</h3>
+<p> <pre class=codehilite><code class=language-php>function ($request, $response, $next) use ($bodyParser)
 {
     $response = $next(
         $request-&gt;withBodyParams($bodyParser($request)),
@@ -512,15 +507,14 @@ function ($request, DelegateInterface $delegate) use ($bodyParser)
     return $delegate-&gt;process(
         $request-&gt;withBodyParams($bodyParams)
     );
-}</code></pre>
-
-<h3 id="returning-a-response-to-complete-the-request">Returning a response to complete the request</h3>
+}</code></pre></p>
+<h3>Returning a response to complete the request</h3>
 <p>If your middleware does not need to delegate to another layer, it's time to
 return a response.</p>
 <p>While we pass a response when using <code>Next</code> as a functor, we recommend creating
 a new response, or providing your middleware with a response prototype; this
 will ensure that the response is specific for your context.</p>
-<pre class="codehilite"><code class="language-php">$prototype = new Response();
+<p> <pre class=codehilite><code class=language-php>$prototype = new Response();
 
 // Standard invokable signature:
 function ($request, $response, $next) use ($prototype)
@@ -542,25 +536,22 @@ function ($request, DelegateInterface $delegate) use ($prototype)
         'max-age=18600',
         's-maxage=18600',
     ]);
-}</code></pre>
-
-<h3 id="delegation">Delegation</h3>
+}</code></pre></p>
+<h3>Delegation</h3>
 <p>If your middleware is not capable of returning a response, or a particular path
 in the middleware cannot return a response, return the result of executing the
 delegate.</p>
 <p>If using the legacy middleware signature, invoke the <code>$next</code> argument:</p>
-<pre class="codehilite"><code class="language-php">return $next($request, $response);</code></pre>
-
+<p> <pre class=codehilite><code class=language-php>return $next($request, $response);</code></pre></p>
 <p>If using a <code>DelegateInterface</code>, invoke its <code>process()</code> method:</p>
-<pre class="codehilite"><code class="language-php">return $delegate-&gt;process($request);</code></pre>
-
+<p> <pre class=codehilite><code class=language-php>return $delegate-&gt;process($request);</code></pre></p>
 <p><strong>Middleware should always return a response, and, if it cannot, return the
 result of delegation.</strong></p>
-<h3 id="raising-an-error-condition">Raising an error condition</h3>
+<h3>Raising an error condition</h3>
 <p>If your middleware cannot complete &mdash; perhaps a database error occurred, a
 service was unreachable, etc. &mdash; how can you report the error?</p>
 <p>Raise an exception!</p>
-<pre class="codehilite"><code class="language-php">function ($request, $response, $next) use ($service)
+<p> <pre class=codehilite><code class=language-php>function ($request, $response, $next) use ($service)
 {
     $result = $service-&gt;fetchSomething();
     if (! $result-&gt;isSuccess()) {
@@ -568,18 +559,17 @@ service was unreachable, etc. &mdash; how can you report the error?</p>
     }
 
     /* ... otherwise, complete the request ... */
-}</code></pre>
-
+}</code></pre></p>
 <p>Use the <a href="../error-handlers/#handling-php-errors-and-exceptions">ErrorHandler middleware</a>
 to handle exceptions thrown by your middleware and report the error condition to
 your users.</p>
 <h2 id="middleware_1">Middleware</h2>
 <p>Stratigility provides several concrete middleware implementations.</p>
-<h4 id="errorhandler-and-notfoundhandler">ErrorHandler and NotFoundHandler</h4>
+<h4>ErrorHandler and NotFoundHandler</h4>
 <p>These two middleware allow you to provide handle PHP errors and exceptions, and
 404 conditions, respectively. You may read more about them in the
 <a href="../error-handlers/">error handling chapter</a>.</p>
-<h3 id="originalmessages">OriginalMessages</h3>
+<h3>OriginalMessages</h3>
 <p>This callable middleware can be used as the outermost layer of middleware in
 order to set the original request, URI, and response instances as request
 attributes for inner layers. See the <a href="../migration/#original-request-response-and-uri">migration chapter</a>
@@ -592,19 +582,19 @@ middleware piped to the instance will be wrapped in a decorator.</p>
 <li><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapper</code> will wrap a callable
   using the legacy interface; as such, it also requires a response instance:</li>
 </ul>
-<pre class="codehilite"><code class="language-php">$middleware = new CallableMiddlewareWrapper($middleware, $response);</code></pre>
-
+<p><code>php
+  $middleware = new CallableMiddlewareWrapper($middleware, $response);</code></p>
 <ul>
 <li><code>Zend\Stratigility\Middleware\CallableMiddlewareWrapper</code> will wrap a callable
   that defines exactly two arguments, with the second type-hinting on the
   http-interop/http-middleware <code>DelegateInterface</code>:</li>
 </ul>
-<pre class="codehilite"><code class="language-php">$middleware = new CallableMiddlewareWrapper(
-  function ($request, DelegateInterface $delegate) {
-      // ...
-  }
-);</code></pre>
-
+<p><code>php
+  $middleware = new CallableMiddlewareWrapper(
+    function ($request, DelegateInterface $delegate) {
+        // ...
+    }
+  );</code></p>
 <p>You can manually decorate callable middleware using these decorators, or simply
 let <code>MiddlewarePipe</code> do the work for you. To let <code>MiddlewarePipe</code> handle this,
 however, you <em>must</em> compose a response prototype prior to piping middleware
@@ -618,7 +608,7 @@ an http-interop/http-middleware middleware interface <code>process()</code> meth
 delegate; the primary use case is adapting functor middleware to work as
 http-interop middleware.</p>
 <p>As an example:</p>
-<pre class="codehilite"><code class="language-php">// http-interop/http-middleware 0.2:
+<p> <pre class=codehilite><code class=language-php>// http-interop/http-middleware 0.2:
 use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 
@@ -647,7 +637,7 @@ class TimestampMiddleware implements ServerMiddlewareInterface
         $response = $delegate-&gt;process($request);
         return $response-&gt;withHeader('X-Processed-Timestamp', time());
     }
-}</code></pre>
+}</code></pre></p>
 
 
 
@@ -681,7 +671,7 @@ class TimestampMiddleware implements ServerMiddlewareInterface
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v2/api.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v2/api.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

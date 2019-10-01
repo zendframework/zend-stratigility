@@ -373,10 +373,9 @@ recommend the following:</p>
 </li>
 </ul>
 <p>You can then access these values within other middleware:</p>
-<pre class="codehilite"><code class="language-php">$originalRequest = $request-&gt;getAttribute('originalRequest');
+<p> <pre class=codehilite><code class=language-php>$originalRequest = $request-&gt;getAttribute('originalRequest');
 $originalResponse = $request-&gt;getAttribute('originalResponse');
-$originalUri = $request-&gt;getAttribute('originalUri');</code></pre>
-
+$originalUri = $request-&gt;getAttribute('originalUri');</code></pre></p>
 <p>Internally, starting with 1.3.0, we have updated the request decorator to add
 the <code>originalRequest</code> attribute, and the <code>FinalHandler</code> to check for this,
 instead of the decorated instance.</p>
@@ -407,9 +406,8 @@ handlers, instead of using the existing error middleware/final handler system.</
 <p>The first step is to opt-in to having throwables and exceptions raised by
 middleware, instead of having the dispatcher catch them and then invoke
 middleware. Do this via the <code>MiddlewarePipe::raiseThrowables()</code> method:</p>
-<pre class="codehilite"><code class="language-php">$pipeline = new MiddlewarePipe();
-$pipeline-&gt;raiseThrowables();</code></pre>
-
+<p> <pre class=codehilite><code class=language-php>$pipeline = new MiddlewarePipe();
+$pipeline-&gt;raiseThrowables();</code></pre></p>
 <p>Once you have done that you may start using some of the new functionality, as
 well as augmented existing functionality:</p>
 <ul>
@@ -419,7 +417,7 @@ well as augmented existing functionality:</p>
 </ul>
 <p>Updating your application to use these features will ensure you are forwards
 compatible with version 2 releases.</p>
-<h3 id="no-op-final-handler">No-op final handler</h3>
+<h3>No-op final handler</h3>
 <p>When using the <code>NotFoundHandler</code> and <code>ErrorHandler</code> middleware (or custom
 middleware you drop in place of them), the <code>FinalHandler</code> implementation loses
 most of its meaning, as you are now handling errors and 404 conditions as
@@ -438,14 +436,12 @@ it in your application in one of two ways:</p>
 </ul>
 <p>If you are not using <code>Zend\Diactoros\Server</code> to execute your application, but
 instead invoking your pipeline manually, use the following:</p>
-<pre class="codehilite"><code class="language-php">$response = $app($request, $response, new NoopFinalHandler());</code></pre>
-
+<p> <pre class=codehilite><code class=language-php>$response = $app($request, $response, new NoopFinalHandler());</code></pre></p>
 <p>If you are using <code>Zend\Diactoros\Server</code>, you will need to pass the final
 handler you wish to use as an argument to the <code>listen()</code> method; that method
 will then pass that value as the third argument to <code>MiddlewarePipe</code> as shown
 above:</p>
-<pre class="codehilite"><code class="language-php">$server-&gt;listen(new NoopFinalHandler());</code></pre>
-
+<p> <pre class=codehilite><code class=language-php>$server-&gt;listen(new NoopFinalHandler());</code></pre></p>
 <p>Both approaches above are fully forwards compatible with version 2, and will
 work in all version 1 releases as well.</p>
 <p>(You can also compose your own custom final handler; it only needs to accept a
@@ -463,11 +459,11 @@ request and a response, and be guaranteed to return a response instance.)</p>
   dispatching your application pipeline.</li>
 </ul>
 <h2 id="http-interop-compatibility">http-interop compatibility</h2>
-<h3 id="http-middleware-020-and-stratigility-13">http-middleware 0.2.0 and Stratigility 1.3</h3>
+<h3>http-middleware 0.2.0 and Stratigility 1.3</h3>
 <p>Starting in version 1.3.0, we offer compatibility with
 <a href="https://github.com/http-interop/http-middleware/tree/ff545c87e97bf4d88f0cb7eb3e89f99aaa53d7a9">http-interop/http-middleware 0.2.0</a>.
 That version of the specification defines the following interfaces:</p>
-<pre class="codehilite"><code class="language-php">namespace Interop\Http\Middleware;
+<p> <pre class=codehilite><code class=language-php>namespace Interop\Http\Middleware;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -486,8 +482,7 @@ interface MiddlewareInterface
 interface ServerMiddlewareInterface
 {
     public function process(ServerRequestInterface $request, DelegateInterface $delegate) : ResponseInterface;
-}</code></pre>
-
+}</code></pre></p>
 <p>The support in version 1.3.0 consists of the following:</p>
 <ul>
 <li><code>MiddlewarePipe</code> now also implements <code>ServerMiddlewareInterface</code>, and allows
@@ -504,7 +499,7 @@ middleware piped to the pipeline will be wrapped in a
 <code>Zend\Stratigility\Middleware\CallableMiddlewareWrapper</code> instance, which
 converts it into an http-interop middleware type; when processed, the response
 prototype will be passed to the callable for the response argument.</p>
-<h3 id="http-middleware-041-and-stratigility-20">http-middleware 0.4.1 and Stratigility 2.0</h3>
+<h3>http-middleware 0.4.1 and Stratigility 2.0</h3>
 <p>http-interop/http-middleware 0.4.1 introduces breaking changes in the
 interfaces, including the following:</p>
 <ul>
@@ -535,7 +530,7 @@ version (and compatible versions) only.</p>
 <code>Zend\Stratigility\MiddlewareInterface</code>, and only implement the
 http-interop/http-middleware <code>MiddlewareInterface</code></em>. This has several
 repercussions.</p>
-<h3 id="callable-middleware-in-version-130">Callable middleware in version 1.3.0</h3>
+<h3>Callable middleware in version 1.3.0</h3>
 <p>Callable middleware can be used without change in version 1.3.0. However, we
 recommend updating your code to prepare for version 2.0.0.</p>
 <p>First, <strong>we recommend <em>never</em> using the <code>$response</code> argument provided to
@@ -546,7 +541,7 @@ makes your middleware incompatible. Second, and more importantly, is due to the
 reason why http-interop does not include the argument: usage can lead to
 inconsistent and/or unexpected results.</p>
 <p>As an example, consider the following:</p>
-<pre class="codehilite"><code class="language-php">use Zend\Diactoros\Response\JsonResponse;
+<p> <pre class=codehilite><code class=language-php>use Zend\Diactoros\Response\JsonResponse;
 
 $pipeline-&gt;pipe(function ($request, $response, $next) {
     return $next($request, $response-&gt;withHeader('X-Foo', 'Bar'));
@@ -554,14 +549,13 @@ $pipeline-&gt;pipe(function ($request, $response, $next) {
 
 $pipeline-&gt;pipe(function ($request, $response, $next) {
     return new JsonResponse(['ack' =&gt; time()]);
-});</code></pre>
-
+});</code></pre></p>
 <p>The first, outer layer of middleware sets a response header. However, the
 second, inner middleware, <em>creates and returns an entirely new response</em>,
 making the new header disappear.</p>
 <p>As such, we recommend rewriting such middleware to modify the <em>returned</em>
 response instead:</p>
-<pre class="codehilite"><code class="language-php">use Zend\Diactoros\Response\JsonResponse;
+<p> <pre class=codehilite><code class=language-php>use Zend\Diactoros\Response\JsonResponse;
 
 $pipeline-&gt;pipe(function ($request, $response, $next) {
     $response = $next($request, $response);
@@ -570,8 +564,7 @@ $pipeline-&gt;pipe(function ($request, $response, $next) {
 
 $pipeline-&gt;pipe(function ($request, $response, $next) {
     return new JsonResponse(['ack' =&gt; time()]);
-});</code></pre>
-
+});</code></pre></p>
 <p>The above will have the expected result for whatever middleware is nested
 beneath it, as it will operate on the returned response, and have consistent
 results.</p>
@@ -579,17 +572,16 @@ results.</p>
 your pipeline composes a <em>response prototype</em> (doing so will implicitly
 decorate callable middleware). Either of these will ensure your middleware will
 work with http-interop/http-middleware delegators.</p>
-<pre class="codehilite"><code class="language-php">use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
+<p> <pre class=codehilite><code class=language-php>use Zend\Stratigility\Middleware\CallableMiddlewareWrapper;
 
 // Manually decorating callable middleware for use with http-middleware:
 $pipeline-&gt;pipe(new CallableMiddlewareWrapper($middleware, $response));
 
 // Auto-decorate middleware by providing a response prototype:
 $pipeline-&gt;setResponsePrototype($response);
-$pipeline-&gt;pipe($middleware);</code></pre>
-
+$pipeline-&gt;pipe($middleware);</code></pre></p>
 <blockquote>
-<h3 id="callablemiddlewarewrapper-and-stratigility-20">CallableMiddlewareWrapper and Stratigility 2.0</h3>
+<h3>CallableMiddlewareWrapper and Stratigility 2.0</h3>
 <p>As noted above, version 2 of Stratigility is incompatible with version 1.3 due
 to signature changes in the http-middleware project. However, if you wrap your
 callable middleware using <code>CallableMiddlewareWrapper</code>, you will need to make
@@ -607,24 +599,22 @@ your callable middleware:</p>
   typehint the delegate argument, and make it required.</li>
 </ul>
 <p>As an example of the first:</p>
-<pre class="codehilite"><code class="language-php">function ($request, $response, DelegateInterface $delegate) {
+<p> <pre class=codehilite><code class=language-php>function ($request, $response, DelegateInterface $delegate) {
     $response = $delegate-&gt;process($request);
     return $response-&gt;withHeader('X-Foo', 'Bar');
-}</code></pre>
-
+}</code></pre></p>
 <p>As an example of adopting both practices:</p>
-<pre class="codehilite"><code class="language-php">function ($request, DelegateInterface $delegate) {
+<p> <pre class=codehilite><code class=language-php>function ($request, DelegateInterface $delegate) {
     $response = $delegate-&gt;process($request);
     return $response-&gt;withHeader('X-Foo', 'Bar');
-}</code></pre>
-
+}</code></pre></p>
 <p>At this point, you have essentially implemented <code>Interop\Http\Middleware\ServerMiddlewareInterface</code>
 (with the notable exception of not type-hinting the <code>$request</code> argument).
 When you pipe such callable middleware to <code>MiddlewarePipeline</code>, it will be
 wrapped in a <code>Zend\Stratigility\Middleware\CallableInteropMiddlewareWrapper</code>,
 which simply proxies to the middleware when processed.</p>
 <blockquote>
-<h3 id="delegateinterface-and-stratigility-20">DelegateInterface and Stratigility 2.0</h3>
+<h3>DelegateInterface and Stratigility 2.0</h3>
 <p>Since the namespace within http-interop/http-middleware changes between
 version 0.2.0 and 0.4.1, the above strategy will require making changes
 multiple times: once when upgrading to Stratigility 1.3, and another when
@@ -637,7 +627,7 @@ specifically implement one or the other of the http-interop/http-middleware
 interfaces. This is particularly relevant for class-based middleware, but can
 also be accomplished by using PHP 7 anonymous classes.</p>
 <p>As an example, consider the following middleware class:</p>
-<pre class="codehilite"><code class="language-php">use Psr\Http\Message\ResponseInterface;
+<p> <pre class=codehilite><code class=language-php>use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\JsonResponse;
 
@@ -650,10 +640,9 @@ class PingMiddleware
     ) {
         return new JsonResponse(['ack' =&gt; time()]);
     }
-}</code></pre>
-
+}</code></pre></p>
 <p>This could be rewritten as follows:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
+<p> <pre class=codehilite><code class=language-php>use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\JsonResponse;
@@ -664,17 +653,15 @@ class PingMiddleware implements ServerMiddlewareInterface
     {
         return new JsonResponse(['ack' =&gt; time()]);
     }
-}</code></pre>
-
+}</code></pre></p>
 <p>If we were dealing with callable middleware instead:</p>
-<pre class="codehilite"><code class="language-php">use Zend\Diactoros\Response\JsonResponse;
+<p> <pre class=codehilite><code class=language-php>use Zend\Diactoros\Response\JsonResponse;
 
 $pipeline-&gt;pipe(function ($request, $response, $next) {
     return new JsonResponse(['ack' =&gt; time()]);
-});</code></pre>
-
+});</code></pre></p>
 <p>we could wrap this in an anonymous class instead:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
+<p> <pre class=codehilite><code class=language-php>use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\JsonResponse;
@@ -684,8 +671,7 @@ $pipeline-&gt;pipe(new class implements ServerMiddlewareInterface {
     {
         return new JsonResponse(['ack' =&gt; time()]);
     }
-});</code></pre>
-
+});</code></pre></p>
 <blockquote>
 <p>Using anonymous classes is likely overkill, as both v1.3.0 and v2.0.0 support
 piping closures.</p>
@@ -695,7 +681,7 @@ with the pre-1.3.0 middleware signature, you can do that as well. To accomplish
 this, we provide <code>Zend\Stratigility\Delegate\CallableDelegateDecorator</code>, which
 will wrap a <code>callable $next</code> such that it may be used as a <code>DelegateInterface</code>
 implementation:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
+<p> <pre class=codehilite><code class=language-php>use Interop\Http\Middleware\DelegateInterface;
 use Interop\Http\Middleware\ServerMiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -716,23 +702,22 @@ class PingMiddleware implements ServerMiddlewareInterface
     {
         return new JsonResponse(['ack' =&gt; time()]);
     }
-}</code></pre>
-
+}</code></pre></p>
 <blockquote>
-<h3 id="implementing-http-interop-between-stratigility-13-and-20">Implementing http-interop between Stratigility 1.3 and 2.0</h3>
+<h3>Implementing http-interop between Stratigility 1.3 and 2.0</h3>
 <p>While you <em>can</em> write your middleware to implement the
 http-interop/http-middleware middleware interface, please be aware that if you
 do so, you will need to take additional steps when upgrading from 1.3 to 2.0.</p>
 <p>In most cases, you should be able to simply change the import statements
 within your class file. As an example, if you have the following in your
 Stratigility 1.3-based project:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\Middleware\DelegateInterface;
-use Interop\Http\Middleware\ServerMiddlewareInterface;</code></pre>
-
+<p><code>php
+use Interop\Http\Middleware\DelegateInterface;
+use Interop\Http\Middleware\ServerMiddlewareInterface;</code></p>
 <p>The imports would become:</p>
-<pre class="codehilite"><code class="language-php">use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;</code></pre>
-
+<p><code>php
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterface;</code></p>
 </blockquote>
 <p>To summarize:</p>
 <ul>
@@ -765,7 +750,7 @@ use Interop\Http\ServerMiddleware\MiddlewareInterface as ServerMiddlewareInterfa
 <p>The first and last suggestions in this list are strongly recommended to ensure
 forwards compatibility with http-middleware, and to ensure your middleware works
 properly across middleware stacks.</p>
-<h3 id="callable-middleware-in-version-200">Callable middleware in version 2.0.0</h3>
+<h3>Callable middleware in version 2.0.0</h3>
 <p>Callable middleware may still be used; however, in order to pipe it to the
 pipeline, you must do one of the following:</p>
 <ul>
@@ -775,26 +760,26 @@ pipeline, you must do one of the following:</p>
   prior to piping callable middleware to the instance. This factory class
   requires a <code>ResponseInterface</code> in its constructor, and will use that
   response when creating <code>CallableMiddlewareWrapper</code> instances.</p>
-<pre class="codehilite"><code class="language-php">$factory = new CallableMiddlewareWrapperFactory(new Response());
-$pipeline-&gt;setCallableMiddlewareDecorator($factory);</code></pre>
-
+<p><code>php
+$factory = new CallableMiddlewareWrapperFactory(new Response());
+$pipeline-&gt;setCallableMiddlewareDecorator($factory);</code></p>
 </li>
 <li>
 <p>Pass a response prototype before piping the callable middleware. If no
   <code>CallableMiddlewareWrapperFactory</code> is present, this prototype will be
   used to seed one for use with decorating callable middleware.</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;setResponsePrototype(new Response());</code></pre>
-
+<p><code>php
+$pipeline-&gt;setResponsePrototype(new Response());</code></p>
 </li>
 <li>
 <p>Manually decorate your middleware prior to passing it to the pipeline:</p>
-<pre class="codehilite"><code class="language-php">$pipeline-&gt;pipe(new CallableMiddlewareWrapper($middleware, $response));
+<p><code>php
+$pipeline-&gt;pipe(new CallableMiddlewareWrapper($middleware, $response));
 // or CallableInteropMiddlewareWrapper, if your middleware implements
-// the http-middleware signature already.</code></pre>
-
+// the http-middleware signature already.</code></p>
 </li>
 </ul>
-<h3 id="invoking-middlewarepipe-instances-in-version-200">Invoking MiddlewarePipe instances in version 2.0.0</h3>
+<h3>Invoking MiddlewarePipe instances in version 2.0.0</h3>
 <p>Invocation of the outermost middleware can now be done in two ways:</p>
 <ul>
 <li>Using <code>__invoke()</code>. This now requires a third argument, <code>$delegate</code>, which
@@ -809,7 +794,7 @@ $pipeline-&gt;setCallableMiddlewareDecorator($factory);</code></pre>
   the pipeline's internal queue is exhausted without returning a response.</li>
 </ul>
 <p>As examples:</p>
-<pre class="codehilite"><code class="language-php">use Zend\Stratigility\NoopFinalHandler;
+<p> <pre class=codehilite><code class=language-php>use Zend\Stratigility\NoopFinalHandler;
 use Zend\Stratigility\Delegate\CallableDelegateDecorator;
 
 // Using __invoke():
@@ -819,8 +804,7 @@ $response = $pipeline($request, $response, new NoopFinalHandler());
 $response = $pipeline-&gt;process($request, new CallableDelegateDecorator(
     new NoopFinalHandler(),
     $response
-));</code></pre>
-
+));</code></pre></p>
 <p>Once you have done so, you can process the returned request via an
 <a href="https://docs.zendframework.com/zend-diactoros/emitting-responses/">emitter</a>.</p>
 <h2 id="deprecated-functionality">Deprecated functionality</h2>
@@ -909,7 +893,7 @@ $response = $pipeline-&gt;process($request, new CallableDelegateDecorator(
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v2/migration.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v2/migration.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

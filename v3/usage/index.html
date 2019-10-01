@@ -328,7 +328,7 @@
 <li>Create a server, using the middleware</li>
 <li>Instruct the server to listen for a request</li>
 </ul>
-<pre class="codehilite"><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
+<p> <pre class=codehilite><code class=language-php>use Zend\Stratigility\MiddlewarePipe;
 use Zend\Diactoros\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -345,8 +345,7 @@ $server = Server::createServer(
 
 $server-&gt;listen(function ($req, $res) {
   return $res;
-});</code></pre>
-
+});</code></pre></p>
 <p>The above example is useless by itself until you pipe middleware into the application.</p>
 
 
@@ -381,7 +380,7 @@ $server-&gt;listen(function ($req, $res) {
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v3/usage.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v3/usage.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

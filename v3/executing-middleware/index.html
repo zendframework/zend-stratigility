@@ -323,10 +323,6 @@
             <ul class="toc__list">
                 
                     <li class="toc__entry">
-                        <a href="#request-path-changes-when-path-matched" class="toc__link">Request path changes when path matched</a>
-                    </li>
-                
-                    <li class="toc__entry">
                         <a href="#handling-errors" class="toc__link">Handling errors</a>
                     </li>
                 
@@ -345,14 +341,13 @@
 <code>Zend\Stratigility\MiddlewarePipe</code> instance. You can nest <code>MiddlewarePipe</code>
 instances to create groups of related middleware, and attach them using a base
 path so they only execute if that path is matched.</p>
-<pre class="codehilite"><code class="language-php">$api = new MiddlewarePipe();  // API middleware collection
+<p> <pre class=codehilite><code class=language-php>$api = new MiddlewarePipe();  // API middleware collection
 $api-&gt;pipe(/* ... */);        // repeat as necessary
 
 $app = new MiddlewarePipe();  // Middleware representing the application
-$app-&gt;pipe(new PathMiddlewareDecorator('/api', $api)); // API middleware attached to the path "/api"</code></pre>
-
+$app-&gt;pipe(new PathMiddlewareDecorator('/api', $api)); // API middleware attached to the path &quot;/api&quot;</code></pre></p>
 <blockquote>
-<h3 id="request-path-changes-when-path-matched">Request path changes when path matched</h3>
+<h3>Request path changes when path matched</h3>
 <p>When you use the <code>PathMiddlewareDecorator</code> using a path (other than '' or
 '/'), the middleware it decorates is dispatched with a request that strips the
 matched segment(s) from the start of the path. Using the previous example, if
@@ -364,12 +359,11 @@ be re-used without changes to its own internal routing.</p>
 <p>While the above will give you a basic application, it has no error handling
 whatsoever. We recommend adding an initial middleware layer using the
 <code>Zend\Stratigility\Middleware\ErrorHandler</code> class:</p>
-<pre class="codehilite"><code class="language-php">use Zend\Diactoros\Response;
+<p> <pre class=codehilite><code class=language-php>use Zend\Diactoros\Response;
 use Zend\Stratigility\Middleware\ErrorHandler;
 
 $app-&gt;pipe(new ErrorHandler(new Response());
-// Add more middleware...</code></pre>
-
+// Add more middleware...</code></pre></p>
 <p>You can learn how to customize the error handler to your needs in the
 <a href="../error-handlers/">chapter on error handlers</a>.</p>
 <h2 id="decorating-the-middlewarepipe">Decorating the MiddlewarePipe</h2>
@@ -379,7 +373,7 @@ optionally implementing the <code>RequestHandlerInterface</code> and/or <code>pi
 <p>In such a case, you might define the <code>process()</code> method to perform any
 additional logic you have, and then call on the decorated <code>MiddlewarePipe</code>
 instance in order to iterate through your stack of middleware:</p>
-<pre class="codehilite"><code class="language-php">class CustomMiddleware implements MiddlewareInterface
+<p> <pre class=codehilite><code class=language-php>class CustomMiddleware implements MiddlewareInterface
 {
     private $pipeline;
 
@@ -397,11 +391,10 @@ instance in order to iterate through your stack of middleware:</p>
 
         // maybe do more work?
     }
-}</code></pre>
-
+}</code></pre></p>
 <p>Another approach using this method would be to override the constructor to add
 in specific middleware, perhaps using configuration provided.</p>
-<pre class="codehilite"><code class="language-php">use Psr\Http\Message\ResponseInterface;
+<p> <pre class=codehilite><code class=language-php>use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -425,8 +418,7 @@ class CustomMiddleware implements MiddlewareInterface
     {
         /* ... */
     }
-}</code></pre>
-
+}</code></pre></p>
 <p>These approaches are particularly suited for cases where you may want to
 implement a specific workflow for an application segment using existing
 middleware, but do not necessarily want that middleware applied to all requests
@@ -464,7 +456,7 @@ in the application.</p>
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v3/executing-middleware.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v3/executing-middleware.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>

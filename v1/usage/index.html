@@ -306,7 +306,7 @@
 <li>Create a server, using the middleware</li>
 <li>Instruct the server to listen for a request</li>
 </ul>
-<pre class="codehilite"><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
+<p> <pre class=codehilite><code class=language-php>use Zend\Stratigility\MiddlewarePipe;
 use Zend\Stratigility\NoopFinalHandler;
 use Zend\Diactoros\Server;
 
@@ -320,8 +320,7 @@ $server = Server::createServer($app,
   $_COOKIE,
   $_FILES
 );
-$server-&gt;listen(new NoopFinalHandler());</code></pre>
-
+$server-&gt;listen(new NoopFinalHandler());</code></pre></p>
 <p>The above example is useless by itself until you pipe middleware into the application.</p>
 
 
@@ -356,7 +355,7 @@ $server-&gt;listen(new NoopFinalHandler());</code></pre>
     <div class="help-wanted">
         <p>
             Found a mistake or want to contribute to the documentation?
-            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/v1/usage.md" target="_blank" class="help-wanted__link">
+            <a href="https://github.com/zendframework/zend-stratigility/edit/master/docs/book/v1/usage.md" target="_blank" class="help-wanted__link">
                 Edit this page on GitHub!
             </a>
         </p>
