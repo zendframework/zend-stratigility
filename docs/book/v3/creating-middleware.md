@@ -25,7 +25,7 @@ class MyMiddleware implements MiddlewareInterface
 ## Anonymous middleware
 
 For one-off middleware, particularly when debugging, you can use an anonymous
-class to implement `MiddleareInterface`:
+class to implement `MiddlewareInterface`:
 
 ```php
 $pipeline->pipe(new class implements MiddlewareInterface {
