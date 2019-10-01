@@ -48,7 +48,7 @@ create a PHP callable that follows the same signature of
 ```php
 $pipeline->pipe(new CallableMiddlewareDecorator(function ($req, $handler) {
     // do some work
-    $response = $handler->($req);
+    $response = $handler($req);
     // do some work
     return $response;
 });
