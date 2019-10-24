@@ -385,9 +385,10 @@ dispatching wraps all middleware in <code>try/catch</code> blocks.</p>
 <p>Starting in 1.3.0, we provide a new way to handle errors via middleware.</p>
 <p><strong>To opt-in to the new system, you must call <code>raiseThrowables()</code> on your
 middleware pipeline:</strong></p>
-<p><code>php
+<p><pre class=codehilite><code class=language-php>
 $pipeline = new MiddlewarePipe();
-$pipeline-&gt;raiseThrowables();</code></p>
+$pipeline-&gt;raiseThrowables();
+</code></pre></p>
 <p>(Starting in 2.0.0, this will no longer be necessary, but until then, this is
 how you opt-in to the system described below.)</p>
 </blockquote>

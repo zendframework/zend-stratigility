@@ -361,59 +361,66 @@ and do something with it</em>.</p>
 project. http-interop is a project attempting to standardize middleware signatures.
 The signature of the 0.4 series server-side middleware, on which Stratigility
 2.X is based, is:</p>
-<p>```php
-namespace Interop\Http\ServerMiddleware;</p>
-<p>use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;</p>
-<p>interface MiddlewareInterface
+<p><pre class=codehilite><code class=language-php>
+namespace Interop\Http\ServerMiddleware;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+interface MiddlewareInterface
 {
     public function process(
         ServerRequestInterface $request,
         DelegateInterface $delegate
     ) : ResponseInterface;
-}</p>
-<p>interface DelegateInterface
+}
+
+interface DelegateInterface
 {
     public function process(
         ServerRequestInterface $request
     ) : ResponseInterface;
 }
-```</p>
+</code></pre></p>
 <p>Stratigility allows you to implement the http-interop/http-middleware
 middleware interface to provide middleware.  Additionally, you can define
 <code>callable</code> middleware with the following signature, and it will be dispatched
 as http-interop middleware:</p>
-<p><code>php
+<p><pre class=codehilite><code class=language-php>
 function(
     ServerRequestInterface $request,
     DelegateInterface $delegate
-) : ResponseInterface;</code></p>
+) : ResponseInterface;
+</code></pre></p>
 <p>(The <code>$request</code> argument does not require a typehint when defining callable
 middleware, but we encourage its use.)</p>
 <p>Finally, to keep backwards compatibility with Stratigility v1, as well as
 other projects that have not yet adopted http-interop, we allow using the
 "double-pass" signature (so-called because you pass both a request and response
 object to the delegate):</p>
-<p><code>php
+<p><pre class=codehilite><code class=language-php>
 function (
     ServerRequestInterface $request,
     ResponseInterface $response,
     callable $next
-) : ResponseInterface</code></p>
+) : ResponseInterface
+</code></pre></p>
 <p>where <code>$next</code> is expected to have the following signature:</p>
-<p><code>php
+<p><pre class=codehilite><code class=language-php>
 function (
     ServerRequestInterface $request,
     ResponseInterface $response
-) : ResponseInterface</code></p>
+) : ResponseInterface
+</code></pre></p>
 <p>As such, the above example can also be written as follows:</p>
-<p><code>php
+<p><pre class=codehilite><code class=language-php>
 $app-&gt;pipe('/', function ($request, $response, $next) {
     if (! in_array($request-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
         return $next($request, $response);
     }
     return new TextResponse('Hello world!');
-});</code></p>
+});
+</code></pre></p>
 </blockquote>
 <p>Middleware can decide more processing can be performed by calling the <code>$next</code>
 callable (or, when defining http-interop middleware, <code>$delegate</code>) passed during

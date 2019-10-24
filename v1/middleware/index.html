@@ -344,51 +344,57 @@ middleware, which is also widely used across other middleware frameworks
 such as Slim, Relay, Adroit, etc.</p>
 <p>http-interop is a project attempting to standardize middleware signatures.
 The signature it uses for server-side middleware is:</p>
-<p>```php
-namespace Interop\Http\Middleware;</p>
-<p>use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;</p>
-<p>interface ServerMiddlewareInterface
+<p><pre class=codehilite><code class=language-php>
+namespace Interop\Http\Middleware;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+interface ServerMiddlewareInterface
 {
     public function process(
         ServerRequestInterface $request,
         DelegateInterface $delegate
     ) : ResponseInterface;
 }
-```</p>
+</code></pre></p>
 <p>where <code>DelegateInterface</code> is defined as:</p>
-<p>```php
-namespace Interop\Http\Middleware;</p>
-<p>use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;</p>
-<p>interface DelegateInterface
+<p><pre class=codehilite><code class=language-php>
+namespace Interop\Http\Middleware;
+
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+interface DelegateInterface
 {
     public function process(
         RequestInterface $request
     ) : ResponseInterface;
 }
-```</p>
+</code></pre></p>
 <p>Stratigility allows you to implement <code>ServerMiddlewareInterface</code> to provide
 middleware.  Additionally, you can define <code>callable</code> middleware with the
 following signature, and it will be dispatched as http-interop middleware:</p>
-<p><code>php
+<p><pre class=codehilite><code class=language-php>
 function(
     ServerRequestInterface $request,
     DelegateInterface $delegate
-) : ResponseInterface;</code></p>
+) : ResponseInterface;
+</code></pre></p>
 <p>(The <code>$request</code> argument does not require a typehint when defining callable
 middleware, but we encourage its use.)</p>
 <p>As such, the above example can also be written as follows:</p>
-<p>```php
+<p><pre class=codehilite><code class=language-php>
 use Interop\Http\Middleware\DelegateInterface;
-use Zend\Diactoros\Response\TextResponse;</p>
-<p>$app-&gt;pipe('/', function ($req, DelegateInterface $delegate) {
+use Zend\Diactoros\Response\TextResponse;
+
+$app-&gt;pipe('/', function ($req, DelegateInterface $delegate) {
     if (! in_array($req-&gt;getUri()-&gt;getPath(), ['/', ''], true)) {
         return $delegate-&gt;process($req);
     }
     return new TextResponse('Hello world!');
 });
-```</p>
+</code></pre></p>
 </blockquote>
 <p>Middleware can decide more processing can be performed by calling the <code>$next</code>
 callable (or, when defining http-interop middleware, <code>$delegate</code>) passed during
