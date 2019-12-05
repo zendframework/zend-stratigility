@@ -37,7 +37,7 @@ final class NotFoundHandler implements RequestHandlerInterface
     }
 
     /**
-     * Creates and retursn a 404 response.
+     * Creates and returns a 404 response.
      */
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
