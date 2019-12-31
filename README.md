@@ -1,5 +1,9 @@
 # zend-stratigility
 
+> ## Repository abandoned 2019-12-31
+>
+> This repository has moved to laminas/laminas-stratigility.
+
 [![Build Status](https://secure.travis-ci.org/zendframework/zend-stratigility.svg?branch=master)](https://secure.travis-ci.org/zendframework/zend-stratigility)
 [![Coverage Status](https://coveralls.io/repos/github/zendframework/zend-stratigility/badge.svg?branch=master)](https://coveralls.io/github/zendframework/zend-stratigility?branch=master)
 
