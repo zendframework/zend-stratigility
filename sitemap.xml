@@ -1,168 +1,168 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v3/intro/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v3/intro/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v3/install/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v3/install/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v3/usage/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v3/usage/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v3/middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v3/middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v3/error-handlers/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v3/error-handlers/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v3/creating-middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v3/creating-middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v3/executing-middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v3/executing-middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v3/api/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v3/api/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v3/migration/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v3/migration/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v2/install/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v2/install/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v2/usage/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v2/usage/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v2/middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v2/middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v2/error-handlers/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v2/error-handlers/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v2/creating-middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v2/creating-middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v2/executing-middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v2/executing-middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v2/api/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v2/api/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v2/migration/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v2/migration/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/install/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v1/install/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/usage/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v1/usage/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v1/middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/error-handlers/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v1/error-handlers/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/creating-middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v1/creating-middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/executing-middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v1/executing-middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/v1/api/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/v1/api/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/install/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/install/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/usage/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/usage/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/error-handlers/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/error-handlers/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/creating-middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/creating-middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/executing-middleware/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/executing-middleware/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/api/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/api/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>https://docs.zendframework.com/zend-stratigility/migration/</loc>
-     <lastmod>2019-10-25</lastmod>
+     <loc>https://docs.zendframework.com/migration/</loc>
+     <lastmod>2020-01-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>

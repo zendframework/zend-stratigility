@@ -7,12 +7,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="zend-stratigility">  
-    <link rel="canonical" href="https://docs.zendframework.com/zend-stratigility/v1/middleware/">
+    <link rel="canonical" href="https://docs.zendframework.com/v1/middleware/">
     <link rel="shortcut icon" href="../../img/favicon.ico">
 
     <title>Middleware - zend-stratigility - Zend Framework Docs</title>
 
-    <link rel="stylesheet" href="../../css/styles-5cfabd53ee.css">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body id="page-top">
 
@@ -240,9 +240,9 @@
     <div class="laminas-announcement">
     <div class="container">
         <div class="row">
-            <div class="col-xs-12">
-                Zend Framework transitions to the Linux Foundation. <a href="https://getlaminas.org">Learn More.</a>
-            </div>
+            <div class="col-xs-12"><strong>
+                This package has moved. Visit its replacement, <a href="https://docs.laminas.dev/laminas-stratigility/">laminas/laminas-stratigility.</a>
+            </strong></div>
         </div>
     </div>
 </div>
@@ -304,7 +304,7 @@
 <p>Middleware is code that exists between the request and response, and which can
 take the incoming request, perform actions based on it, and either complete the
 response or pass delegation on to the next middleware in the queue.</p>
-<p> <pre class=codehilite><code class=language-php>use Zend\Stratigility\MiddlewarePipe;
+<pre><code class="language-php">use Zend\Stratigility\MiddlewarePipe;
 use Zend\Diactoros\Server;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -327,7 +327,9 @@ $app-&gt;pipe('/foo', function ($req, $res, $next) {
     return $res;
 });
 
-$server-&gt;listen();</code></pre></p>
+$server-&gt;listen();
+</code></pre>
+
 <p>In the above example, we have two examples of middleware. The first is a
 landing page, and listens at the root path. If the request path is empty or
 <code>/</code>, it completes the response. If it is not, it delegates to the next
@@ -344,7 +346,7 @@ middleware, which is also widely used across other middleware frameworks
 such as Slim, Relay, Adroit, etc.</p>
 <p>http-interop is a project attempting to standardize middleware signatures.
 The signature it uses for server-side middleware is:</p>
-<p><pre class=codehilite><code class=language-php>
+<pre class=codehilite><code class=language-php>
 namespace Interop\Http\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
@@ -357,9 +359,9 @@ interface ServerMiddlewareInterface
         DelegateInterface $delegate
     ) : ResponseInterface;
 }
-</code></pre></p>
+</code></pre>
 <p>where <code>DelegateInterface</code> is defined as:</p>
-<p><pre class=codehilite><code class=language-php>
+<pre class=codehilite><code class=language-php>
 namespace Interop\Http\Middleware;
 
 use Psr\Http\Message\RequestInterface;
@@ -371,20 +373,20 @@ interface DelegateInterface
         RequestInterface $request
     ) : ResponseInterface;
 }
-</code></pre></p>
+</code></pre>
 <p>Stratigility allows you to implement <code>ServerMiddlewareInterface</code> to provide
 middleware.  Additionally, you can define <code>callable</code> middleware with the
 following signature, and it will be dispatched as http-interop middleware:</p>
-<p><pre class=codehilite><code class=language-php>
+<pre class=codehilite><code class=language-php>
 function(
     ServerRequestInterface $request,
     DelegateInterface $delegate
 ) : ResponseInterface;
-</code></pre></p>
+</code></pre>
 <p>(The <code>$request</code> argument does not require a typehint when defining callable
 middleware, but we encourage its use.)</p>
 <p>As such, the above example can also be written as follows:</p>
-<p><pre class=codehilite><code class=language-php>
+<pre class=codehilite><code class=language-php>
 use Interop\Http\Middleware\DelegateInterface;
 use Zend\Diactoros\Response\TextResponse;
 
@@ -394,7 +396,7 @@ $app-&gt;pipe('/', function ($req, DelegateInterface $delegate) {
     }
     return new TextResponse('Hello world!');
 });
-</code></pre></p>
+</code></pre>
 </blockquote>
 <p>Middleware can decide more processing can be performed by calling the <code>$next</code>
 callable (or, when defining http-interop middleware, <code>$delegate</code>) passed during
@@ -410,9 +412,11 @@ requests &mdash; for instance, you could have middleware perform the following:<
 allowing you to mix and match applications under a common domain. As an
 example, you could put API middleware next to middleware that serves its
 documentation, next to middleware that serves files, and segregate each by URI:</p>
-<p> <pre class=codehilite><code class=language-php>$app-&gt;pipe('/api', $apiMiddleware);
+<pre><code class="language-php">$app-&gt;pipe('/api', $apiMiddleware);
 $app-&gt;pipe('/docs', $apiDocMiddleware);
-$app-&gt;pipe('/files', $filesMiddleware);</code></pre></p>
+$app-&gt;pipe('/files', $filesMiddleware);
+</code></pre>
+
 <p>The handlers in each middleware attached this way will see a URI with that path
 segment stripped, allowing them to be developed separately and re-used under
 any path you wish.</p>
@@ -591,7 +595,7 @@ any path you wish.</p>
             
             <div class="col-md-9">
                 <h4 class="footer__headline">Copyright</h4>
-                <p>&copy; 2006-2019 by <a href="https://www.zend.com/">Zend</a>, a <a href="https://www.roguewave.com/">Rogue Wave Company</a>.</p>
+                <p>&copy; 2006-2020 by <a href="https://www.zend.com/">Zend</a> by <a href="https://www.perforce.com/">Perforce</a>.</p>
             </div>
 
             
@@ -599,10 +603,10 @@ any path you wish.</p>
                 <h4 class="footer__headline">Support</h4>
                 <ul class="support__list">
                     <li class="support__list-item">
-                        <a href="https://discourse.zendframework.com" class="support__link" title="Forum"><i class="fa fa-comments"></i></a>
+                        <a href="https://discourse.laminas.dev" class="support__link" title="Forum"><i class="fa fa-comments"></i></a>
                     </li>
                     <li class="support__list-item">
-                        <a href="https://zendframework-slack.herokuapp.com" class="support__link" title="Chat"><i class="fa fa-slack"></i></a>
+                        <a href="https://laminas.dev/chat/" class="support__link" title="Chat"><i class="fa fa-slack"></i></a>
                     </li>
                     <li class="support__list-item">
                         <a href="https://github.com/zendframework" class="support__link" title="Github"><i class="fa fa-github"></i></a>
@@ -610,27 +614,28 @@ any path you wish.</p>
                     <li class="support__list-item">
                         <a href="https://twitter.com/zfdevteam" class="support__link" title="Twitter"><i class="fa fa-twitter"></i></a>
                     </li>
-                    <li class="support__list-item">
-                        <a href="https://tinyletter.com/mwopzend" class="support__link" title="Newsletter"><i class="fa fa-envelope"></i></a>
-                    </li>
-                    <li class="support__list-item">
-                        <a href="https://framework.zend.com/blog/feed-rss.xml" class="support__link" title="Blog feed"><i class="fa fa-rss"></i></a>
-                    </li>
-                    <li class="support__list-item">
-                        <a href="https://framework.zend.com/security/feed" class="support__link" title="Security feed"><i class="fa fa-rss-square"></i></a>
-                    </li>
                 </ul>
             </div>
         </div>
     </div>
 </footer>
 
+<nav class="cookie-bar navbar navbar-fixed-bottom navbar-default hidden">
+    <div class="container">
+        <p class="navbar-text">
+            We use cookies to allow you to dismiss dialogs such as the Laminas
+            Project notification.
+        </p>
+        <button type="button" class="cookie-button btn btn-default navbar-btn">Allow Cookies</button>
+    </div>
+</nav>
+
     <script>
         var base_url = '../..',
             siteName = 'zend-stratigility';
     </script>
-    <script src="../../js/scripts-8d7ae56abf.js"></script>
-        <script src="../../search/main.js"></script>
+    <script src="/js/scripts.js"></script>
+    <script src="../../search/main.js"></script>
 
     
     <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
